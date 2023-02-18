@@ -1,0 +1,86 @@
+cabal-version:      3.0
+name:               jambhala
+version:            0.1.0.0
+
+-- A short (one-line) description of the package.
+synopsis:           A batteries-included Plutus Development Kit
+
+-- A longer description of the package.
+description:
+
+-- A URL where users can report bugs.
+-- bug-reports:
+
+-- The license under which the package is released.
+-- license:
+author:             Ian Burzynski
+maintainer:         ian.burzynski@emurgo.io
+
+-- A copyright notice.
+-- copyright:
+-- category:
+
+flag defer-plugin-errors
+  description:
+      Defer errors from the plugin, useful for things like Haddock that can't handle it.
+  default: False
+  manual: True
+
+common common
+  default-language: Haskell2010
+  build-depends:
+      base ^>=4.14.3.0
+    , optparse-applicative
+  ghc-options:
+    -Wall -fobject-code -fno-ignore-interface-pragmas
+    -fno-omit-interface-pragmas -fno-strictness -fno-spec-constr
+    -fno-specialise
+  if flag(defer-plugin-errors)
+    ghc-options: -fplugin-opt PlutusTx.Plugin:defer-errors
+
+library
+  import: common
+  exposed-modules:
+    Utils.CLI
+    Utils.Parsers
+    Utils.Scripts
+    Utils.Utils
+    Contracts.Contracts
+  other-modules:
+    Contracts.Simple
+    Contracts.SimpleTyped
+  hs-source-dirs:
+      src
+  build-depends:
+      aeson
+    , base16-bytestring
+    , bytestring
+    , cardano-api
+    , cardano-binary
+    , containers
+    , filepath
+    , megaparsec
+    , plutus-core
+    , plutus-ledger
+    , plutus-ledger-api
+    , plutus-script-utils
+    , plutus-tx
+    , plutus-tx-plugin
+    , serialise
+    , text
+    , turtle
+  mixins:
+      base hiding (Prelude)
+    , plutus-tx (PlutusTx.Prelude as Prelude)
+    , plutus-tx
+  default-extensions: DataKinds, OverloadedStrings, TemplateHaskell, RecordWildCards
+
+executable jambhala
+  import: common
+  main-is: Main.hs
+  hs-source-dirs:
+    app
+  default-language: Haskell2010
+  ghc-options:      -Wall -Werror -threaded -rtsopts -with-rtsopts=-T
+  build-depends:
+    jambhala

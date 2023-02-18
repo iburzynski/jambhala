@@ -1,0 +1,15 @@
+ignore-project: False
+with-compiler: ghc-8.10.7
+
+-- Prevents HLS errors
+flags: +defer-plugin-errors
+
+-- Required if not installing IOG libsodium fork: use ported C code
+package cardano-crypto-praos
+  flags: -external-libsodium-vrf
+
+package trace-dispatcher
+  ghc-options: -Wwarn
+
+package HsOpenSSL
+  flags: -homebrew-openssl

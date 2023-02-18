@@ -1,0 +1,25 @@
+echo "Building and serving plutus-apps docs..."
+
+hash=$(grep -A 1 "location: https://github.com/input-output-hk/plutus-apps.git" cabal.project | tail -n 1 | awk '{ print $NF }')
+
+if [ ! -d "plutus-apps" ]; then
+  git clone https://github.com/input-output-hk/plutus-apps.git
+  if [ ! $? -eq 0 ]; then
+    echo "Error: git clone failed"
+    exit 1
+  fi
+else
+  cd plutus-apps
+  git pull
+fi
+
+git reset --hard $hash
+
+function cleanup {
+  echo "Returning to parent directory."
+  cd ..
+}
+
+trap cleanup INT
+
+nix-shell --run "build-and-serve-docs"
