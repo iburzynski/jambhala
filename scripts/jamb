@@ -1,0 +1,9 @@
+if [ -n "$3" ]; then
+  nix run . -- "$1" "$2" "$3"
+else
+  if [ -n "$2" ]; then
+    nix run . -- "$1" "$2"
+  else
+    nix run . -- "$1"
+  fi
+fi

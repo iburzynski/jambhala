@@ -22,4 +22,4 @@ function cleanup {
 
 trap cleanup INT
 
-nix-shell --run "build-and-serve-docs"
+nix develop --command "serve-docs"

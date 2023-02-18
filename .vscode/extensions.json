@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "cab404.vscode-direnv",
+    // "Rubymaniac.vscode-direnv", -- causing issues with Nix recently, use the extension above instead
+    // "mkhl.direnv",  -- causing issues with Nix recently, use the extension above instead
+    "jnoortheen.nix-ide",
+    "haskell.haskell",
+  ]
+}

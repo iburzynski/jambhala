@@ -1,13 +1,5 @@
 {
   "haskell.manageHLS": "PATH",
-  "task.allowAutomaticTasks": "on",
-  "recommendations": [
-    "Rubymaniac.vscode-direnv"
-    //, "mkhl.direnv" -- causing issues with Nix recently, use the extension above instead
-    ,
-    "jnoortheen.nix-ide",
-    "haskell.haskell"
-  ],
   "terminal.integrated.profiles.linux": {
     "bash": {
       "path": "bash",

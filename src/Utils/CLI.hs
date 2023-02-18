@@ -1,6 +1,7 @@
 module Utils.CLI ( commandParser, runCommand ) where
 
 import Contracts.Contracts ( contracts )
+import Utils.Scripts ( updatePlutusApps )
 
 import Prelude hiding (Functor, Semigroup, Monoid, Applicative, elem, (<$>), (<*>), (<>), mconcat)
 import Data.String ( String )
@@ -19,7 +20,7 @@ type FileName = String
 data Command = List
              | Write !ContractName !(Maybe FileName)
              | Hash !ContractName
-
+             | Update
 
 contractNames :: [String]
 contractNames = M.keys contracts
@@ -29,10 +30,13 @@ contractsPretty = unlines $ map ('\t':) contractNames
 
 commandParser :: ParserInfo Command
 commandParser = info (helper <*> parseCommand) . mconcat $ [fullDesc, progDesc "Create sample smart contracts"]
-  where parseCommand = parseList <|> parseWrite <|> parseHash
+  where parseCommand = parseList <|> parseWrite <|> parseHash <|> parseUpdate
 
 parseList :: Parser Command
 parseList = flag' List (long "list" <> short 'l' <> help "List the available contracts")
+
+parseUpdate :: Parser Command
+parseUpdate = flag' Update (long "update" <> short 'u' <> help "Update plutus-apps")
 
 parseWrite :: Parser Command
 parseWrite = Write <$> option contractReader
@@ -64,6 +68,7 @@ runCommand cmd  = case cmd of
   List               -> putStrLn $ "Available Contracts:\n\n" ++ contractsPretty
   Write c maybeFName -> go c (writePlutusFile $ fromMaybe c maybeFName)
   Hash c             -> go c (print . validatorHash)
+  Update             -> updatePlutusApps
   where
     go c act =
       maybe (putStrLn $ "Error: contract \"" ++ c ++ "\" not found") act $ M.lookup c contracts

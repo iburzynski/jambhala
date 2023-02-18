@@ -68,6 +68,7 @@ formatFlakeDep (FlakeDependency (Dependency {..}) sha) = T.unlines [
 
 updatePlutusApps :: IO ()
 updatePlutusApps = do
+    putStrLn "Updating plutus-apps...\n"
     rev <- cloneOrPullPlutusApps
     cabalProjectContents <- decodeUtf8 <$> BS.readFile "plutus-apps/cabal.project"
     case runParser (projectParser rev) "" cabalProjectContents of
@@ -75,5 +76,5 @@ updatePlutusApps = do
         let ProjectData deps allOtherContent = projData
         fDeps <- T.strip . T.unlines . map formatFlakeDep <$> makeFlakeDependencies deps
         _ <- Sh.cp "plutus-apps/cabal.project" "cabal.project.backup"
-        TIO.writeFile "cabal.project.new" (allOtherContent <> fDeps)
+        TIO.writeFile "cabal.project" (allOtherContent <> fDeps)
       Left parseErr -> putStrLn $ errorBundlePretty parseErr
