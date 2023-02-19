@@ -61,7 +61,7 @@ writePlutusFile fileName validator =
     Left err -> print $ displayError err
     Right () -> putStrLn $ "wrote validator to file " ++ fp
   where
-    fp = "assets/" ++ fileName ++ ".plutus"
+    fp = "compiled/" ++ fileName ++ ".plutus"
 
 encodePlutusData :: ToData a => a -> BSL.ByteString
 encodePlutusData a =

@@ -2,7 +2,7 @@ module Utils.Scripts where
 
 import Utils.Parsers
 
-import Prelude hiding (error, decodeUtf8, Functor(..), Semigroup(..), Monoid(..), Applicative(..), Traversable(..), (<$>), elem, (/=), (<$), (<*), (*>), mconcat)
+import Prelude hiding ((==), error, decodeUtf8, Functor(..), Semigroup(..), Monoid(..), Applicative(..), Traversable(..), (<$>), elem, (/=), (<$), (<*), (*>), mconcat)
 import GHC.Show (Show)
 import Control.Applicative ( (<$>) )
 import Data.Text (Text)
@@ -17,6 +17,10 @@ import System.IO (IO, putStrLn)
 import GHC.Err (error)
 import Data.Traversable
 import Data.Monoid
+import Data.Time (getCurrentTime)
+import Data.Time.Format.ISO8601 (iso8601Show)
+import Data.List (break)
+import Data.Eq ((==))
 
 type Location = Text
 type Revision = Text
@@ -75,6 +79,7 @@ updatePlutusApps = do
       Right projData -> do
         let ProjectData deps allOtherContent = projData
         fDeps <- T.strip . T.unlines . map formatFlakeDep <$> makeFlakeDependencies deps
-        _ <- Sh.cp "plutus-apps/cabal.project" "cabal.project.backup"
+        (timestamp, _) <- break (== '.') . iso8601Show <$> getCurrentTime
+        _ <- Sh.cp "cabal.project" $ "backups/cabal.project." ++ timestamp ++ ".backup"
         TIO.writeFile "cabal.project" (allOtherContent <> fDeps)
       Left parseErr -> putStrLn $ errorBundlePretty parseErr

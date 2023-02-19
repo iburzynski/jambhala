@@ -101,12 +101,12 @@ This repository provides a comprehensive Plutus smart-contract development envir
     * `DataKinds`
     * `RecordWildCards`
   * Beyond these, the sample contracts only include the specific language extensions needed to compile their code. Keep in mind that Haskell language extensions are experimental modifications to compiler behavior, and should only be used when necessary with clear understanding of their purpose. It is better to add extensions incrementally as they become needed than to add a multitude of modifications to the compiler as boilerplate in every file.
-* **Updating `source-repository-package` entries in `cabal.project`:**
+* **Updating Plutus Dependencies:**
   * The non-Hackage dependencies in the `cabal.project` file are following those of the [plutus-apps](https://github.com/input-output-hk/plutus-apps) library, with `sha256` hashes calculated for each `source-repository-package` entry.
   * Since Nix flakes require pure inputs to guarantee reproducibility, and the content associated with a particular Git repository/tag can change, we need to hash any repositories we include in `cabal.project`.
   * This means if you need to change any dependencies or add additional ones, you'll need to manually calculate new hashes and replace the existing ones.
-  * Jambhala provides a utility to easily update `plutus-apps` to the most recent revision and adjust all related dependencies. Run the `jamb -u` command to pull the latest revision and generate a new `cabal.project` file.
-  * If you need to change the revision of `plutus-apps` manually, you should also add/update any other dependencies this package requires and calculate sha256 hashes for them. You can do this using the `nix-prefetch-git` utility, which has been provided with this project's Nix development environment.
+  * Jambhala provides a utility to easily update `plutus-apps` to the most recent revision and adjust all related dependencies. Run the `jamb -u` command to pull the latest revision and generate a new `cabal.project` file. A backup of your existing `cabal.project` file will be created in the `backups/` directory in case you need to roll back the update.
+  * **Manually updating dependencies:** while not recommended, if you need to change the revision of Plutus dependencies manually, you will need to calculate sha256 hashes for them. You can do this using the `nix-prefetch-git` utility, which has been provided with this project's Nix development environment.
   * Use the following command to calculate a hash:
     ```
     $ nix-prefetch-git LOCATION TAG
@@ -115,7 +115,7 @@ This repository provides a comprehensive Plutus smart-contract development envir
   * Here is an example of how we'd calculate a hash for the `plutus-apps` dependency with tag `5dda0323ef30c92bfebd520ac8d4bc5a46580c5c`:
 
     ```bash
-      $ nix-prefetch-git https://github.com/input-output-hk/plutus-apps.git 87b647b05902a7cef37340fda9acb175f962f354
+      $ nix-prefetch-git https://github.com/input-output-hk/plutus-apps.git 5dda0323ef30c92bfebd520ac8d4bc5a46580c5c
 
       ...
 
@@ -180,7 +180,7 @@ This repository provides a comprehensive Plutus smart-contract development envir
       jamb -w CONTRACT [FILENAME]
       ```
 
-      Where `CONTRACT` is the name of the contract to compile, and `[FILENAME]` is an optional file name (the contract name is used as the filename by default if no argument is given). When the command finishes, you should get a `assets/CONTRACT.plutus` file that contains a JSON envelope of the UPLC code.
+      Where `CONTRACT` is the name of the contract to compile, and `[FILENAME]` is an optional file name (the contract name is used as the filename by default if no argument is given). When the command finishes, you should get a `compiled/CONTRACT.plutus` file that contains a JSON envelope of the UPLC code.
 
       ```json
       {
@@ -192,6 +192,12 @@ This repository provides a comprehensive Plutus smart-contract development envir
 
       This file can be used to submit transactions on-chain.
 
+    * **Updating Plutus Dependencies:**
+
+      ```sh
+      jamb -u
+      ```
+
 **Adding Contracts**
   * The source code for the sample Plutus contracts live in the `src/Contracts` folder. `Contracts.hs` contains a ***Map*** data structure with the names and validators for the included sample contracts.
   * To create a new contract, create a new `.hs` file in the `src/Contracts` directory, and write a module declaration, i.e.:
@@ -200,7 +206,9 @@ This repository provides a comprehensive Plutus smart-contract development envir
       module Contracts.MyContract where
       ```
 
-  * In the `plutus-starter.cabal` file, add your module name (i.e. `Contracts.MyContract`) to the `other-modules` section of the `library` stanza.
+    **IMPORTANT:** you must stage any new files you create to git, to make them visible to Nix for compilation.
+
+  * In the `jambhala.cabal` file, add your module name (i.e. `Contracts.MyContract`) to the `other-modules` section of the `library` stanza.
   * Write your contract, and create a ***Validator*** value (by convention in the samples this is called `validator`). You can then make this the sole exported item in your module declaration (to avoid unnecessary exports) like so:
 
       ```haskell
@@ -228,4 +236,3 @@ This repository provides a comprehensive Plutus smart-contract development envir
       ```
 
     Your contract has been added to the map and can now be written to a `.plutus` file or hashed using the command-line interface.
-  )
