@@ -10,7 +10,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DataKinds #-}
 
-module Contracts.Simple where
+module Contracts.Samples.Simple where
 
 --2 Imports
 {- `PlutusTx.Prelude` has been set up as an alternate Prelude for this project, so it does not need

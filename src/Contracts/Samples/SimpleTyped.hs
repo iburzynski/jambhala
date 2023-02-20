@@ -1,9 +1,9 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Contracts.SimpleTyped where
+module Contracts.Samples.SimpleTyped where
 
-import Utils.Utils ( wrap, getSerialised, viewCBOR )
+import Utils ( wrap, getSerialised, viewCBOR )
 
 import Data.ByteString ( ByteString )
 import Plutus.Script.Utils.V2.Scripts ( validatorHash )

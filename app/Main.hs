@@ -1,7 +1,8 @@
 module Main where
 
-import Utils.CLI ( commandParser, runCommand )
-import Options.Applicative ( execParser )
+import CLI ( runJamb )
+import Contracts ( contracts, samples )
 
 main :: IO ()
-main = execParser commandParser >>= runCommand
+main = runJamb allContracts -- << replace `allContracts` with `contracts` to hide sample contracts
+  where allContracts = contracts <> samples
