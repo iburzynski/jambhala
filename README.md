@@ -6,31 +6,31 @@ Jambhala brings a state of Zen to Plutus smart-contract development.
     * we need to adjust all of our individual projects' `cabal.project` files by hand to reflect any changes in dependencies
     * we risk breaking our older projects if the API of `plutus-apps` has changed
   * Even setting up a single project with this approach is painful, because in the absence of an up-to-date template, we must manually copy and adjust boilerplate from `plutus-apps` into our `cabal.project` file. This in turn quickly becomes outdated given the pace of Plutus development.
-  * Jhambala uses [haskell.nix]() to provide a self-reliant development environment for each of your Plutus projects, which can be brought up to date with the current state of `plutus-apps` using a single command. No more wrangling of dependency boilerplate: just build your project environment and get to work, then bump `plutus-apps` for a specific project whenever you like.
-  * Serve Haddock documentation for the specific `plutus-apps` revision your project is using with the `serve-docs` command.
+  * Jhambala uses [haskell.nix](https://input-output-hk.github.io/haskell.nix/) to provide a fully self-reliant development environment for each of your Plutus projects, which can be brought up to date with the current state of `plutus-apps` using a single command. No more wrangling of dependency boilerplate: just build your project environment and get to work, then bump `plutus-apps` for a specific project whenever you like.
+  * Serve Haddock documentation for the specific `plutus-apps` revision your project uses with the `serve-docs` command.
 * **Perform common Plutus tasks with simple commands:**
   * Serialize your contracts to `.plutus` files.
   * Compute validator hashes.
 * **Minimize boilerplate in your contract files:**
-  * `PlutusTx.Prelude` is enabled as prelude by default
+  * `PlutusTx.Prelude` is enabled as prelude project-wide by default via mixin
   * Certain common language extensions are enabled by default
 
 # Installation
 
 **Requirements:**
-  * This project uses the Nix package manager, Nix flakes, and IOG's `haskell.nix` infrastructure to build a fully-functioning and reproducible Plutus development environment.
+  * This project uses the Nix package manager, Nix flakes, and IOG's [haskell.nix](https://input-output-hk.github.io/haskell.nix/) infrastructure to build a fully-functioning and reproducible Plutus development environment.
   * Nix is only compatible with Unix-like operating systems, so you must be using a Linux distribution, MacOS, or WSL2 (Windows Subsystem for Linux) to install this project locally.
-  * This project also assumes the use of `VS Code` as editor and `bash` as shell. Other tools will require alternative workflows that are not covered here.
+  * This project assumes the use of `VS Code` as editor and `bash` as shell. Other tools will require alternative workflows that are not covered here.
   * This project is storage-intensive. We suggest you have at least `30GB` of free disk space before proceeding further.
   * **NOTE for MacOS users:** MacOS may ship with versions of `bash` and `grep` that are incompatible with this workflow. You should install `bash`/`grep` using Homebrew first before proceeding.
   * You'll need a fully-synced Cardano Node and the `cardano-cli` binary in order to submit example transactions to the blockchain.
 
-1. **[Install Nix package manager](https://nixos.org/download.html)**
-  * Follow the instructions for **multi-user installation** for your OS at the link above
-  * Then follow the prompts in your terminal
-  * When you are finished installing, close the terminal session and open a fresh one.
+1. **Install Nix package manager**
+  * If you're setting up Nix on your system for the first time, try [Zero-to-Nix] in lieu of the official installer, as it provides an easier tool for [installing](https://zero-to-nix.com/start/install) and [uninstalling](https://zero-to-nix.com/start/uninstall) Nix.
+  * Alternatively, you may follow the instructions for **multi-user installation** for your OS at [nixos.org](https://nixos.org/download.html). This approach will require some additional configuration and it will be harder to uninstall Nix if you need to. It is only recommended if you've previously installed Nix on your system, as it will detect and repair a previous installation as needed.
+  * When you are finished installing Nix, close the terminal session and open a fresh one.
 
-2. **Enable flakes & configure binary cache**
+2. **Configure nix.conf:**
   * Edit `/etc/nix/nix.conf`: this requires root access to edit. Use a terminal-based editor like `nano` (i.e.):
 
       ```bash
@@ -45,13 +45,13 @@ Jambhala brings a state of Zen to Plutus smart-contract development.
     # Leave this line alone (may appear differently in your file)
     build-users-group = nixbld
 
-    # Step 2a: Add this line to enable Flakes
+    # Step 2a: Add this line to enable Flakes. If you used the zero-to-nix installer this should already be added:
     experimental-features = nix-command flakes
 
     # Step 2b: Set up binary cache (replace existing substituters and trusted-public-keys lines if present)
 
-    substituters = https://cache.iog.io https://cache.nixos.org https://digitallyinduced.cachix.org https://all-hies.cachix.org https://cache.zw3rk.com
-    trusted-public-keys = hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= digitallyinduced.cachix.org-1:y+wQvrnxQ+PdEsCt91rmvv39qRCYzEgGQaldK26hCKE= all-hies.cachix.org-1:JjrzAOEUsD9ZMt8fdFbzo3jNAyEWlPAwdVuHw4RD43k= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk=
+    substituters = https://cache.nixos.org https://cache.iog.io https://cache.zw3rk.com
+    trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk=
 
     # Step 2c: Avoid unwanted garbage collection with nix-direnv
 
@@ -88,9 +88,14 @@ Jambhala brings a state of Zen to Plutus smart-contract development.
   * When you load the project in VS Code for the first time, you will be prompted to install the [direnv extension](https://marketplace.visualstudio.com/items?itemName=cab404.vscode-direnv&ssr=false#review-details).
 
 4. **Create your repository**
-  * On this repository's Github page, select the green `Use this template` button and select `Create a new repository` to fork the template.
-  * Clone your new repository, open the root directory in VS Code, and open a `bash` terminal session.
-  * When you open the project in VS Code, you should be prompted to install some recommended extensions: `haskell`, `direnv` and `Nix IDE`.
+  * On this repository's Github page, select the green `Use this template ` button and select `Create a new repository` to fork the template.
+  * Clone your new repository and enter the root directory in a `bash` terminal session:
+
+    ```sh
+    $ git clone https://github.com/PATH-TO/YOUR-REPO.git
+
+    $ cd YOUR-REPO
+    ```
 
 5. **Build development environment**
   * Open the project root directory in a terminal window. You should see the following message:
@@ -114,6 +119,7 @@ Jambhala brings a state of Zen to Plutus smart-contract development.
     This will take some time to complete.
 
   * You can now start VS Code and use the `File > Open Folder...` menu option to load the starter kit.
+  * You will be prompted to install some recommended extensions if you don't have them already: `haskell`, `direnv` and `Nix IDE`.
 
 # Usage
 
@@ -166,9 +172,11 @@ Since Nix flakes require pure inputs to guarantee reproducibility, and the conte
   jamb -u
   ```
 
-A backup of your existing `cabal.project` file will be created in the `backups/` directory in case you need to roll back the update.
+#### **Restoring a previous version:**
+Whenever you run the `jamb -u` command, a backup of your existing `cabal.project` file will be created in the `backups/` directory in case you need to roll back the update. Just delete the current `cabal.project` file, copy the backup file and rename it to `cabal.project`. Then run `direnv allow` or reload the project in VS Code and your previous project state will be restored.
 
-**Manually updating dependencies:** while not recommended, if you need to change the revision of Plutus dependencies manually, you will need to calculate sha256 hashes for them. You can do this using the `nix-prefetch-git` utility, which has been provided with this project's Nix development environment.
+#### **Manually updating dependencies:**
+While not recommended, if you need to change the revision of Plutus dependencies manually, you will need to calculate sha256 hashes for them. You can do this using the `nix-prefetch-git` utility, which has been provided with this project's Nix development environment.
   * Use the following command to calculate a  hash:
 
     ```
@@ -232,10 +240,13 @@ The following language extensions are enabled project-wide by Jambhala using the
       -- Allows promotion of types to "kinds", enabling more expressive type-level programming (required for all Plutus contracts):
         DataKinds
 
+      -- A syntactic convenience for writing single-argument lambdas containing case expressions (used in Jambhala's utilities)
+      , LambdaCase
+
       -- Allows construction of Text and other string-like values as string literals:
       , OverloadedStrings
 
-      -- A syntactic convenience for working with record values (used by Jambhala's utilities):
+      -- A syntactic convenience for working with record values (used in Jambhala's utilities):
       , RecordWildCards
 
       -- Required for all Plutus contracts to translate between Plutus and Haskell:
@@ -245,7 +256,15 @@ The following language extensions are enabled project-wide by Jambhala using the
 Beyond these, the sample contracts include only the specific language extensions needed to compile their code. Keep in mind that Haskell language extensions are experimental modifications to compiler behavior, and should only be used when necessary with clear understanding of their purpose. It is better to add extensions incrementally as they become needed than to add a multitude of modifications to the compiler as boilerplate in every file.
 
 #### **Sample contracts:**
-The source code for the sample Plutus contracts live in the `src/Contracts` folder. `Contracts.hs` contains a ***Map*** data structure with the names and validators for the included sample contracts.
+The source code for the sample Plutus contracts live in the `src/Contracts/Samples` folder. `src/Contracts.hs` contains a ***Map*** data structure called `samples` with the names and validators for the included sample contracts.
+
+If you want to hide the sample contracts from the `jamb` utility and only serve your own contracts, you can modify the `main` action in `app/Main.hs` accordingly:
+
+  ```haskell
+  main :: IO ()
+  main = runJamb contracts -- << replace `allContracts` with `contracts` to hide sample contracts
+    where allContracts = samples <> contracts
+  ```
 
 ### **Creating a New Contract**
 To create a new contract, create a new `.hs` file in the `src/Contracts` directory, and write a module declaration, i.e.:
@@ -253,10 +272,9 @@ To create a new contract, create a new `.hs` file in the `src/Contracts` directo
   ```haskell
   module Contracts.MyContract where
   ```
-
-**IMPORTANT:** you must stage any new contract files you create to git, to make them visible to Nix for compilation.
-
 In the `jambhala.cabal` file, add your module name (i.e. `Contracts.MyContract`) to the `other-modules` section of the `library` stanza.
+
+**IMPORTANT:** you must stage any new contract files you create to git before they are visible to Nix for compilation. Use the `Source Control` option in the left sidebar of VS Code or stage changes from the command line with `git add`.
 
 You're now ready to write your contract, which should contain a ***Validator*** value (by convention in the samples this is called `validator`). You can then make this the sole exported item in your module declaration (to avoid unnecessary exports) like so:
 
@@ -273,18 +291,16 @@ In `src/Contracts/Contracts.hs`, import your contract module as a qualified impo
 Then add a new tuple entry to the `contracts` ***Map***, containing a name string for your contract and reference to its validator like so:
 
   ```haskell
-    contracts :: Map String Validator
-    contracts = M.fromList [
-      ("simple", Simple.validator)
-    , ("simple-typed", SimpleTyped.validator)
-
-    ...
-
-    , ("my-contract", MyContract.validator) -- example entry for new contract
+  contracts :: Map String Validator
+  contracts = M.fromList [
+      ("my-contract", MyContract.validator)
     ]
   ```
 
 Once your contract has been added to the map, it can now be written to a `.plutus` file or hashed using the `jamb` CLI.
+
+## Using GHCi
+...
 
 ## Serving `plutus-apps` docs
 To serve docs for the specific revision of `plutus-apps` this project is using, open a new bash terminal from the project root directory and run the following command:

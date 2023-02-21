@@ -5,4 +5,4 @@ import Contracts ( contracts, samples )
 
 main :: IO ()
 main = runJamb allContracts -- << replace `allContracts` with `contracts` to hide sample contracts
-  where allContracts = contracts <> samples
+  where allContracts = samples <> contracts
