@@ -26,14 +26,14 @@ Jambhala brings a state of Zen to Plutus smart-contract development.
   * You'll need a fully-synced Cardano Node and the `cardano-cli` binary in order to submit example transactions to the blockchain.
 
 1. **Install Nix package manager**
-  * If you're setting up Nix on your system for the first time, try [Zero-to-Nix] in lieu of the official installer, as it provides an easier tool for [installing](https://zero-to-nix.com/start/install) and [uninstalling](https://zero-to-nix.com/start/uninstall) Nix.
+  * If you're setting up Nix on your system for the first time, try Determinate Systems' [Zero-to-Nix](https://zero-to-nix.com) in lieu of the official installer, as it provides an easier tool for [installing](https://zero-to-nix.com/start/install) and [uninstalling](https://zero-to-nix.com/start/uninstall) Nix.
   * Alternatively, you may follow the instructions for **multi-user installation** for your OS at [nixos.org](https://nixos.org/download.html). This approach will require some additional configuration and it will be harder to uninstall Nix if you need to. It is only recommended if you've previously installed Nix on your system, as it will detect and repair a previous installation as needed.
   * When you are finished installing Nix, close the terminal session and open a fresh one.
 
 2. **Configure nix.conf:**
   * Edit `/etc/nix/nix.conf`: this requires root access to edit. Use a terminal-based editor like `nano` (i.e.):
 
-      ```bash
+      ```sh
       $ sudo nano /etc/nix/nix.conf
       ```
 
@@ -42,48 +42,44 @@ Jambhala brings a state of Zen to Plutus smart-contract development.
     ```
     # Sample /etc/nix/nix.conf
 
-    # Leave this line alone (may appear differently in your file)
-    build-users-group = nixbld
-
-    # Step 2a: Add this line to enable Flakes. If you used the zero-to-nix installer this should already be added:
+    # Step 2a: Add this line to enable Flakes if missing (if you used the Zero-to-Nix installer this should already be added)
     experimental-features = nix-command flakes
 
-    # Step 2b: Set up binary cache (replace existing substituters and trusted-public-keys lines if present)
-
-    substituters = https://cache.nixos.org https://cache.iog.io https://cache.zw3rk.com
-    trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk=
-
-    # Step 2c: Avoid unwanted garbage collection with nix-direnv
-
+    # Step 2b: Avoid unwanted garbage collection with nix-direnv
     keep-outputs = true
     keep-derivations = true
+
+    # Step 2c: Set up binary cache - this step shouldn't be necessary, but add it if your cache isn't working in Step 5
+    # (add to existing substituters and trusted-public-keys lines if present, separated by spaces)
+    substituters = https://cache.nixos.org https://cache.iog.io https://cache.zw3rk.com
+    trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk=
     ```
 
   * **IMPORTANT!** You must restart the `nix-daemon` to apply the changes
 
     **Linux:**
 
-      ```bash
+      ```sh
       $ sudo systemctl restart nix-daemon
       ```
 
     **MacOS:** \
     Find the name of the `nix-daemon` service
 
-      ```bash
+      ```sh
       $ sudo launchctl list | grep nix
       ```
 
       Then stop and restart the service
 
-      ```bash
+      ```sh
       $ sudo launchctl stop <NAME>
       $ sudo launchctl start <NAME>
       ```
 
 3. **Set up direnv**
   * This setup uses `direnv` to provide seamless loading of the Nix environment whenever you navigate into the project directory tree.
-  * The `direnv` extension for VS Code integrates the environment with your editor, providing full IDE support for Plutus development.
+  * The `direnv` extension for VS Code integrates this environment with your editor, providing full IDE support for Plutus development.
   * [Install direnv](https://direnv.net/docs/installation.html) and follow the instructions to hook it into your shell.
   * When you load the project in VS Code for the first time, you will be prompted to install the [direnv extension](https://marketplace.visualstudio.com/items?itemName=cab404.vscode-direnv&ssr=false#review-details).
 
@@ -114,6 +110,13 @@ Jambhala brings a state of Zen to Plutus smart-contract development.
 
     ```sh
     $ direnv allow
+    ```
+
+  * You should see the following prompts: enter `y` for both:
+
+    ```sh
+    do you want to allow configuration setting 'accept-flake-config' to be set to 'true' (y/N)? y
+    do you want to permanently mark this value as trusted (y/N)? y
     ```
 
   * It will take some time to set up the environment the first time.
@@ -333,6 +336,5 @@ The script will look up the specific `plutus-apps` revision hash from the `cabal
 To view the correct Haddock documentation for the revision you are using, open http://0.0.0.0:8002/haddock in your browser.
 
 ## TODO: Troubleshooting
-
 
 For assistance or bug reporting, file an Issue or email `ian.burzynski@emurgo.io`.
