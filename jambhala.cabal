@@ -66,6 +66,7 @@ library
     , cardano-binary
     , containers
     , filepath
+    , foldl
     , megaparsec
     , plutus-core
     , plutus-ledger

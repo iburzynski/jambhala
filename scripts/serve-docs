@@ -1,25 +1,8 @@
-echo "Building and serving plutus-apps docs..."
+dir=$(find dist-newstyle/src -type d -name 'plutus-ap_*' -print -quit)
 
-hash=$(grep -A 1 "location: https://github.com/input-output-hk/plutus-apps.git" cabal.project | tail -n 1 | awk '{ print $NF }')
-
-if [ ! -d "plutus-apps" ]; then
-  git clone https://github.com/input-output-hk/plutus-apps.git
-  if [ ! $? -eq 0 ]; then
-    echo "Error: git clone failed"
-    exit 1
-  fi
+if [ -n "$dir" ]; then
+  cd "dist-newstyle/src/$(basename "$dir")"
+  nix develop --command "serve-docs"
 else
-  cd plutus-apps
-  git pull
+  echo "Error: plutus-apps directory not found"
 fi
-
-git reset --hard $hash
-
-function cleanup {
-  echo "Returning to parent directory."
-  cd ..
-}
-
-trap cleanup INT
-
-nix develop --command "serve-docs"

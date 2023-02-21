@@ -1,8 +1,19 @@
 # Jambhala: A Plutus Starter Kit
-This repository provides a comprehensive Plutus smart-contract development environment.
-
-## TODO: Add Features List
-* ...
+Jambhala brings a state of Zen to Plutus smart-contract development.
+* **Keep your project in sync with the `plutus-apps` library:**
+  * With Jambhala, we don't need to maintain a central clone of the [plutus-apps](https://github.com/input-output-hk/plutus-apps) repository and use its associated Nix shell as the entry point for development of every project.
+  * **Why this matters:** relying on a central `plutus-apps` instance forces us to use the same revision for every project we develop. If we update our `plutus-apps` to use a more recent revision:
+    * we need to adjust all of our individual projects' `cabal.project` files by hand to reflect any changes in dependencies
+    * we risk breaking our older projects if the API of `plutus-apps` has changed
+  * Even setting up a single project with this approach is painful, because in the absence of an up-to-date template, we must manually copy and adjust boilerplate from `plutus-apps` into our `cabal.project` file. This in turn quickly becomes outdated given the pace of Plutus development.
+  * Jhambala uses [haskell.nix]() to provide a self-reliant development environment for each of your Plutus projects, which can be brought up to date with the current state of `plutus-apps` using a single command. No more wrangling of dependency boilerplate: just build your project environment and get to work, then bump `plutus-apps` for a specific project whenever you like.
+  * Serve Haddock documentation for the specific `plutus-apps` revision your project is using with the `serve-docs` command.
+* **Perform common Plutus tasks with simple commands:**
+  * Serialize your contracts to `.plutus` files.
+  * Compute validator hashes.
+* **Minimize boilerplate in your contract files:**
+  * `PlutusTx.Prelude` is enabled as prelude by default
+  * Certain common language extensions are enabled by default
 
 # Installation
 
@@ -85,7 +96,7 @@ This repository provides a comprehensive Plutus smart-contract development envir
   * Open the project root directory in a terminal window. You should see the following message:
 
     ```sh
-      $ direnv: error /home/.../jambhala/.envrc is blocked. Run `direnv allow` to approve its content
+    $ direnv: error /home/.../jambhala/.envrc is blocked. Run `direnv allow` to approve its content
     ```
 
     This is a security measure, since `.envrc` files can contain run arbitrary shell commands. Make sure you always trust the author of a project and inspect the contents of its `.envrc` file before running `direnv allow`.
@@ -94,7 +105,15 @@ This repository provides a comprehensive Plutus smart-contract development envir
   * Warning messages about "No index state specified" can be disregarded.
   * Some dependencies will need to be built from source, but if you see "building" for certain packages that should be downloadable from a binary cache (particularly GHC, the Linux kernel, and other non-Haskell related dependencies) or if you see any warning such as `warning: ignoring substitute`, this means your binary cache was not set up correctly and Nix is attempting to build packages from source that it should be fetching from a cache. Exit with `CTRL+c` and repeat **Step 2**, then try again. Make sure to restart the `nix-daemon`!
   * If you see any HTTP-related errors, it means the IOG binary cache is non-responsive. Wait a bit and try again later.
-  * Once the build process completes, you can start VS Code and use the `File > Open Folder...` menu option to load the starter kit.
+  * Once the build process completes, run `cabal build` to build the project dependencies.
+
+    ```sh
+    $ cabal build
+    ```
+
+    This will take some time to complete.
+
+  * You can now start VS Code and use the `File > Open Folder...` menu option to load the starter kit.
 
 # Usage
 
@@ -143,9 +162,9 @@ Since Nix flakes require pure inputs to guarantee reproducibility, and the conte
 
 `jamb` provides a utility to easily update `plutus-apps` to the most recent revision and adjust all related dependencies. Run the `jamb -u` command to pull the latest revision and generate a new `cabal.project` file.
 
-    ```sh
-    jamb -u
-    ```
+  ```sh
+  jamb -u
+  ```
 
 A backup of your existing `cabal.project` file will be created in the `backups/` directory in case you need to roll back the update.
 
