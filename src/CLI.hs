@@ -11,7 +11,7 @@ import Control.Monad.Reader ( MonadReader, MonadIO(..), ReaderT (..), ask, asks 
 import Data.Functor ( Functor(fmap) )
 import Data.List ( unlines )
 import Data.Map.Strict (Map)
-import Data.Monoid ( mconcat, (<>) )
+import Data.Monoid ( Monoid(..), (<>) )
 import Data.String ( String )
 import Options.Applicative
 import Plutus.Script.Utils.V2.Scripts ( validatorHash )
@@ -56,9 +56,10 @@ parseWrite :: MonadReader Contracts m => m (Parser Command)
 parseWrite = fmap ((<*> parseFName) . fmap Write) . parseContractName $ mconcat [
         long "write"
       , short 'w'
-      , metavar "CONTRACT"
-      , help "Write CONTRACT to file"]
-  where parseFName = optional (strOption (metavar "FILENAME" <> help "Optional FILENAME" ))
+      , metavar "CONTRACT [FILENAME]"
+      , help "Write CONTRACT to file with optional FILENAME (default is CONTRACT.plutus)"
+      ]
+  where parseFName = optional (argument str mempty)
 
 parseHash :: MonadReader Contracts m => m (Parser Command)
 parseHash = fmap (fmap Hash) . parseContractName $ mconcat [

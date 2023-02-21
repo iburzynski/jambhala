@@ -1,6 +1,8 @@
 {-# LANGUAGE TypeFamilies #-}
 
-module CLI.Parsers where
+module CLI.Parsers (
+    CabalProjectData(..), Dependency(..)
+  , cabalProjectParser, prefetchGitParser ) where
 
 import Prelude hiding (
     Applicative(..), Functor(..), Monoid(..), Semigroup(..)

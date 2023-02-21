@@ -43,6 +43,6 @@
       };
     in flake // {
       # Built by `nix build .`
-      packages.default = flake.packages."jambhala:exe:jambhala";
+      packages.default = flake.packages."jambhala:exe:jamb";
     });
 }

@@ -42,15 +42,17 @@ common common
 library
   import: common
   exposed-modules:
-    CLI
     Contracts
+    CLI
     Utils
+
+  -- Add new contracts here, i.e.:
+  -- Contracts.MyContract
+
+
   other-modules:
     CLI.Parsers
     CLI.Update
-   -- Add new contracts here, i.e.:
-  -- Contracts.MyContract
-
   -- Sample contracts:
     Contracts.Samples.Simple
     Contracts.Samples.SimpleTyped
@@ -95,7 +97,7 @@ library
     -- Required for all Plutus contracts to translate between Plutus and Haskell:
     , TemplateHaskell
 
-executable jambhala
+executable jamb
   import: common
   main-is: Main.hs
   hs-source-dirs:

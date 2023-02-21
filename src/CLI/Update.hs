@@ -6,7 +6,7 @@ import Prelude hiding (
     Applicative(..), Eq(..), Functor(..), Monoid(..), Semigroup(..), Traversable(..)
   , (<$>), decodeUtf8, elem, error, mconcat )
 
-import Turtle ( ExitCode(..), (<=<) )
+import Turtle ( ExitCode(..) )
 import Control.Applicative ( Applicative(..) )
 import Control.Monad.IO.Class ( MonadIO(..) )
 import Data.Eq ( Eq(..) )
@@ -44,17 +44,18 @@ updatePlutusApps = do
 
 cloneOrPullPlutusApps :: MonadIO m => m Revision
 cloneOrPullPlutusApps = Sh.testdir "plutus-apps" >>= \case
-    False -> gitCmd ["clone", "https://github.com/input-output-hk/plutus-apps.git"]
-    _else -> gitCmd ["pull"]
+  False -> git ["clone", "https://github.com/input-output-hk/plutus-apps.git"]
+        >>= runOrDie (Sh.cd "plutus-apps" >> revParse)
+  _else -> Sh.cd "plutus-apps" >> git ["pull"] >>= runOrDie revParse
   where
-    gitCmd = getRevOrDie <=< flip (Sh.proc "git") Sh.empty
-    getRevOrDie exitCode = case exitCode of
-      ExitSuccess -> do
-        Sh.cd "plutus-apps"
-        (_, commitHash) <- Sh.procStrict "git" ["rev-parse", "HEAD"] Sh.empty
-        Sh.cd ".."
-        pure $ T.strip commitHash
+    git = flip (Sh.proc "git") Sh.empty
+    runOrDie onSuccess code = case code of
+      ExitSuccess -> onSuccess
       ExitFailure n -> Sh.die ("failed with exit code: " <> Sh.repr n)
+    revParse = do
+      (_, commitHash) <- Sh.procStrict "git" ["rev-parse", "HEAD"] Sh.empty
+      Sh.cd ".."
+      pure $ T.strip commitHash
 
 makeFlakeDependencies :: MonadIO m => [Dependency] -> m Text
 makeFlakeDependencies deps = formatFlakeDeps <$> do
