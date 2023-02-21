@@ -1,4 +1,4 @@
-# Jambhala: A Plutus Starter Kit
+# Jambhala: A Plutus Development Suite
 Jambhala brings a state of Zen to Plutus smart-contract development.
 * **Keep your project in sync with the `plutus-apps` library:**
   * With Jambhala, we don't need to maintain a central clone of the [plutus-apps](https://github.com/input-output-hk/plutus-apps) repository and use its associated Nix shell as the entry point for development of every project.
@@ -89,27 +89,38 @@ Jambhala brings a state of Zen to Plutus smart-contract development.
 
 4. **Create your repository**
   * On this repository's Github page, select the green `Use this template ` button and select `Create a new repository` to fork the template.
-  * Clone your new repository and enter the root directory in a `bash` terminal session:
+  * Clone your new repository in a `bash` terminal session:
 
     ```sh
     $ git clone https://github.com/PATH-TO/YOUR-REPO.git
-
-    $ cd YOUR-REPO
     ```
 
 5. **Build development environment**
-  * Open the project root directory in a terminal window. You should see the following message:
+  * Open the project root directory in your terminal session:
+
+    ```sh
+    $ cd YOUR-REPO
+    ```
+
+    You should now see the following message:
 
     ```sh
     $ direnv: error /home/.../jambhala/.envrc is blocked. Run `direnv allow` to approve its content
     ```
 
-    This is a security measure, since `.envrc` files can contain run arbitrary shell commands. Make sure you always trust the author of a project and inspect the contents of its `.envrc` file before running `direnv allow`.
-    Enter `direnv allow` to approve the content.
+    This is a security measure, since `.envrc` files can run arbitrary shell commands. Make sure you always trust the author of a project and inspect the contents of its `.envrc` file before running `direnv allow`.
+
+    Enter `direnv allow` to approve the content when you're ready:
+
+    ```sh
+    $ direnv allow
+    ```
+
   * It will take some time to set up the environment the first time.
   * Warning messages about "No index state specified" can be disregarded.
   * Some dependencies will need to be built from source, but if you see "building" for certain packages that should be downloadable from a binary cache (particularly GHC, the Linux kernel, and other non-Haskell related dependencies) or if you see any warning such as `warning: ignoring substitute`, this means your binary cache was not set up correctly and Nix is attempting to build packages from source that it should be fetching from a cache. Exit with `CTRL+c` and repeat **Step 2**, then try again. Make sure to restart the `nix-daemon`!
   * If you see any HTTP-related errors, it means the IOG binary cache is non-responsive. Wait a bit and try again later.
+
   * Once the build process completes, run `cabal build` to build the project dependencies.
 
     ```sh
@@ -118,6 +129,7 @@ Jambhala brings a state of Zen to Plutus smart-contract development.
 
     This will take some time to complete.
 
+6. **Open in VS Code**
   * You can now start VS Code and use the `File > Open Folder...` menu option to load the starter kit.
   * You will be prompted to install some recommended extensions if you don't have them already: `haskell`, `direnv` and `Nix IDE`.
 
@@ -300,7 +312,14 @@ Then add a new tuple entry to the `contracts` ***Map***, containing a name strin
 Once your contract has been added to the map, it can now be written to a `.plutus` file or hashed using the `jamb` CLI.
 
 ## Using GHCi
-...
+To start a GHCi REPL session, run `cabal repl` and load your contract:
+
+  ```sh
+  $ cabal repl
+
+  Prelude Contracts λ > :m Contracts.MyContract
+  Prelude Contracts.MyContract λ >
+  ```
 
 ## Serving `plutus-apps` docs
 To serve docs for the specific revision of `plutus-apps` this project is using, open a new bash terminal from the project root directory and run the following command:
@@ -314,5 +333,6 @@ The script will look up the specific `plutus-apps` revision hash from the `cabal
 To view the correct Haddock documentation for the revision you are using, open http://0.0.0.0:8002/haddock in your browser.
 
 ## TODO: Troubleshooting
+
 
 For assistance or bug reporting, file an Issue or email `ian.burzynski@emurgo.io`.
