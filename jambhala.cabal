@@ -3,7 +3,7 @@ name:               jambhala
 version:            0.1.0.0
 
 -- A short (one-line) description of the package.
-synopsis:           A batteries-included Plutus Development Kit
+synopsis:           Plutus Development Suite
 
 -- A longer description of the package.
 description:
@@ -30,8 +30,6 @@ common common
   default-language: Haskell2010
   build-depends:
       base ^>=4.14.3.0
-    , mtl
-    , optparse-applicative
   ghc-options:
     -Wall -fobject-code -fno-ignore-interface-pragmas
     -fno-omit-interface-pragmas -fno-strictness -fno-spec-constr
@@ -45,15 +43,13 @@ library
     Contracts
     CLI
     Utils
-
-  -- Add new contracts here, i.e.:
-  -- Contracts.MyContract
-
+-- Add new contracts here, i.e.:
+--  Contracts.MyContract
 
   other-modules:
     CLI.Parsers
     CLI.Update
-  -- Sample contracts:
+-- Sample contracts:
     Contracts.Samples.Simple
     Contracts.Samples.SimpleTyped
   hs-source-dirs:
@@ -68,6 +64,8 @@ library
     , filepath
     , foldl
     , megaparsec
+    , mtl
+    , optparse-applicative
     , plutus-core
     , plutus-ledger
     , plutus-ledger-api
