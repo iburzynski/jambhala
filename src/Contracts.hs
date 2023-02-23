@@ -1,26 +1,26 @@
 module Contracts ( contracts, samples ) where
 
-import Data.Map.Strict ( Map )
-import Data.String ( String )
-import Plutus.V2.Ledger.Api ( Validator )
+
+import Jambhala.Utils
 import qualified Data.Map.Strict as M
 
 -- Sample contracts
-import qualified Contracts.Samples.Simple as Simple
+import qualified Contracts.Samples.Simple      as Simple
 import qualified Contracts.Samples.SimpleTyped as SimpleTyped
+import qualified Contracts.Samples.CustomTyped as CustomTyped
 -- Import your contracts here, i.e.:
 -- import qualified Contracts.MyContract as MyContract
 
-
 {- HLINT ignore "Use empty" -}
-contracts :: Map String Validator
+contracts :: Contracts
 contracts = M.fromList [
   -- Add contracts here, i.e.:
---  ("my-contract", MyContract.validator)
+--  ("my-contract", MyContract.exports)
   ]
 
-samples :: Map String Validator
+samples :: Contracts
 samples = M.fromList [
-    ("simple", Simple.validator)
-  , ("simple-typed", SimpleTyped.validator)
+    ("simple",       Simple.exports)
+  , ("simple-typed", SimpleTyped.exports)
+  , ("custom-typed", CustomTyped.exports)
   ]

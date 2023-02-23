@@ -1,6 +1,6 @@
-module CLI.Update ( updatePlutusApps, getPlutusAppsRev ) where
+module Jambhala.CLI.Update ( updatePlutusApps, getPlutusAppsRev ) where
 
-import CLI.Parsers ( CabalProjectData(..), Dependency(..), cabalProjectParser, prefetchGitParser )
+import Jambhala.CLI.Parsers ( CabalProjectData(..), Dependency(..), cabalProjectParser, prefetchGitParser )
 
 import Prelude hiding (
     Applicative(..), Eq(..), Functor(..), Monoid(..), Semigroup(..), Traversable(..)

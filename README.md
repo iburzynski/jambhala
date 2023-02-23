@@ -1,19 +1,20 @@
 # Jambhala: A Plutus Development Suite
-Jambhala brings a state of Zen to Plutus smart-contract development.
-* **Keep your project in sync with the `plutus-apps` library:**
-  * With Jambhala, we don't need to maintain a central clone of the [plutus-apps](https://github.com/input-output-hk/plutus-apps) repository and use its associated Nix shell as the entry point for development of every project.
-  * **Why this matters:** relying on a central `plutus-apps` instance forces us to use the same revision for every project we develop. If we update our `plutus-apps` to use a more recent revision:
-    * we need to adjust all of our individual projects' `cabal.project` files by hand to reflect any changes in dependencies
-    * we risk breaking our older projects if the API of `plutus-apps` has changed
-  * Even setting up a single project with this approach is painful, because in the absence of an up-to-date template, we must manually copy and adjust boilerplate from `plutus-apps` into our `cabal.project` file. This in turn quickly becomes outdated given the pace of Plutus development.
-  * Jhambala uses [haskell.nix](https://input-output-hk.github.io/haskell.nix/) to provide a fully self-reliant development environment for each of your Plutus projects, which can be brought up to date with the current state of `plutus-apps` using a single command. No more wrangling of dependency boilerplate: just build your project environment and get to work, then bump `plutus-apps` for a specific project whenever you like.
-  * Serve Haddock documentation for the specific `plutus-apps` revision your project uses with the `serve-docs` command.
-* **Perform common Plutus tasks with simple commands:**
-  * Serialize your contracts to `.plutus` files.
-  * Compute validator hashes.
+Jambhala aims to bring Plutus development nirvana:
 * **Minimize boilerplate in your contract files:**
   * `PlutusTx.Prelude` is enabled as prelude project-wide by default via mixin
   * Certain common language extensions are enabled by default
+* **Perform common Plutus tasks with simple commands:**
+  * Compute validator hashes.
+  * Run emulator tests on your contracts.
+  * Serialize your contracts to `.plutus` files.
+* **Keep projects in sync with the `plutus-apps` library:**
+  * With Jambhala, we don't need to maintain a central clone of the [plutus-apps](https://github.com/input-output-hk/plutus-apps) repository and use its associated Nix shell as the entry point for development of every project.
+  * Relying on a central `plutus-apps` instance forces us to use the same revision for every project we develop. If we update our `plutus-apps` to use a more recent revision:
+    * we need to adjust all of our individual projects' `cabal.project` files by hand to reflect any changes in dependencies
+    * we risk breaking our older projects if the API of `plutus-apps` has changed
+  * Even setting up a single project with this approach is painful, because in the absence of an up-to-date template, we must manually copy and adjust boilerplate from `plutus-apps` into our `cabal.project` file. This in turn quickly becomes outdated given the pace of Plutus development.
+  * Jhambala uses [haskell.nix](https://input-output-hk.github.io/haskell.nix/) to provide a fully self-reliant Plutus development environment for each of your projects, which can be brought up to date with the current state of `plutus-apps` using a single command. No more wrangling of dependency boilerplate: just build your project environment and get to work, then bump `plutus-apps` for a specific project whenever you like.
+  * Serve Haddock documentation for the specific `plutus-apps` revision your project uses with the `serve-docs` command.
 
 # Installation
 
@@ -91,7 +92,7 @@ Jambhala brings a state of Zen to Plutus smart-contract development.
     $ git clone https://github.com/PATH-TO/YOUR-REPO.git
     ```
 
-5. **Build development environment**
+5. **Build development environment and project**
   * Open the project root directory in your terminal session:
 
     ```sh
@@ -119,18 +120,27 @@ Jambhala brings a state of Zen to Plutus smart-contract development.
     do you want to permanently mark this value as trusted (y/N)? y
     ```
 
-  * It will take some time to set up the environment the first time.
-  * Warning messages about "No index state specified" can be disregarded.
-  * Some dependencies will need to be built from source, but if you see "building" for certain packages that should be downloadable from a binary cache (particularly GHC, the Linux kernel, and other non-Haskell related dependencies) or if you see any warning such as `warning: ignoring substitute`, this means your binary cache was not set up correctly and Nix is attempting to build packages from source that it should be fetching from a cache. Exit with `CTRL+c` and repeat **Step 2**, then try again. Make sure to restart the `nix-daemon`!
-  * If you see any HTTP-related errors, it means the IOG binary cache is non-responsive. Wait a bit and try again later.
+  * It will take some time to set up the environment the first time. You can recite the [Yellow Dzambhala Mantra](https://mantrasmeditation.com/buddhist-mantras/yellow-dzambhala-mantra/) while you wait:
 
-  * Once the build process completes, run `cabal build` to build the project dependencies.
-
-    ```sh
-    $ cabal build
+    ```
+    Om Dzambhala Dzalentraye Svaha
     ```
 
-    This will take some time to complete.
+  * Warning messages about "No index state specified" can be disregarded.
+  * Some dependencies will need to be built from source, but if you see "building" for certain packages that should be downloadable from a binary cache (particularly GHC, the Linux kernel, and other non-Haskell related dependencies) or if you see any warning such as `warning: ignoring substitute`, this means your binary cache was not set up correctly and Nix is attempting to build packages from source that it should be fetching from a cache. Exit with `CTRL+c` and repeat **Step 2**, then try again. Make sure to restart the `nix-daemon`!
+  * **If you see any HTTP-related errors**, it means the IOG binary cache is non-responsive. Wait a bit and try again later.
+
+  * Once the Nix environment build process completes, run `build` to build the project dependencies.
+
+    ```sh
+    $ build
+    ```
+
+    This will also take some time to complete:
+
+    ```
+    Om Dzambhala Dzalentraye Svaha
+    ```
 
 6. **Open in VS Code**
   * You can now start VS Code and use the `File > Open Folder...` menu option to load the starter kit.
@@ -175,62 +185,6 @@ you can run the following command from the workspace terminal to write a contrac
   ```
 
   This file can be used to submit transactions on-chain.
-
-### **Updating Plutus Dependencies:**
-The non-Hackage dependencies in the `cabal.project` file are following those of the [plutus-apps](https://github.com/input-output-hk/plutus-apps) library, with `sha256` hashes calculated for each `source-repository-package` entry.
-
-Since Nix flakes require pure inputs to guarantee reproducibility, and the content associated with a particular Git repository/tag can change, we need to hash any repositories we include in `cabal.project`. This means if we need to change any dependencies or add additional ones, we'll need to calculate new hashes and replace the existing ones.
-
-`jamb` provides a utility to easily update `plutus-apps` to the most recent revision and adjust all related dependencies. Run the `jamb -u` command to pull the latest revision and generate a new `cabal.project` file.
-
-  ```sh
-  jamb -u
-  ```
-
-#### **Restoring a previous version:**
-Whenever you run the `jamb -u` command, a backup of your existing `cabal.project` file will be created in the `backups/` directory in case you need to roll back the update. Just delete the current `cabal.project` file, copy the backup file and rename it to `cabal.project`. Then run `direnv allow` or reload the project in VS Code and your previous project state will be restored.
-
-#### **Manually updating dependencies:**
-While not recommended, if you need to change the revision of Plutus dependencies manually, you will need to calculate sha256 hashes for them. You can do this using the `nix-prefetch-git` utility, which has been provided with this project's Nix development environment.
-  * Use the following command to calculate a  hash:
-
-    ```
-    $ nix-prefetch-git LOCATION TAG
-    ```
-
-  * Here is an example of how we'd calculate a hash for the `plutus-apps` dependency with tag `5dda0323ef30c92bfebd520ac8d4bc5a46580c5c`:
-
-    ```bash
-    $ nix-prefetch-git https://github.com/input-output-hk/plutus-apps.git 5dda0323ef30c92bfebd520ac8d4bc5a46580c5c
-
-    ...
-
-    git revision is 5dda0323ef30c92bfebd520ac8d4bc5a46580c5c
-    path is /nix/store/mzjqwvfc2qmmvg9llskjyvkdph8hv4i4-plutus-apps-5dda032
-    git human-readable version is -- none --
-    Commit date is 2023-01-19 17:41:18 +0000
-    hash is 05ggi69w2n0cnhfyifpa83aphq6avk0fd9zvxywn1scwxza85r1a
-    {
-      "url": "https://github.com/input-output-hk/plutus-apps.git",
-      "rev": "5dda0323ef30c92bfebd520ac8d4bc5a46580c5c",
-      "date": "2023-01-19T17:41:18+00:00",
-      "path": "/nix/store/mzjqwvfc2qmmvg9llskjyvkdph8hv4i4-plutus-apps-5dda032",
-      "sha256": "05ggi69w2n0cnhfyifpa83aphq6avk0fd9zvxywn1scwxza85r1a",
-      "fetchLFS": false,
-      "fetchSubmodules": false,
-      "deepClone": false,
-      "leaveDotGit": false
-    }
-    ```
-  * The hash string must now be added as a comment prexied with `--sha256:` anywhere inside the `source-repository-package` stanza like so:
-
-    ```
-    source-repository-package
-      type: git
-      location: https://github.com/input-output-hk/plutus-apps.git
-      tag: 5dda0323ef30c92bfebd520ac8d4bc5a46580c5c
-      --sha256: 05ggi69w2n0cnhfyifpa83aphq6avk0fd9zvxywn1scwxza85r1a
-    ```
 
 ## Writing Contracts
 
@@ -287,14 +241,60 @@ To create a new contract, create a new `.hs` file in the `src/Contracts` directo
   ```haskell
   module Contracts.MyContract where
   ```
-In the `jambhala.cabal` file, add your module name (i.e. `Contracts.MyContract`) to the `other-modules` section of the `library` stanza.
+
+In the `jambhala.cabal` file, add your module name (i.e. `Contracts.MyContract`) to the `exposed-modules` section of the `library` stanza:
+
+  ```
+  library
+    import: common
+    exposed-modules:
+      Contracts
+      Jambhala.CLI
+      Jambhala.Utils
+
+  -- Add new contracts here, i.e.:
+      Contracts.MyContract
+
+  ...
+  ```
 
 **IMPORTANT:** you must stage any new contract files you create to git before they are visible to Nix for compilation. Use the `Source Control` option in the left sidebar of VS Code or stage changes from the command line with `git add`.
 
-You're now ready to write your contract, which should contain a ***Validator*** value (by convention in the samples this is called `validator`). You can then make this the sole exported item in your module declaration (to avoid unnecessary exports) like so:
+You're now ready to write your contract, which should contain a ***Validator*** value (by convention in the samples this is called `validator`). See the contracts in `src/Contracts/Samples` for example validators.
+
+The `jamb` CLI can perform various operations on your contracts, including calculating its validator hash, testing it using the emulator, and compiling it into a `.plutus` file. To do this you need to prepare a ***ContractExports*** value in each of your contracts, which has the following type definition:
 
   ```haskell
-  module Contracts.MyContract ( validator ) where
+  data ContractExports = ContractExports { getValidator :: !Validator
+                                         , getTest      :: !(Maybe (EmulatorTrace ())) }
+  ```
+
+In our contract, we construct the exports value like this:
+
+  ```haskell
+  -- Prepare exports for jamb CLI:
+  exports :: ContractExports
+  exports = ContractExports { getValidator = validator, getTest = Just test }
+  ```
+
+  or in shorter notation:
+  ```haskell
+  exports :: ContractExports
+  exports = ContractExports validator $ Just test
+  ```
+
+  where `validator` and `test` are values defined in our contract of types ***Validator*** and ***EmulatorTrace* ()**, respectively.
+
+For a contract without an emulator test, construct the exports with a `Nothing` value:
+
+  ```haskell
+  exports :: ContractExports
+  exports = ContractExports validator Nothing
+  ```
+
+
+  ```haskell
+  module Contracts.MyContract where
   ```
 
 In `src/Contracts/Contracts.hs`, import your contract module as a qualified import, i.e.:
@@ -303,16 +303,22 @@ In `src/Contracts/Contracts.hs`, import your contract module as a qualified impo
   import qualified Contracts.MyContract as MyContract
   ```
 
-Then add a new tuple entry to the `contracts` ***Map***, containing a name string for your contract and reference to its validator like so:
+Then add a new tuple entry to the `contracts` ***Map***, containing a name string for your contract and reference to its exports like so:
 
   ```haskell
-  contracts :: Map String Validator
+  contracts :: Contracts
   contracts = M.fromList [
-      ("my-contract", MyContract.validator)
+      ("my-contract", MyContract.exports)
     ]
   ```
 
-Once your contract has been added to the map, it can now be written to a `.plutus` file or hashed using the `jamb` CLI.
+Once your contract has been added to the map, it can now be operated on by the `jamb` CLI:
+
+  ```sh
+  $ jamb -s my-contract
+  $ jamb -t my-contract
+  $ jamb -w my-contract
+  ```
 
 ## Using GHCi
 To start a GHCi REPL session, run `cabal repl` and load your contract:
@@ -335,6 +341,75 @@ The script will look up the specific `plutus-apps` revision hash from the `cabal
 
 To view the correct Haddock documentation for the revision you are using, open http://0.0.0.0:8002/haddock in your browser.
 
+## **Updating Plutus Dependencies:**
+The non-Hackage dependencies in the `cabal.project` file are following those of the [plutus-apps](https://github.com/input-output-hk/plutus-apps) library, with `sha256` hashes calculated for each `source-repository-package` entry.
+
+Since Nix flakes require pure inputs to guarantee reproducibility, and the content associated with a particular Git repository/tag can change, we need to hash any repositories we include in `cabal.project`. This means if we need to change any dependencies or add additional ones, we'll need to calculate new hashes and replace the existing ones.
+
+`jamb` provides a utility to easily update `plutus-apps` to the most recent revision and adjust all related dependencies. Run the `jamb -u` command to pull the latest revision and generate a new `cabal.project` file.
+
+  ```sh
+  jamb -u
+  ```
+
+### **Restoring a previous version:**
+Whenever you run the `jamb -u` command, a backup of your existing `cabal.project` file will be created in the `backups/` directory in case you need to roll back the update. Just delete the current `cabal.project` file, copy the backup file and rename it to `cabal.project`. Then run `direnv allow` or reload the project in VS Code and your previous project state will be restored.
+
+### **Manually updating dependencies:**
+While not recommended, if you need to change the revision of Plutus dependencies manually, you will need to calculate sha256 hashes for them. You can do this using the `nix-prefetch-git` utility, which has been provided with this project's Nix development environment.
+  * Use the following command to calculate a  hash:
+
+    ```
+    $ nix-prefetch-git LOCATION TAG
+    ```
+
+  * Here is an example of how we'd calculate a hash for the `plutus-apps` dependency with tag `5dda0323ef30c92bfebd520ac8d4bc5a46580c5c`:
+
+    ```bash
+    $ nix-prefetch-git https://github.com/input-output-hk/plutus-apps.git 5dda0323ef30c92bfebd520ac8d4bc5a46580c5c
+
+    ...
+
+    git revision is 5dda0323ef30c92bfebd520ac8d4bc5a46580c5c
+    path is /nix/store/mzjqwvfc2qmmvg9llskjyvkdph8hv4i4-plutus-apps-5dda032
+    git human-readable version is -- none --
+    Commit date is 2023-01-19 17:41:18 +0000
+    hash is 05ggi69w2n0cnhfyifpa83aphq6avk0fd9zvxywn1scwxza85r1a
+    {
+      "url": "https://github.com/input-output-hk/plutus-apps.git",
+      "rev": "5dda0323ef30c92bfebd520ac8d4bc5a46580c5c",
+      "date": "2023-01-19T17:41:18+00:00",
+      "path": "/nix/store/mzjqwvfc2qmmvg9llskjyvkdph8hv4i4-plutus-apps-5dda032",
+      "sha256": "05ggi69w2n0cnhfyifpa83aphq6avk0fd9zvxywn1scwxza85r1a",
+      "fetchLFS": false,
+      "fetchSubmodules": false,
+      "deepClone": false,
+      "leaveDotGit": false
+    }
+    ```
+  * The hash string must now be added as a comment prexied with `--sha256:` anywhere inside the `source-repository-package` stanza like so:
+
+    ```
+    source-repository-package
+      type: git
+      location: https://github.com/input-output-hk/plutus-apps.git
+      tag: 5dda0323ef30c92bfebd520ac8d4bc5a46580c5c
+      --sha256: 05ggi69w2n0cnhfyifpa83aphq6avk0fd9zvxywn1scwxza85r1a
+    ```
+
 ## TODO: Troubleshooting
+
+**`'hs-source-dirs: app' specifies a directory which does not exist.`**
+```
+  > Warning: 'hs-source-dirs: app' specifies a directory which does not exist.
+  > building
+  > Preprocessing library for jambhala-0.1.0.0..
+  > Error: Setup: can't find source for Contracts/... in src,
+```
+You need to **stage** your new module file in `git` so it becomes visible to the Nix environment. Use the `Source Control` option in the left sidebar of VS Code or stage changes from the command line with `git add`. Then try the operation that caused the error again.
+
+### **General Troubleshooting Techniques**
+* **Restart Haskell LSP Server:** restarting `haskell-language-server` often fixes common issues with Haskell in VS Code. Open the command palette (`Ctrl + Shift + p`) and begin typing `Restart Haskell LSP Server` until you see this option, and select it. In the future it will be pinned to the top of the command palette options and easier to find.
+* **`cabal clean` + `cabal build jambhala`:** cleaning the `dist-newstyle` directory of all build artifacts and rebuilding the project with `cabal may resolve issues. Note that it will be time-consuming to rebuild the project from scratch, so be sure to exhaust all other troubleshooting options before attempting.
 
 For assistance or bug reporting, file an Issue or email `ian.burzynski@emurgo.io`.

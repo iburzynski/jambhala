@@ -1,23 +1,23 @@
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
-module Utils ( wrap, getSerialised, viewCBOR, writePlutusFile, encodePlutusData ) where
+module Jambhala.Utils where
 
-import Cardano.Api.Shelley
+import Jambhala.Plutus
+import Jambhala.Haskell
+
+import Cardano.Binary (serialize')
 import Codec.Serialise ( serialise )
 import Data.Aeson ( encode )
-import PlutusTx ( builtinDataToData, ToData (toBuiltinData), UnsafeFromData(..) )
-import System.IO ( print, putStrLn )
-import Data.ByteString ( ByteString )
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Short as BSS
 import qualified Data.ByteString.Base16 as B16
-import qualified Plutus.V1.Ledger.Scripts as Scripts
-import Plutus.Script.Utils.V2.Scripts (Validator)
-import Plutus.V2.Ledger.Contexts ( ScriptContext )
-import Cardano.Binary (serialize')
-import Data.String (String)
-import Control.Monad.IO.Class (MonadIO(..))
+import qualified Plutus.V1.Ledger.Scripts as V1Scripts
 
+type Contracts       = Map String ContractExports
+data ContractExports = ContractExports { getValidator :: !Validator
+                                       , getTest      :: !(Maybe (EmulatorTrace ())) }
+
+-- Boilerplate version of the (removed) `mkUntypedValidator` function.
 wrap :: (UnsafeFromData d, UnsafeFromData r)
      => (d -> r -> ScriptContext -> Bool)
      -> (BuiltinData -> BuiltinData -> BuiltinData -> ())
@@ -32,15 +32,15 @@ getSerialised = PlutusScriptSerialised . BSS.toShort . BSL.toStrict . serialise
 viewCBOR :: PlutusScript PlutusScriptV2 -> ByteString
 viewCBOR = B16.encode . serialize'
 
-scriptHash :: Scripts.Script -> Scripts.ScriptHash
+scriptHash :: V1Scripts.Script -> V1Scripts.ScriptHash
 scriptHash =
-  Scripts.ScriptHash
+  V1Scripts.ScriptHash
     . toBuiltin
     . serialiseToRawBytes
     . hashScript
     . toCardanoApiScript
 
-toCardanoApiScript :: Scripts.Script -> Script PlutusScriptV2
+toCardanoApiScript :: V1Scripts.Script -> Script PlutusScriptV2
 toCardanoApiScript =
   PlutusScript PlutusScriptV2
     . PlutusScriptSerialised

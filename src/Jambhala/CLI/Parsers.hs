@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 
-module CLI.Parsers (
+module Jambhala.CLI.Parsers (
     CabalProjectData(..), Dependency(..)
   , cabalProjectParser, prefetchGitParser ) where
 
@@ -8,15 +8,7 @@ import Prelude hiding (
     Applicative(..), Functor(..), Monoid(..), Semigroup(..)
   , (<$>), (<$), (<*), (*>), (/=), elem, notElem, mconcat )
 
-import Control.Applicative ( Applicative(..), (<$>) )
-import Control.Monad ( Functor(..), void )
-import Data.Eq ( Eq(..) )
-import Data.List (notElem)
-import Data.Monoid ( Monoid(..), (<>) )
-import Data.String ( String )
-import Data.Text ( Text )
-import Data.Void ( Void )
-import GHC.Show ( Show )
+import Jambhala.Haskell
 import Text.Megaparsec
 import Text.Megaparsec.Char ( char, eol, hspace, printChar, space, string )
 import Text.Megaparsec.Char.Lexer ( skipLineComment, charLiteral )
