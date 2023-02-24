@@ -45,7 +45,7 @@ echo "Preparing ${PKGNAME}.cabal..."
   git ls-files | xargs -I _ sed _ -i \
       -e "s#jambhala#$PKGNAME#g" \
       -e "s#Ian Burzynski#$AUTHNAME#g" \
-      -e "s#23251244+iburzynski@users.noreply.github.com#$EMAIL#g" \
+      -e "s#23251244+iburzynski@users.noreply.github.com#$EMAIL#g"
   mv "jambhala.cabal" "$PKGNAME.cabal"
 ) 2>&1 | indent
 
@@ -55,7 +55,7 @@ echo "Creating README..."
   mv "README.md" "docs/README.md"
   mv "README_TEMPLATE.md" "README.md"
   git remote add template https://github.com/iburzynski/jambhala
-  git add --A
+  git add -A
   git commit -m "Set up project"
 ) 2>&1 | indent
 

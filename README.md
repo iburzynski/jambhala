@@ -144,6 +144,9 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
     $ direnv allow
     ```
 
+  * You can ignore the following warning: `direnv: ([/nix/store/.../bin/direnv export bash]) is taking a while to execute. Use CTRL-C to give up.`
+
+
   * You should see the following prompts: enter `y` for both:
 
     ```sh
