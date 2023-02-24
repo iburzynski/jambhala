@@ -115,6 +115,11 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
 ***
 ### 4. **Create your repository**
 ***
+  * There are two different options you can use to create your Jambhala project:
+  **Fork**
+  Use this option if you want to be able to pull new commits to the template upstream.
+
+  **Template**
   * On this repository's Github page, select the green `Use this template ` button and select `Create a new repository` to fork the template.
   * Clone your new repository in a `bash` terminal session:
 
