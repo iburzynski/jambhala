@@ -417,6 +417,18 @@ To view the correct Haddock documentation for the revision you are using, open h
 ***
 # **📥 Updating Jambhala**
 #### **🛠️ This section is under construction...**
+Since Jambhala is under active development and is closely tracking the progress of `plutus-apps`, its codebase changes frequently.
+
+Unlike forks, Github repositories generated from templates have unique histories, so they aren't able to fetch and merge upstream changes as smoothly. However it's still possible to merge updates from an upstream template into your project with a little manual effort.
+
+The `setup` wizard added the upstream template as a remote source. You can now run the `update` command to fetch any changes to the template and attempt to merge them:
+
+```sh
+$ update
+```
+> *Note that this command is distinct from the `jamb -u` command, which updates only the `plutus-apps` dependency in `cabal.project`.*
+
+You will need to manually resolve the resulting merge conflicts. You may find a VS Code extension like [Git Merger](https://marketplace.visualstudio.com/items?itemName=shaharkazaz.git-merger) to be helpful with this.
 
 ***
 # **📥 Updating Plutus Dependencies**
