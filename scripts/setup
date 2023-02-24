@@ -41,38 +41,37 @@ EMAIL=${EMAIL:-$EMAIL_DEFAULT}
 
 echo "Preparing ${PKGNAME}.cabal..."
 (
-    set -x
-    git ls-files | xargs -I _ sed _ -i \
-        -e "s#jambhala#$PKGNAME#g" \
-        -e "s#Ian Burzynski#$AUTHNAME#g" \
-        -e "s#23251244+iburzynski@users.noreply.github.com#$EMAIL#g" \
+  set -x
+  git ls-files | xargs -I _ sed _ -i \
+      -e "s#jambhala#$PKGNAME#g" \
+      -e "s#Ian Burzynski#$AUTHNAME#g" \
+      -e "s#23251244+iburzynski@users.noreply.github.com#$EMAIL#g" \
+  mv "jambhala.cabal" "$PKGNAME.cabal"
 ) 2>&1 | indent
 
+echo "Creating README..."
 (
-    set -x
-    mv "jambhala.cabal" "$PKGNAME.cabal"
-    mv "README.md" "docs/README.md"
-    mv "README_TEMPLATE.md" "README.md"
+  set -x
+  mv "README.md" "docs/README.md"
+  mv "README_TEMPLATE.md" "README.md"
+  git remote add template https://github.com/iburzynski/jambhala
+  git add --A
+  git commit -m "Set up project"
 ) 2>&1 | indent
 
-echo "Cleaning up..."
+echo "Building project..."
 (
-    set -x
-    cabal update
-    cabal build "$PKGNAME"
+  set -x
+  cabal update
+  cabal build "$PKGNAME"
 ) 2>&1 | indent
 
-read -e -p 'Reinitialize git history? [Y/n]? ' REINIT
-
-if [[ "$REINIT" != [Nn]* ]]; then
-    echo "Reinitializing git..."
-    (
-        set -x
-        rm -rf .git
-        git init
-        git add --all
-        git commit -m "Initial commit"
-    ) 2>&1 | indent
-fi
+echo "Committing changes..."
+(
+  set -x
+  git remote add template https://github.com/iburzynski/jambhala
+  git add -A
+  git commit -m "Set up project"
+) 2>&1 | indent
 
 echo "Jambhala setup complete"

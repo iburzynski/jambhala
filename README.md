@@ -115,11 +115,6 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
 ***
 ### 4. **Create your repository**
 ***
-  * There are two different options you can use to create your Jambhala project:
-  **Fork**
-  Use this option if you want to be able to pull new commits to the template upstream.
-
-  **Template**
   * On this repository's Github page, select the green `Use this template ` button and select `Create a new repository` to fork the template.
   * Clone your new repository in a `bash` terminal session:
 
@@ -415,6 +410,10 @@ To serve docs for the specific revision of `plutus-apps` this project is using, 
 The script will look up the specific `plutus-apps` revision hash from the `cabal.project` file, clone the `plutus-apps` repository (if it doesn't already exist) and checkout this revision, then launch a new `nix develop` shell and serve the docs at `http://0.0.0.0:8002/`.
 
 To view the correct Haddock documentation for the revision you are using, open http://0.0.0.0:8002/haddock in your browser.
+
+***
+# **📥 Updating Jambhala**
+#### **🛠️ This section is under construction...**
 
 ***
 # **📥 Updating Plutus Dependencies**
