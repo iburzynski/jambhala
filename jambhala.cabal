@@ -12,9 +12,6 @@ license:            MIT
 license-file:       LICENSE
 author:             Ian Burzynski
 maintainer:         23251244+iburzynski@users.noreply.github.com
--- copyright:
-
--- category:
 
 flag defer-plugin-errors
   description:

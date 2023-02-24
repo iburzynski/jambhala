@@ -40,7 +40,7 @@ commandParser = do
   pw <- parseWrite
   ph <- parseHash
   pt <- parseTest
-  let p = parseList <|> pw <|> ph <|> pt <|> parseUpdate
+  let p = parseList <|> ph <|> pt <|> pw <|> parseUpdate
   pure . info (helper <*> p) $ mconcat [fullDesc, progDesc "Create sample smart contracts"]
 
 parseList, parseUpdate :: Parser Command

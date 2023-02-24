@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 if [ -n "$3" ]; then
   nix run . -- "$1" "$2" "$3"
 else

@@ -4,6 +4,7 @@ module Jambhala.Haskell (
   , Data.Semigroup.Semigroup(..)
   , Data.Eq.Eq(..)
   , Functor(..)
+  , IO
   , Map
   , MonadIO(..)
   , MonadReader(..)
@@ -39,4 +40,4 @@ import Data.String ( String )
 import Data.Text ( Text )
 import Data.Void ( Void )
 import GHC.Show ( Show(..) )
-import System.IO ( putStrLn, print )
+import System.IO ( IO, putStrLn, print )

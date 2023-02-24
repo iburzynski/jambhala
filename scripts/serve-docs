@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 dir=$(find dist-newstyle/src -type d -name 'plutus-ap_*' -print -quit)
 
 if [ -n "$dir" ]; then

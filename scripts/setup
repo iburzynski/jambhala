@@ -5,24 +5,39 @@ indent() {
     sed 's/^/    /'
 }
 
+cat << "EOF"
+  ,____          (\=-,
+  \    `'-.______/ /
+  `-._.-"(       |
+          \ '--\ |
+            ^^   ^^
+     ▄█    ▄████████   ▄▄▄▄███▄▄▄▄   ▀█████████▄     ▄█    █▄       ▄████████  ▄█          ▄████████
+    ███   ███    ███ ▄██▀▀▀███▀▀▀██▄   ███    ███   ███    ███     ███    ███ ███         ███    ███
+    ███   ███    ███ ███   ███   ███   ███    ███   ███    ███     ███    ███ ███         ███    ███
+    ███   ███    ███ ███   ███   ███  ▄███▄▄▄██▀   ▄███▄▄▄▄███▄▄   ███    ███ ███         ███    ███
+    ███ ▀███████████ ███   ███   ███ ▀▀███▀▀▀██▄  ▀▀███▀▀▀▀███▀  ▀███████████ ███       ▀███████████
+    ███   ███    ███ ███   ███   ███   ███    ██▄   ███    ███     ███    ███ ███         ███    ███
+    ███   ███    ███ ███   ███   ███   ███    ███   ███    ███     ███    ███ ███▌    ▄   ███    ███
+█▄ ▄███   ███    █▀   ▀█   ███   █▀  ▄█████████▀    ███    █▀      ███    █▀  █████▄▄██   ███    █▀
+▀▀▀▀▀▀                                                                        ▀
+EOF
+
+echo "Welcome to Jambhala Setup Wizard..."
+
 PKGNAME_DEFAULT="$(basename "$(pwd)")"
 if [ "$PKGNAME_DEFAULT" = "jambhala" ]; then
     PKGNAME_DEFAULT="jambhala"
 fi
-read -r -p "Package name [$PKGNAME_DEFAULT]: " PKGNAME
+read -r -p "Project Name [$PKGNAME_DEFAULT]: " PKGNAME
 PKGNAME=${PKGNAME:-$PKGNAME_DEFAULT}
 
 AUTHNAME_DEFAULT=$(git config --default "Firstname Lastname" --get user.name)
-read -r -p "Author name [$AUTHNAME_DEFAULT]: " AUTHNAME
+read -r -p "Project Author [$AUTHNAME_DEFAULT]: " AUTHNAME
 AUTHNAME=${AUTHNAME:-$AUTHNAME_DEFAULT}
 
 EMAIL_DEFAULT=$(git config --default "user@email.com" --get user.email)
-read -r -p "Author email [$EMAIL_DEFAULT]: " EMAIL
+read -r -p "Maintainer Email [$EMAIL_DEFAULT]: " EMAIL
 EMAIL=${EMAIL:-$EMAIL_DEFAULT}
-
-currentyear=$(date +"%Y")
-
-echo "Running Jambhala setup wizard"
 
 echo "Preparing ${PKGNAME}.cabal..."
 (
@@ -31,19 +46,19 @@ echo "Preparing ${PKGNAME}.cabal..."
         -e "s#jambhala#$PKGNAME#g" \
         -e "s#Ian Burzynski#$AUTHNAME#g" \
         -e "s#23251244+iburzynski@users.noreply.github.com#$EMAIL#g" \
-        -e "s#CURRENTYEAR#$currentyear#g"
 ) 2>&1 | indent
 
-echo "Renaming files..."
 (
     set -x
     mv "jambhala.cabal" "$PKGNAME.cabal"
-#   mv "README_TEMPLATE.md" "README.md"
+    mv "README.md" "docs/README.md"
+    mv "README_TEMPLATE.md" "README.md"
 ) 2>&1 | indent
 
 echo "Cleaning up..."
 (
     set -x
+    cabal update
     cabal build "$PKGNAME"
 ) 2>&1 | indent
 
@@ -60,4 +75,4 @@ if [[ "$REINIT" != [Nn]* ]]; then
     ) 2>&1 | indent
 fi
 
-echo "All set!"
+echo "Jambhala setup complete"

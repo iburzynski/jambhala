@@ -1,6 +1,6 @@
 module Main where
 
-import CLI ( runJamb )
+import Jambhala.CLI ( runJamb )
 import Contracts ( contracts, samples )
 
 main :: IO ()
