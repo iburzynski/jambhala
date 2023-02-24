@@ -54,7 +54,18 @@ echo "Creating README..."
   set -x
   mv "README.md" "docs/README.md"
   mv "README_TEMPLATE.md" "README.md"
-  git remote add template https://github.com/iburzynski/jambhala
+) 2>&1 | indent
+
+echo "Removing wizard..."
+(
+  set -x
+  rm "scripts/setup"
+) 2>&1 | indent
+
+echo "Committing changes..."
+(
+  set -x
+  git remote add template "https://github.com/iburzynski/jambhala"
   git add -A
   git commit -m "Set up project"
 ) 2>&1 | indent
@@ -64,14 +75,6 @@ echo "Building project..."
   set -x
   cabal update
   cabal build "$PKGNAME"
-) 2>&1 | indent
-
-echo "Committing changes..."
-(
-  set -x
-  git remote add template https://github.com/iburzynski/jambhala
-  git add -A
-  git commit -m "Set up project"
 ) 2>&1 | indent
 
 echo "Jambhala setup complete"

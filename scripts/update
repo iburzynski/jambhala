@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+git fetch --all
+git merge --allow-unrelated-histories
