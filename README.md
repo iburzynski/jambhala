@@ -214,6 +214,15 @@ You can calculate the validator hash for any available contract like this:
 
 where `CONTRACT` is the name of the contract to hash.
 
+### **Testing Contracts with Emulator Trace**
+You can run the emulator test defined for a contract with the following command:
+
+  ```sh
+  $ jamb -t CONTRACT
+  ```
+
+where `CONTRACT` is the name of the contract to test.
+
 ### **Compiling Contracts to `.plutus` Files**
 you can run the following command from the workspace terminal to write a contract to a `.plutus` file:
 
