@@ -73,6 +73,7 @@ echo "Committing changes..."
 echo "Building project..."
 (
   set -x
+  nix build .
   cabal update
   cabal build "$PKGNAME"
 ) 2>&1 | indent

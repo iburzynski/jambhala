@@ -17,7 +17,7 @@
 
 ***
 
-# 🦦 A Full-Featured Development Suite for Plutus 🐍
+# A Full-Featured Development Suite for Plutus
 Jambhala brings Plutus development nirvana by presenting three jewels:
 
 💎 #1: **Minimizes contract boilerplate**
@@ -79,7 +79,7 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
     keep-outputs = true
     keep-derivations = true
 
-    # Step 2c: Set up binary cache - this step shouldn't be necessary, but add it if your cache isn't working in Step 5
+    # Step 2c: Set up binary cache
     # (add to existing substituters and trusted-public-keys lines if present, separated by spaces)
     substituters = https://cache.nixos.org https://cache.iog.io https://cache.zw3rk.com
     trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk=
@@ -110,8 +110,16 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
 ***
   * This setup uses `direnv` to provide seamless loading of the Nix environment whenever you navigate into the project directory tree.
   * The `direnv` extension for VS Code integrates this environment with your editor, providing full IDE support for Plutus development.
-  * [Install direnv](https://direnv.net/docs/installation.html) and follow the instructions to hook it into your shell.
+  * Jambhala requires `direnv` version `>= 2.30`, which may not be available in the packaging systems for certain older operating systems (for instance, any Ubuntu system below version `22.10`).
+  * Visit the [direnv installation page](https://direnv.net/docs/installation.html) and check which version is available for your OS in the `Packaging status` section. If your `direnv` version `2.30` or higher is available, follow the instructions to install it and hook it into your shell.
+  * If `direnv` version `2.30+` isn't available for your OS through the standard installation method above, you can use `nix` to install it. Just run the following:
+
+    ```sh
+    $ nix-env -iA nixpkgs.direnv
+    ```
+
   * When you load the project in VS Code for the first time, you will be prompted to install the [direnv extension](https://marketplace.visualstudio.com/items?itemName=cab404.vscode-direnv&ssr=false#review-details).
+
 ***
 ### 4. **Create your repository**
 ***
@@ -146,15 +154,7 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
 
   * You can ignore the following warning: `direnv: ([/nix/store/.../bin/direnv export bash]) is taking a while to execute. Use CTRL-C to give up.`
 
-
-  * You should see the following prompts: enter `y` for both:
-
-    ```sh
-    do you want to allow configuration setting 'accept-flake-config' to be set to 'true' (y/N)? y
-    do you want to permanently mark this value as trusted (y/N)? y
-    ```
-
-  * It will take some time to set up the environment the first time. You can recite the [Yellow Dzambhala Mantra](https://mantrasmeditation.com/buddhist-mantras/yellow-dzambhala-mantra/) while you wait:
+  * It will take significant time (~2 hours) to set up the environment the first time. You can recite the [Yellow Dzambhala Mantra](https://mantrasmeditation.com/buddhist-mantras/yellow-dzambhala-mantra/) while you wait:
 
     ```
                   _=_
@@ -167,7 +167,6 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
     Om Dzambhala Dzalentraye Svaha!
     ```
 
-  * Warning messages about "No index state specified" can be disregarded.
   * Some dependencies will need to be built from source, but if you see "building" for certain packages that should be downloadable from a binary cache (particularly GHC, the Linux kernel, and other non-Haskell related dependencies) or if you see any warning such as `warning: ignoring substitute`, this means your binary cache was not set up correctly and Nix is attempting to build packages from source that it should be fetching from a cache. Exit with `CTRL + c` and repeat **Step 2**, then try again. Make sure to restart the `nix-daemon`!
   * **If you see any HTTP-related errors**, it means the IOG binary cache is non-responsive. Wait a bit and try again later.
 
@@ -409,6 +408,8 @@ To serve docs for the specific revision of `plutus-apps` this project is using, 
   ```sh
   $ serve-docs
   ```
+
+**Note:** This will require significant additional build time and storage space the first time the docs are served.
 
 The script will look up the specific `plutus-apps` revision hash from the `cabal.project` file, clone the `plutus-apps` repository (if it doesn't already exist) and checkout this revision, then launch a new `nix develop` shell and serve the docs at `http://0.0.0.0:8002/`.
 
