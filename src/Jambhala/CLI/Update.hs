@@ -39,7 +39,7 @@ updatePlutusApps = do
   unless (rev == rev') $ do
     liftIO $ putStrLn "Updating plutus-apps...\n"
     cProjConts <- decodeUtf8 <$> liftIO (BS.readFile $ fp ++ "/cabal.project")
-    let CabalProjectData deps allOtherContent = runCProjParser rev cProjConts
+    let CabalProjectData deps allOtherContent = runCProjParser rev' cProjConts
     fDeps <- liftIO $ makeFlakeDependencies deps
     (timestamp, _) <- break (== '.') . iso8601Show <$> liftIO getCurrentTime
     let backup = mconcat ["backups/cabal.project.", timestamp, ".backup"]
@@ -49,8 +49,8 @@ updatePlutusApps = do
     void $ Sh.proc "direnv" ["allow"] Sh.empty
     liftIO $ putStrLn "Update complete!"
     where
-      runCProjParser rev = either (error . errorBundlePretty) id
-                         . runParser (cabalProjectParser rev) ""
+      runCProjParser rv = either (error . errorBundlePretty) id
+                         . runParser (cabalProjectParser rv) ""
 
 getPlutusAppsRev :: MonadIO m => m Revision
 getPlutusAppsRev = do

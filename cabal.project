@@ -11,10 +11,10 @@ repository cardano-haskell-packages
     c00aae8461a256275598500ea0e187588c35a5d5d7454fb57eac18d9edb86a56
     d4a35cd3121aa00d18544bb0ac01c3e1691d618f462c46129271bccf39f7e8ee
 
-index-state: 2022-12-22T00:00:00Z
+index-state: 2023-02-20T00:00:00Z
 
 index-state:
-  , hackage.haskell.org 2022-12-22T00:00:00Z
+  , hackage.haskell.org 2023-02-20T00:00:00Z
   , cardano-haskell-packages 2022-12-22T00:00:00Z
 
 write-ghc-environment-files: never
@@ -52,6 +52,10 @@ constraints:
 
   , hedgehog >= 1.1
 
+  , resource-pool <0.4.0.0
+
+  , http2 <4.0.0
+
 package plutus-ledger
   haddock-options: "--optghc=-fplugin-opt PlutusTx.Plugin:defer-errors"
 package plutus-script-utils
@@ -81,8 +85,8 @@ package cardano-wallet-core-integration
 source-repository-package
     type: git
     location: https://github.com/input-output-hk/plutus-apps.git
-    tag: b220a4e4c861c7e09d9528839e81fbff85ebb2aa
-    --sha256: 0f41af4gcdnwqkrk2fissqbfsvjv46653np3mm671rkgn24na1r4
+    tag: 3ee2c455b570e075b51754dd50d45c8fa7879bb9
+    --sha256: 153jw1r3zn8qpm2r909pvrcw256vqa43m3801h22vcnmx1hjbm4b
     subdir:
       cardano-node-emulator
       cardano-streaming
@@ -90,6 +94,7 @@ source-repository-package
       freer-extras
       marconi-chain-index
       marconi-core
+      marconi-sidechain
       pab-blockfrost
       plutus-chain-index
       plutus-chain-index-core
@@ -124,8 +129,8 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/Quviq/quickcheck-contractmodel
-    tag: b66e3ff0c6011dcef63f2bcfa6ea8d6ab685230d
-    --sha256: 1w1bh1wvnbvy885ynrsjqw7alz4cawlidp18vy71mvb2rwz3yxl2
+    tag: cc43f13f98c704e0d53dbdef6a98367918f8c5c1
+    --sha256: 1ya604zn6jaq2qis1qgrlc21q08a7qmwwaj19f9m86y6dmvq5gk5
     subdir:
       contractmodel
 
