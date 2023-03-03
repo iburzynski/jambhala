@@ -19,7 +19,7 @@ data Dependency = Dependency {
     depType :: !Text
   , depLoc :: !Text
   , depTag :: !Text
-  , depSubdirs :: !Text
+  , depSubdirs :: !(Maybe Text)
   } deriving Show
 
 data CabalProjectData = CabalProjectData ![Dependency] !Text deriving Show
@@ -37,9 +37,9 @@ cabalProjectParser tag = do
       depType    = "git"
     , depLoc     = "https://github.com/input-output-hk/plutus-apps.git"
     , depTag     = tag
-    , depSubdirs = sds
+    , depSubdirs = Just sds
     }
-  deps  <- (plutusAppsSrp :) <$> many srpParser <* eof
+  deps  <- (plutusAppsSrp :) <$> manyTill srpParser eof
   pure . CabalProjectData deps $ mconcat ["packages: ./\n\n", sect1, sect2]
   where sectP = fmap T.unlines . sectionParser
 
@@ -54,13 +54,16 @@ subdirsParser t = fmtSds <$> manyTill textParser (lookAhead $ void (string t) <|
 
 srpParser :: Parser Dependency
 srpParser = do
+  _ <- many (space *> skipLineComment "--" *> eol)
+  _ <- try $ lookAhead $ string "source-repository-package"
   let fieldP fld = T.pack <$> (space *> string fld *> space *> manyTill anySingle eol)
   _          <- string "source-repository-package" *> space
   depType    <- fieldP "type:"
   depLoc     <- fieldP "location:"
   depTag     <- fieldP "tag:"
-  _          <- space *> string "subdir:" *> hspace *> eol
-  depSubdirs <- subdirsParser "source-repository-package"
+  -- _          <- space *> string "subdir:" *> hspace *> eol
+  depSubdirs <- optional . try $ (space *> string "subdir:" *> hspace *> eol *> subdirsParser "source-repository-package")
+
   pure $ Dependency {..}
 
 prefetchGitParser :: Parser [Text]

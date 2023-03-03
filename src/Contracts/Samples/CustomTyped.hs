@@ -41,7 +41,6 @@ type GiftSchema =
       Endpoint "give" Integer
   .\/ Endpoint "grab" Integer
 
-
 -- 2. Create Cardano.CLI address
 address :: AddressInEra BabbageEra
 address = mkValidatorCardanoAddress (Testnet $ NetworkMagic 1) $ Versioned validator PlutusV2

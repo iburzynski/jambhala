@@ -2,7 +2,7 @@
 
 module Jambhala.CLI ( runJamb ) where
 
-import Prelude hiding ( Applicative(..), Functor(..), Monoid(..), Semigroup(..), elem, mconcat )
+import Prelude hiding ( Applicative(..), Functor(..), Monoid(..), Semigroup(..), (<$>), elem, mconcat )
 import Jambhala.CLI.Update ( updatePlutusApps )
 import Jambhala.Haskell
 import Jambhala.Plutus
@@ -17,7 +17,7 @@ data Command = List
              | Hash !ContractName
              | Test !ContractName
              | Write !ContractName !(Maybe FileName)
-             | Update
+             | Update !(Maybe String)
 
 runJamb :: MonadIO m => Contracts -> m ()
 runJamb = runReaderT (commandParser >>= liftIO . execParser >>= runCommand)
@@ -30,7 +30,7 @@ runCommand = \case
                          (liftIO . runEmulatorTraceIO)
                  . getTest
   Write c mFName -> go c (writePlutusFile (fromMaybe c mFName) . getValidator)
-  Update -> updatePlutusApps
+  Update mRev -> updatePlutusApps mRev
   where
     go contract eff = asks (M.lookup contract) >>=
       maybe (liftIO . putStrLn $ "Error: contract \"" ++ contract ++ "\" not found") eff
@@ -41,11 +41,10 @@ commandParser = do
   ph <- parseHash
   pt <- parseTest
   let p = parseList <|> ph <|> pt <|> pw <|> parseUpdate
-  pure . info (helper <*> p) $ mconcat [fullDesc, progDesc "Create sample smart contracts"]
+  pure . info (helper <*> p) $ mconcat [fullDesc, progDesc "Jambhala Plutus Development Suite"]
 
-parseList, parseUpdate :: Parser Command
+parseList :: Parser Command
 parseList = flag' List (long "list" <> short 'l' <> help "List the available contracts")
-parseUpdate = flag' Update (long "update" <> short 'u' <> help "Update plutus-apps")
 
 parseHash :: MonadReader Contracts m => m (Parser Command)
 parseHash = fmap (fmap Hash) . parseContractName $ mconcat [
@@ -65,9 +64,16 @@ parseWrite :: MonadReader Contracts m => m (Parser Command)
 parseWrite = fmap ((<*> parseFName) . fmap Write) . parseContractName $ mconcat [
     long "write"
   , short 'w'
-  , metavar "CONTRACT [FILENAME]"
+  , metavar "CONTRACT"
   , help "Write CONTRACT to file with optional FILENAME (default is CONTRACT.plutus)" ]
-  where parseFName = optional (argument str mempty)
+  where parseFName = optional $ argument str (metavar "FILENAME")
+
+parseUpdate :: Parser Command
+parseUpdate = flag' Update (mconcat [
+     long "update"
+   , short 'u'
+   , help "Update plutus-apps to optional TAG or COMMIT (default is latest commit)"
+   ]) <*> optional (argument str $ metavar "TAG/COMMIT")
 
 parseContractName :: MonadReader Contracts m => Mod OptionFields String -> m (Parser String)
 parseContractName fields = do

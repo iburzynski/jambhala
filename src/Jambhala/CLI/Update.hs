@@ -1,4 +1,6 @@
-module Jambhala.CLI.Update ( updatePlutusApps, getPlutusAppsRev ) where
+{-# LANGUAGE FlexibleContexts #-}
+module Jambhala.CLI.Update where
+-- ( updatePlutusApps, getPlutusAppsRev ) where
 
 import Jambhala.CLI.Parsers ( CabalProjectData(..), Dependency(..), cabalProjectParser, prefetchGitParser )
 
@@ -6,21 +8,11 @@ import Prelude hiding (
     Applicative(..), Eq(..), Functor(..), Monoid(..), Semigroup(..), Traversable(..)
   , (<$>), decodeUtf8, elem, error, mconcat, unless )
 
-import Control.Applicative ( Applicative(..) )
-import Control.Monad ( filterM, unless, void )
-import Control.Monad.IO.Class ( MonadIO(..) )
-import Data.Eq ( Eq(..) )
-import Data.Functor ( Functor(..), (<$>), (<&>) )
-import Data.List ( break, isPrefixOf )
-import Data.Monoid ( Monoid(..) )
-import Data.Semigroup ( Semigroup(..) )
-import Data.Text ( Text )
+import Jambhala.Haskell
 import Data.Text.Encoding ( decodeUtf8 )
 import Data.Time ( getCurrentTime )
 import Data.Time.Format.ISO8601 ( iso8601Show )
-import Data.Traversable ( Traversable(..) )
 import GHC.Err ( error )
-import System.IO ( FilePath, putStrLn )
 import Text.Megaparsec ( runParser, errorBundlePretty )
 import Turtle ( ExitCode(..) )
 import qualified Data.ByteString as BS
@@ -31,11 +23,11 @@ import qualified Control.Foldl as Fold
 
 type Revision = Text
 
-updatePlutusApps :: MonadIO m => m ()
-updatePlutusApps = do
-  rev  <- getPlutusAppsRev
+updatePlutusApps :: MonadIO m => Maybe String -> m ()
+updatePlutusApps mRev = do
+  rev  <- getCurrentPlutusAppsRev
   fp   <- findPlutusApps
-  rev' <- pullPlutusApps fp
+  rev' <- runReaderT (resetPlutusApps (T.pack <$> mRev)) fp
   unless (rev == rev') $ do
     liftIO $ putStrLn "Updating plutus-apps...\n"
     cProjConts <- decodeUtf8 <$> liftIO (BS.readFile $ fp ++ "/cabal.project")
@@ -46,14 +38,15 @@ updatePlutusApps = do
     Sh.cp "cabal.project" backup
     liftIO . putStrLn $ "cabal.project saved to " ++ backup
     liftIO $ TIO.writeFile "cabal.project" $ allOtherContent <> fDeps
-    void $ Sh.proc "direnv" ["allow"] Sh.empty
-    liftIO $ putStrLn "Update complete!"
+    _ <- Sh.proc "direnv" ["allow"] Sh.empty
+    _ <- Sh.proc "build" [] Sh.empty
+    void $ Sh.proc "jamb" ["-h"] Sh.empty
     where
       runCProjParser rv = either (error . errorBundlePretty) id
                          . runParser (cabalProjectParser rv) ""
 
-getPlutusAppsRev :: MonadIO m => m Revision
-getPlutusAppsRev = do
+getCurrentPlutusAppsRev :: MonadIO m => m Revision
+getCurrentPlutusAppsRev = do
   mRev <- fmap Sh.lineToText <$> Sh.fold (Sh.inshell cmd Sh.empty) Fold.head
   maybe (error "plutus-apps source-repository-package not found in cabal.project!") pure mRev
   where
@@ -69,17 +62,47 @@ findPlutusApps = Sh.fold (Sh.ls src) Fold.list
     src = "dist-newstyle/src/"
     err = error "plutus-apps directory not found! Run `cabal build` and try again."
 
-pullPlutusApps :: MonadIO m => FilePath -> m Revision
-pullPlutusApps fp = Sh.cd fp >> git ["pull"] >>= runOrDie revParse
+git :: MonadIO m => [Text] -> m ExitCode
+git = flip (Sh.proc "git") Sh.empty
+
+logPlutusApps :: (MonadReader FilePath m, MonadIO m) => m ()
+logPlutusApps = ask >>= Sh.cd >> git ["log"] >> cdRoot
+
+resetPlutusApps :: (MonadReader FilePath m, MonadIO m) => Maybe Revision -> m Revision
+resetPlutusApps mRev = do
+  fp <- ask
+  _  <- Sh.cd fp
+  exitCode <- git ["pull"]
+  runOrDie revParse exitCode
   where
-    git = flip (Sh.proc "git") Sh.empty
-    runOrDie onSuccess code = case code of
-      ExitSuccess -> onSuccess
-      ExitFailure n -> Sh.cd "../../.." >> Sh.die ("Failed with exit code: " <> Sh.repr n)
     revParse = do
+      _ <- maybe (pure ()) gitReset mRev
       (_, commitHash) <- Sh.procStrict "git" ["rev-parse", "HEAD"] Sh.empty
-      Sh.cd "../../.."
+      _ <- cdRoot
       pure $ T.strip commitHash
+
+gitReset :: (MonadReader FilePath m, MonadIO m) => Revision -> m ()
+gitReset rev = do
+  exitCode <- resetTo rev
+  case exitCode of
+    ExitSuccess   -> pure ()
+    -- if invalid rev, reset head back to current plutus-apps revision in cabal.project
+    ExitFailure _ -> do
+      fp <- ask
+      _ <- cdRoot
+      currentRev <- getCurrentPlutusAppsRev
+      _ <- Sh.cd fp
+      exitCode' <- resetTo currentRev
+      runOrDie (pure ()) exitCode'
+    where resetTo r = git ["reset", "--hard", r]
+
+runOrDie :: MonadIO m => m a -> ExitCode -> m a
+runOrDie onSuccess = \case
+  ExitSuccess -> onSuccess
+  ExitFailure n -> cdRoot >> Sh.die ("Failed with exit code: " <> Sh.repr n)
+
+cdRoot :: MonadIO m => m ()
+cdRoot = Sh.cd "../../.."
 
 makeFlakeDependencies :: MonadIO m => [Dependency] -> m Text
 makeFlakeDependencies deps = formatFlakeDeps <$> do
@@ -96,7 +119,6 @@ makeFlakeDependencies deps = formatFlakeDeps <$> do
       , "    location: " <> depLoc
       , "    tag: " <> depTag
       , "    --sha256: " <> sha
-      , "    subdir:"
-      ] <> depSubdirs)
+      ] <> maybe "" ("    subdir:\n" <>) depSubdirs)
     nixPrefetchGit = fmap (T.strip . snd) . flip (Sh.procStrict "nix-prefetch-git") Sh.empty
     stripUnlines = T.strip . T.unlines

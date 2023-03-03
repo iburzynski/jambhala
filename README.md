@@ -422,10 +422,10 @@ Since Jambhala is under active development and is closely tracking the progress 
 
 Unlike forks, Github repositories generated from templates have unique histories, so they aren't able to fetch and merge upstream changes as smoothly. However it's still possible to merge updates from an upstream template into your project with a little manual effort.
 
-The `setup` wizard added the upstream template as a remote source. You can now run the `update` command to fetch any changes to the template and attempt to merge them:
+The `setup` wizard added the upstream template as a remote source. You can now run the `update-jambhala` command to fetch any changes to the template and attempt to merge them:
 
 ```sh
-$ update
+$ update-jambhala
 ```
 > *Note that this command is distinct from the `jamb -u` command, which updates only the `plutus-apps` dependency in `cabal.project`.*
 
@@ -438,15 +438,37 @@ The non-Hackage dependencies in the `cabal.project` file are following the [plut
 `jamb` provides a utility to easily update `plutus-apps` to the most recent revision and adjust all related dependencies. Run the `jamb -u` command to pull the latest revision and generate a new `cabal.project` file.
 
   ```sh
-  jamb -u
+  $ jamb -u
   ```
 
-🚨 **WARNING!** This operation rewrites your `cabal.project` file according to the most recent `plutus-apps` commit, and may cause your environment and/or contracts to break. You should use at your own risk, but you can also easily restore a previous `cabal.project` file by following the steps below.
+🚨 **WARNING!** This operation rewrites your `cabal.project` file according to the most recent `plutus-apps` commit, and may cause your environment and/or contracts to break. You should use at your own risk, but you can also easily restore a previous `cabal.project` file by following the instructions for **Restoring a previous version** below.
+***
+## **📑 Set `plutus-apps` to a specific commit/tag**
+***
+You can also use the `jamb -u` command with an additional argument to set `plutus-apps` to a specific commit hash or tag:
 
-### **♻️ Restoring a previous version**
-Whenever you run the `jamb -u` command, a backup of your existing `cabal.project` file will be created in the `backups/` directory in case you need to roll back the update. Just delete the current `cabal.project` file, copy the backup file and rename it to `cabal.project`. Then run `direnv allow` or reload the project in VS Code and your previous project state will be restored.
+  ```sh
+  $ jamb -u 38979da68816ab84faf6bfec6d0e7b6d47af651a
+  ```
 
-### **👷 Manually updating dependencies**
+You can run the `pa-history` command to view the full commit history for `plutus-apps`:
+
+  ```sh
+  $ pa-history
+  ```
+
+Use the up/down keys to navigate or type `q` to quit.
+
+🚨 **WARNING!** The code in the sample contracts and `Jambhala.Plutus` module have been designed for compatibility with very recent commits of `plutus-apps` - this means pointing `plutus-apps` to older tags/commits is much more likely to result in breakage. *Use this feature at your own risk!*
+
+***
+## **♻️ Restoring a previous version**
+***
+Before the `jamb -u` command rewrites your `cabal.project` file, a backup of your existing `cabal.project` will be created in the `backups/` directory in case you need to roll back the update. Just delete the current `cabal.project` file, copy the backup file and rename it to `cabal.project`. Then run `direnv allow` or reload the project in VS Code and your previous project state will be restored.
+
+***
+## **👷 Manually updating dependencies**
+***
 Since Nix flakes require pure inputs to guarantee reproducibility, and the content associated with a particular Git repository/tag can change, we need to hash any repositories we include in `cabal.project`. This means if we need to manually change any dependencies or add additional ones, we'll need to calculate new hashes and replace the existing ones.
 
 While not recommended, if you need to change the revision of Plutus dependencies manually, you can calculate sha256 hashes for them using the `nix-prefetch-git` utility, which has been provided with this project's Nix development environment.

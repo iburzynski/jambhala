@@ -25,6 +25,7 @@ wrap f d r sc = check $ f (ufbid d) (ufbid r) (ufbid sc)
   where
     ufbid :: UnsafeFromData a => BuiltinData -> a
     ufbid = unsafeFromBuiltinData
+{-# INLINABLE wrap #-}
 
 getSerialised :: Validator -> PlutusScript PlutusScriptV2
 getSerialised = PlutusScriptSerialised . BSS.toShort . BSL.toStrict . serialise

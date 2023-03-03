@@ -52,7 +52,8 @@ library
   hs-source-dirs:
       src
   build-depends:
-      base16-bytestring
+      aeson
+    , base16-bytestring
     , bytestring
     , cardano-api
     , cardano-binary
@@ -68,7 +69,6 @@ library
     , serialise
     , text
 -- Jambhala dependencies:
-    , aeson
     , containers
     , foldl
     , megaparsec
