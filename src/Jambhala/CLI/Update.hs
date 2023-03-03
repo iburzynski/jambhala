@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-module Jambhala.CLI.Update where
--- ( updatePlutusApps, getPlutusAppsRev ) where
+module Jambhala.CLI.Update ( updatePlutusApps ) where
 
 import Jambhala.CLI.Parsers ( CabalProjectData(..), Dependency(..), cabalProjectParser, prefetchGitParser )
 
@@ -51,7 +50,7 @@ getCurrentPlutusAppsRev = do
   maybe (error "plutus-apps source-repository-package not found in cabal.project!") pure mRev
   where
     cmd = "grep -A 1 \"location: https://github.com/input-output-hk/plutus-apps.git\" cabal.project"
-       <> " | tail -n 1 | awk '{ sub(/\\r?\\n/, \"\"); print $NF }'"
+        <> " | tail -n 1 | awk '{ sub(/\\r?\\n/, \"\"); print $NF }'"
 
 findPlutusApps :: MonadIO m => m FilePath
 findPlutusApps = Sh.fold (Sh.ls src) Fold.list
@@ -64,9 +63,6 @@ findPlutusApps = Sh.fold (Sh.ls src) Fold.list
 
 git :: MonadIO m => [Text] -> m ExitCode
 git = flip (Sh.proc "git") Sh.empty
-
-logPlutusApps :: (MonadReader FilePath m, MonadIO m) => m ()
-logPlutusApps = ask >>= Sh.cd >> git ["log"] >> cdRoot
 
 resetPlutusApps :: (MonadReader FilePath m, MonadIO m) => Maybe Revision -> m Revision
 resetPlutusApps mRev = do
