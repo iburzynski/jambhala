@@ -5,6 +5,7 @@ module Jambhala.Haskell (
   , Data.Eq.Eq(..)
   , FilePath
   , Functor(..)
+  , Generic
   , IO
   , Map
   , MonadIO(..)
@@ -22,6 +23,7 @@ module Jambhala.Haskell (
   , break
   , Data.List.elem
   , filterM
+  , guard
   , isPrefixOf
   , Data.List.notElem
   , putStrLn
@@ -37,7 +39,7 @@ import Prelude hiding (
   , unless )
 
 import Control.Applicative ( Applicative(..), (<$>) )
-import Control.Monad ( filterM, unless, void )
+import Control.Monad ( filterM, guard, unless, void )
 import Control.Monad.Reader ( MonadIO(..), MonadReader(..),  ReaderT(..), asks )
 import Data.ByteString ( ByteString )
 import Data.Eq ( Eq(..) )
@@ -51,5 +53,6 @@ import Data.Text ( Text )
 import Data.Traversable ( Traversable(..) )
 import Data.Void ( Void )
 import GHC.Err ( undefined )
+import GHC.Generics (Generic)
 import GHC.Show ( Show(..) )
 import System.IO ( IO, FilePath, putStrLn, print )

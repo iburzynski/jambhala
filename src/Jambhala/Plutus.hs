@@ -8,9 +8,11 @@ module Jambhala.Plutus (
   , CompiledCode
   , Contract
   , Datum(..)
+  , DecoratedTxOut(..)
   , EmulatorTrace
   , Endpoint
   , Error(..)
+  , FromData(..)
   , Language(..)
   , NetworkId(..)
   , NetworkMagic(..)
@@ -24,6 +26,7 @@ module Jambhala.Plutus (
   , ScriptContext
   , SerialiseAsRawBytes(..)
   , ToData(..)
+  , TxOutRef
   , UnsafeFromData(..)
   , Validator
   , ValidatorHash
@@ -34,6 +37,8 @@ module Jambhala.Plutus (
   , builtinDataToData
   , callEndpoint
   , compile
+  , datumInDatumFromQuery
+  , decoratedTxOutDatum
   , endpoint
   , fromPlutusData
   , getCardanoTxId
@@ -60,12 +65,14 @@ module Jambhala.Plutus (
   , writeFileTextEnvelope
 ) where
 
-import PlutusTx ( CompiledCode, UnsafeFromData(..), builtinDataToData, compile, unstableMakeIsData)
+import PlutusTx ( CompiledCode, FromData(..), UnsafeFromData(..), builtinDataToData, compile, unstableMakeIsData)
 import Plutus.V1.Ledger.Address ( Address, scriptHashAddress )
 import Plutus.Script.Utils.V2.Scripts ( validatorHash )
 import Plutus.V2.Ledger.Contexts ( ScriptContext )
 import Cardano.Api ( AddressInEra, BabbageEra, NetworkId(..), NetworkMagic (..) )
-import Ledger ( Language (..), Versioned (..), getCardanoTxId, mkValidatorCardanoAddress )
+import Ledger
+  ( DecoratedTxOut(..), Language (..), TxOutRef, Versioned (..)
+  , datumInDatumFromQuery, decoratedTxOutDatum, getCardanoTxId, mkValidatorCardanoAddress )
 import Ledger.Tx.Constraints
   ( mustPayToOtherScriptWithDatumInTx, mustSpendScriptOutput, plutusV2OtherScript, unspentOutputs )
 import Plutus.Contract

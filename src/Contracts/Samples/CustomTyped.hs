@@ -12,10 +12,8 @@ import Jambhala.Haskell hiding ((<$>), (==))
 import Jambhala.Plutus
 import Jambhala.Utils
 
--- Non-Plutus imports:
-
+-- Other Haskell imports:
 import Text.Printf ( printf )
-import qualified Control.Monad.Freer.Extras as Extras
 import qualified Data.Map.Strict as Map
 
 newtype Redeem = Redeem { guess :: Integer }
@@ -41,11 +39,7 @@ type GiftSchema =
       Endpoint "give" Integer
   .\/ Endpoint "grab" Integer
 
--- 2. Create Cardano.CLI address
-address :: AddressInEra BabbageEra
-address = mkValidatorCardanoAddress (Testnet $ NetworkMagic 1) $ Versioned validator PlutusV2
-
--- 3. give endpoint: send UTXOs to the script address
+-- 2. give endpoint: send UTXOs to the script address
 give :: AsContractError e => Integer -> Contract w s e ()
 give q = do
   logInfo @String $ printf "Start of the give action"
@@ -58,10 +52,10 @@ give q = do
     lookups     = plutusV2OtherScript validator
     constraints = mustPayToOtherScriptWithDatumInTx vHash datum $ lovelaceValueOf q
 
--- 4. grab endpoint: consume UTXOs at the script address
+-- 3. grab endpoint: consume UTXOs at the script address
 grab :: AsContractError e => Integer -> Contract w s e ()
 grab 42 = do
-    utxos <- utxosAt address
+    utxos <- utxosAt $ mkPreviewAddress validator
     let lookups     = unspentOutputs utxos <> plutusV2OtherScript validator
         orefs       = Map.keys utxos
         redeemer    = Redeemer . toBuiltinData $ Redeem 42
@@ -71,14 +65,14 @@ grab 42 = do
     logInfo @String "collected gifts"
 grab _ = logInfo @String $ "Wrong guess"
 
--- 5. Create endpoint listener
+-- 4. Create endpoint listener
 endpoints :: Contract () GiftSchema Text ()
 endpoints = awaitPromise (give' `select` grab') >> endpoints
   where
     give' = endpoint @"give" give
     grab' = endpoint @"grab" grab
 
--- 6. Define emulator trace test
+-- 5. Define emulator trace test
 test :: EmulatorTrace ()
 test = do
     h1 <- activateContractWallet (knownWallet 1) endpoints
@@ -88,8 +82,6 @@ test = do
     callEndpoint @"grab" h2 100
     void $ waitNSlots 2
     callEndpoint @"grab" h2 42
-    s <- waitNSlots 2
-    Extras.logInfo $ "reached " ++ show s
 
 exports :: ContractExports -- Prepare exports for jamb CLI:
 exports = ContractExports { getValidator = validator, getTest = Just test }

@@ -8,6 +8,7 @@ import qualified Data.Map.Strict as M
 import qualified Contracts.Samples.Simple      as Simple
 import qualified Contracts.Samples.SimpleTyped as SimpleTyped
 import qualified Contracts.Samples.CustomTyped as CustomTyped
+import qualified Contracts.Samples.Guess       as Guess
 -- Import your contracts here, i.e.:
 -- import qualified Contracts.MyContract as MyContract
 
@@ -23,4 +24,5 @@ samples = M.fromList [
     ("simple",       Simple.exports)
   , ("simple-typed", SimpleTyped.exports)
   , ("custom-typed", CustomTyped.exports)
+  , ("guess",        Guess.exports)
   ]
