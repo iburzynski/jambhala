@@ -1,4 +1,6 @@
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Jambhala.Utils where
 
@@ -31,11 +33,6 @@ wrap f d r sc = check $ f (ufbid d) (ufbid r) (ufbid sc)
     ufbid :: UnsafeFromData a => BuiltinData -> a
     ufbid = unsafeFromBuiltinData
 {-# INLINABLE wrap #-}
-
-mkValidator :: (UnsafeFromData d, UnsafeFromData r)
-            => (d -> r -> ScriptContext -> Bool) -> Validator
-mkValidator v = mkValidatorScript $$(compile [|| wrapped ||])
-  where wrapped = wrap v
 
 writePlutusFile :: MonadIO m => String -> Validator -> m ()
 writePlutusFile fileName validator =

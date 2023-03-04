@@ -29,8 +29,8 @@ customTyped _ (Redeem i) _ = traceIfFalse "Sorry, wrong guess!" (i == 42)
 {-# INLINABLE customTyped #-}
 
 validator :: Validator
-validator = mkValidator customTyped
--- `mkValidator` is a custom Jambhala util function to reduce boilerplate
+validator = mkValidatorScript $$(compile [|| wrapped ||])
+  where wrapped = wrap customTyped
 
 -- Off-chain Code
 

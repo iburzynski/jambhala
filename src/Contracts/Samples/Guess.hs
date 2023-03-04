@@ -27,7 +27,8 @@ guess (Answer a) (Guess g) _ = traceIfFalse "Sorry, wrong guess!" (g == a)
 {-# INLINABLE guess #-}
 
 validator :: Validator
-validator = mkValidator guess
+validator = mkValidatorScript $$(compile [|| wrapped ||])
+  where wrapped = wrap guess
 
 data GiveParams = GiveParams {
       giveAmount :: !Integer
