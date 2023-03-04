@@ -1,4 +1,4 @@
--- Sample Plutus contract ("always succeeds")
+-- Simple Plutus Contracts: always succeeds ("gift")/always fails ("burn")
 
 --1 Extensions
 {- The following two extensions are required for all contracts. They're `default-extensions`
@@ -27,16 +27,17 @@ import Jambhala.Plutus
 import Jambhala.Utils
 
 -- 3. Validator Logic:
-simpleV :: BuiltinData -> BuiltinData -> BuiltinData -> ()
-simpleV _ _ _ = error ()
-{-# INLINABLE simpleV #-}
+gift :: BuiltinData -> BuiltinData -> BuiltinData -> ()
+gift _ _ _ = ()
+{-# INLINABLE gift #-}
+
+burn :: BuiltinData -> BuiltinData -> BuiltinData -> ()
+burn _ _ _ = error ()
+{-# INLINABLE burn #-}
 
 -- 4. Boilerplate:
-simpleVCompiled :: CompiledCode (BuiltinData -> BuiltinData -> BuiltinData -> ())
-simpleVCompiled = $$(compile [|| simpleV ||])
-
 validator :: Validator
-validator = mkValidatorScript simpleVCompiled
+validator = mkValidatorScript $$(compile [|| burn ||])
 
 exports :: ContractExports -- Prepare exports for jamb CLI
 exports = ContractExports { getValidator = validator, getTest = Nothing }
