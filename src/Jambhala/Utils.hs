@@ -32,11 +32,36 @@ wrap f d r sc = check $ f (ufbid d) (ufbid r) (ufbid sc)
     ufbid = unsafeFromBuiltinData
 {-# INLINABLE wrap #-}
 
-getSerialised :: Validator -> PlutusScript PlutusScriptV2
-getSerialised = PlutusScriptSerialised . BSS.toShort . BSL.toStrict . serialise
+mkValidator :: (UnsafeFromData d, UnsafeFromData r)
+            => (d -> r -> ScriptContext -> Bool) -> Validator
+mkValidator v = mkValidatorScript $$(compile [|| wrapped ||])
+  where wrapped = wrap v
+
+writePlutusFile :: MonadIO m => String -> Validator -> m ()
+writePlutusFile fileName validator =
+  liftIO $ writeFileTextEnvelope fp Nothing (getSerialised validator) >>= \case
+    Left err -> liftIO . print $ displayError err
+    Right () -> liftIO . putStrLn $ "wrote validator to file " ++ fp
+  where
+    fp = "compiled/" ++ fileName ++ ".plutus"
+    getSerialised :: Validator -> PlutusScript PlutusScriptV2
+    getSerialised = PlutusScriptSerialised . BSS.toShort . BSL.toStrict . serialise
+
+mkTestnetAddress :: Testnet -> Validator -> AddressInEra BabbageEra
+mkTestnetAddress tn v = mkValidatorCardanoAddress nId $ Versioned v PlutusV2
+  where nId = Testnet . NetworkMagic . toEnum $ fromEnum tn + 1
+
+mkPreprodAddress, mkPreviewAddress :: Validator -> AddressInEra BabbageEra
+mkPreprodAddress = mkTestnetAddress Preprod
+mkPreviewAddress = mkTestnetAddress Preview
 
 viewCBOR :: PlutusScript PlutusScriptV2 -> ByteString
 viewCBOR = B16.encode . serialize'
+
+-- Leftover util functions from ADA Philippines starter:
+encodePlutusData :: ToData a => a -> BSL.ByteString
+encodePlutusData a = encode . scriptDataToJson ScriptDataJsonDetailedSchema
+                   . fromPlutusData . builtinDataToData $ toBuiltinData a
 
 scriptHash :: V1Scripts.Script -> V1Scripts.ScriptHash
 scriptHash =
@@ -53,22 +78,3 @@ toCardanoApiScript =
     . BSS.toShort
     . BSL.toStrict
     . serialise
-
-writePlutusFile :: MonadIO m => String -> Validator -> m ()
-writePlutusFile fileName validator =
-  liftIO $ writeFileTextEnvelope fp Nothing (getSerialised validator) >>= \case
-    Left err -> liftIO $ print $ displayError err
-    Right () -> liftIO $ putStrLn $ "wrote validator to file " ++ fp
-  where fp = "compiled/" ++ fileName ++ ".plutus"
-
-encodePlutusData :: ToData a => a -> BSL.ByteString
-encodePlutusData a = encode . scriptDataToJson ScriptDataJsonDetailedSchema
-                   . fromPlutusData . builtinDataToData $ toBuiltinData a
-
-mkTestnetAddress :: Testnet -> Validator -> AddressInEra BabbageEra
-mkTestnetAddress tn v = mkValidatorCardanoAddress nId $ Versioned v PlutusV2
-  where nId = Testnet . NetworkMagic . toEnum $ fromEnum tn + 1
-
-mkPreprodAddress, mkPreviewAddress :: Validator -> AddressInEra BabbageEra
-mkPreprodAddress = mkTestnetAddress Preprod
-mkPreviewAddress = mkTestnetAddress Preview
