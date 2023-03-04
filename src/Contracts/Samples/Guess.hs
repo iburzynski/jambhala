@@ -1,12 +1,14 @@
 {-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE TypeOperators #-}  -- Required for using `.\/` in schema type declaration
-{-# LANGUAGE DeriveGeneric #-}  -- Required for JSON conversion of give/grab params
-{-# LANGUAGE DeriveAnyClass #-} -- Required for JSON conversion of give/grab params
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+-- Required for JSON conversion of give/grab params:
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
 
 module Contracts.Samples.Guess where
 
-import Prelude          hiding ( Semigroup(..), mconcat, Applicative(..), Traversable(..) )
-import Jambhala.Haskell hiding ( (<$>), (==), Functor(..) )
+import Prelude          hiding ( Applicative(..), Semigroup(..), Traversable(..), mconcat )
+import Jambhala.Haskell hiding ( Functor(..), (<$>), (==) )
 import Jambhala.Plutus
 import Jambhala.Utils
 
@@ -30,21 +32,26 @@ validator :: Validator
 validator = mkValidatorScript $$(compile [|| wrapped ||])
   where wrapped = wrap guess
 
+data VTypes
+instance ValidatorTypes VTypes where
+  type instance DatumType    VTypes = Answer
+  type instance RedeemerType VTypes = Guess
+
 data GiveParams = GiveParams {
-      giveAmount :: !Integer
-    , giveAnswer :: !Integer }
+    giveAmount :: !Integer
+  , giveAnswer :: !Integer }
   deriving (Generic, ToJSON, FromJSON)
 
 newtype GrabParams = GrabParams { grabGuess :: Integer }
   deriving (Generic, ToJSON, FromJSON)
 
-type GiftSchema =
+type Schema =
       Endpoint "give" GiveParams
   .\/ Endpoint "grab" GrabParams
 
-give :: AsContractError e => GiveParams -> Contract w s e ()
+give :: GiveParams -> Contract () Schema Text ()
 give (GiveParams q a) = do
-  submittedTxId <- getCardanoTxId <$> submitTxConstraintsWith @Void lookups constraints
+  submittedTxId <- getCardanoTxId <$> submitTxConstraintsWith @VTypes lookups constraints
   awaitTxConfirmed submittedTxId
   logInfo @String $ printf "Gave %d ADA" q
   where
@@ -53,7 +60,7 @@ give (GiveParams q a) = do
     lookups     = plutusV2OtherScript validator
     constraints = mustPayToOtherScriptWithDatumInTx vHash datum $ lovelaceValueOf q
 
-grab :: AsContractError e => GrabParams -> Contract w s e ()
+grab :: GrabParams -> Contract () Schema Text ()
 grab (GrabParams g) = do
     utxos <- utxosAt $ mkPreviewAddress validator
     let orefs = mapMaybe hasMatchingDatum $ Map.toList utxos
@@ -62,7 +69,7 @@ grab (GrabParams g) = do
         let lookups     = unspentOutputs utxos <> plutusV2OtherScript validator
             redeemer    = Redeemer . toBuiltinData $ Guess g
             constraints = mconcat $ map (`mustSpendScriptOutput` redeemer) orefs
-        submittedTxId <- getCardanoTxId <$> submitTxConstraintsWith @Void lookups constraints
+        submittedTxId <- getCardanoTxId <$> submitTxConstraintsWith @VTypes lookups constraints
         awaitTxConfirmed submittedTxId
         logInfo @String "Collected gifts"
   where
@@ -75,7 +82,7 @@ grab (GrabParams g) = do
       guard (g == a) -- terminates with Nothing if guess doesn't match answer
       pure oref -- else return the matching utxo
 
-endpoints :: Contract () GiftSchema Text ()
+endpoints :: Contract () Schema Text ()
 endpoints = awaitPromise (give' `select` grab') >> endpoints
   where
     give' = endpoint @"give" give

@@ -30,6 +30,7 @@ module Jambhala.Plutus (
   , UnsafeFromData(..)
   , Validator
   , ValidatorHash
+  , ValidatorTypes(..)
   , Versioned(..)
   , type (.\/)
   , activateContractWallet
@@ -65,34 +66,30 @@ module Jambhala.Plutus (
   , writeFileTextEnvelope
 ) where
 
-import PlutusTx ( CompiledCode, FromData(..), UnsafeFromData(..), builtinDataToData, compile, unstableMakeIsData)
-import Plutus.V1.Ledger.Address ( Address, scriptHashAddress )
-import Plutus.Script.Utils.V2.Scripts ( validatorHash )
-import Plutus.V2.Ledger.Contexts ( ScriptContext )
 import Cardano.Api ( AddressInEra, BabbageEra, NetworkId(..), NetworkMagic (..) )
+import Cardano.Api.Shelley
+  ( Error(..), PlutusScript(..), PlutusScriptV2, PlutusScriptVersion(..), Script(..)
+  , ScriptDataJsonSchema(..), SerialiseAsRawBytes(..)
+  , fromPlutusData, hashScript, scriptDataToJson, writeFileTextEnvelope )
 import Ledger
   ( DecoratedTxOut(..), Language (..), TxOutRef, Versioned (..)
   , datumInDatumFromQuery, decoratedTxOutDatum, getCardanoTxId, mkValidatorCardanoAddress )
 import Ledger.Tx.Constraints
   ( mustPayToOtherScriptWithDatumInTx, mustSpendScriptOutput, plutusV2OtherScript, unspentOutputs )
 import Plutus.Contract
-    ( AsContractError, Contract, Endpoint, Promise (..), type (.\/)
-    , logInfo, submitTxConstraintsWith,  awaitTxConfirmed, select, endpoint )
+  ( AsContractError, Contract, Endpoint, Promise (..), type (.\/)
+  , logInfo, submitTxConstraintsWith,  awaitTxConfirmed, select, endpoint )
 import Plutus.Contract.Request ( utxosAt )
 import Plutus.Script.Utils.Ada ( lovelaceValueOf )
-import Plutus.V2.Ledger.Api ( Datum(..), Redeemer (..), ToData(..), Validator, ValidatorHash, mkValidatorScript )
+import Plutus.Script.Utils.Typed (ValidatorTypes(..))
+import Plutus.Script.Utils.V2.Scripts ( validatorHash )
 import Plutus.Trace
-  ( activateContractWallet, callEndpoint, runEmulatorTraceIO, waitNSlots, waitUntilSlot, EmulatorTrace )
+  ( EmulatorTrace
+  , activateContractWallet, callEndpoint, runEmulatorTraceIO, waitNSlots, waitUntilSlot )
+import Plutus.V1.Ledger.Address ( Address, scriptHashAddress )
+import Plutus.V2.Ledger.Api
+  ( Datum(..), Redeemer (..), ToData(..), Validator, ValidatorHash, mkValidatorScript )
+import Plutus.V2.Ledger.Contexts ( ScriptContext )
+import PlutusTx
+  ( CompiledCode, FromData(..), UnsafeFromData(..), builtinDataToData, compile, unstableMakeIsData)
 import Wallet.Emulator ( knownWallet )
-import Cardano.Api.Shelley
-    ( hashScript,
-      PlutusScriptV2,
-      PlutusScriptVersion(PlutusScriptV2),
-      PlutusScript(..),
-      Script(PlutusScript),
-      scriptDataToJson,
-      writeFileTextEnvelope,
-      Error(displayError),
-      ScriptDataJsonSchema(ScriptDataJsonDetailedSchema),
-      SerialiseAsRawBytes(serialiseToRawBytes),
-      fromPlutusData )

@@ -3,6 +3,7 @@ module Jambhala.Haskell (
   , ByteString
   , Data.Semigroup.Semigroup(..)
   , Data.Eq.Eq(..)
+  , Enum(..)
   , FilePath
   , Functor(..)
   , Generic
@@ -11,6 +12,7 @@ module Jambhala.Haskell (
   , MonadIO(..)
   , MonadReader(..)
   , Monoid(..)
+  , Num(..)
   , ReaderT(..)
   , Show(..)
   , String
@@ -35,7 +37,7 @@ module Jambhala.Haskell (
 ) where
 
 import Prelude hiding (
-    Applicative(..), Functor(..), Monoid(..), Semigroup(..), Traversable(..)
+    Applicative(..), Enum(..), Functor(..), Monoid(..), Semigroup(..), Traversable(..)
   , unless )
 
 import Control.Applicative ( Applicative(..), (<$>) )
@@ -52,7 +54,9 @@ import Data.String ( String )
 import Data.Text ( Text )
 import Data.Traversable ( Traversable(..) )
 import Data.Void ( Void )
+import GHC.Enum (Enum(..))
 import GHC.Err ( undefined )
 import GHC.Generics (Generic)
+import GHC.Num (Num(..))
 import GHC.Show ( Show(..) )
 import System.IO ( IO, FilePath, putStrLn, print )

@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE TypeOperators #-} -- Required for using `.\/` in schema type declaration
+{-# LANGUAGE TypeFamilies #-}  -- Required to map validator types for `submitTxConstraintsWith`
+{-# LANGUAGE TypeOperators #-} -- Required for `.\/` (row merge) in endpoints schema definition
 
 module Contracts.Samples.CustomTyped where
 
@@ -15,6 +16,7 @@ import Jambhala.Utils
 -- Other Haskell imports:
 import Text.Printf ( printf )
 import qualified Data.Map.Strict as Map
+
 
 newtype Redeem = Redeem { guess :: Integer }
 -- `unstableMakeIsData` uses TemplateHaskell to generate ToData/FromData instances for a custom type
@@ -35,15 +37,21 @@ validator = mkValidatorScript $$(compile [|| wrapped ||])
 -- Off-chain Code
 
 -- 1. Define endpoints schema
-type GiftSchema =
+type Schema =
       Endpoint "give" Integer
   .\/ Endpoint "grab" Integer
 
--- 2. give endpoint: send UTXOs to the script address
-give :: AsContractError e => Integer -> Contract w s e ()
+-- 2. Map validator types
+data VTypes
+instance ValidatorTypes VTypes where
+  type instance DatumType    VTypes = ()
+  type instance RedeemerType VTypes = Redeem
+
+-- 3. give endpoint: send UTXOs to the script address
+give :: Integer -> Contract () Schema Text ()
 give q = do
   logInfo @String $ printf "Start of the give action"
-  submittedTxId <- getCardanoTxId <$> submitTxConstraintsWith @Void lookups constraints
+  submittedTxId <- getCardanoTxId <$> submitTxConstraintsWith @VTypes lookups constraints
   awaitTxConfirmed submittedTxId
   logInfo @String $ printf "Made transaction of %d ADA" q
   where
@@ -52,27 +60,27 @@ give q = do
     lookups     = plutusV2OtherScript validator
     constraints = mustPayToOtherScriptWithDatumInTx vHash datum $ lovelaceValueOf q
 
--- 3. grab endpoint: consume UTXOs at the script address
-grab :: AsContractError e => Integer -> Contract w s e ()
+-- 4. grab endpoint: consume UTXOs at the script address
+grab :: Integer -> Contract () Schema Text ()
 grab 42 = do
     utxos <- utxosAt $ mkPreviewAddress validator
     let lookups     = unspentOutputs utxos <> plutusV2OtherScript validator
         orefs       = Map.keys utxos
         redeemer    = Redeemer . toBuiltinData $ Redeem 42
         constraints = mconcat $ map (`mustSpendScriptOutput` redeemer) orefs
-    submittedTxId <- getCardanoTxId <$> submitTxConstraintsWith @Void lookups constraints
+    submittedTxId <- getCardanoTxId <$> submitTxConstraintsWith @VTypes lookups constraints
     awaitTxConfirmed submittedTxId
     logInfo @String "collected gifts"
 grab _ = logInfo @String $ "Wrong guess"
 
--- 4. Create endpoint listener
-endpoints :: Contract () GiftSchema Text ()
+-- 5. Define endpoints listener
+endpoints :: Contract () Schema Text ()
 endpoints = awaitPromise (give' `select` grab') >> endpoints
   where
     give' = endpoint @"give" give
     grab' = endpoint @"grab" grab
 
--- 5. Define emulator trace test
+-- 6. Define emulator trace test
 test :: EmulatorTrace ()
 test = do
     h1 <- activateContractWallet (knownWallet 1) endpoints

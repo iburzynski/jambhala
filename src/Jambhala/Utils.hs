@@ -1,22 +1,18 @@
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 module Jambhala.Utils where
 
-import Prelude hiding (Enum(..), AdditiveSemigroup(..))
+import Prelude hiding ( Enum(..), AdditiveSemigroup(..) )
 import Jambhala.Plutus
 import Jambhala.Haskell
 
-import Cardano.Binary (serialize')
+import Cardano.Binary ( serialize' )
 import Codec.Serialise ( serialise )
 import Data.Aeson ( encode )
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Short as BSS
 import qualified Data.ByteString.Base16 as B16
 import qualified Plutus.V1.Ledger.Scripts as V1Scripts
-import GHC.Enum (Enum(..))
-import GHC.Num (Num(..))
 
 type Contracts       = Map String ContractExports
 data ContractExports = ContractExports { getValidator :: !Validator
