@@ -50,6 +50,7 @@ library
     Contracts.Samples.SimpleTyped
     Contracts.Samples.CustomTyped
     Contracts.Samples.Guess
+    Contracts.Samples.Vesting
   hs-source-dirs:
       src
   build-depends:
@@ -58,6 +59,8 @@ library
     , bytestring
     , cardano-api
     , cardano-binary
+    , cardano-node-emulator
+    , data-default
     , freer-extras
     , lens
     , plutus-contract

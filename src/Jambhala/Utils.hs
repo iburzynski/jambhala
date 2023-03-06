@@ -2,7 +2,7 @@
 
 module Jambhala.Utils where
 
-import Prelude hiding ( Enum(..), AdditiveSemigroup(..) )
+import Prelude hiding ( Enum(..), AdditiveSemigroup(..), (<$>) )
 import Jambhala.Plutus
 import Jambhala.Haskell
 
@@ -13,6 +13,8 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Short as BSS
 import qualified Data.ByteString.Base16 as B16
 import qualified Plutus.V1.Ledger.Scripts as V1Scripts
+import Plutus.Contract.Request (getParams)
+import Cardano.Node.Emulator (Params(..))
 
 type Contracts       = Map String ContractExports
 data ContractExports = ContractExports { getValidator :: !Validator
@@ -40,13 +42,13 @@ writePlutusFile fileName validator =
     getSerialised :: Validator -> PlutusScript PlutusScriptV2
     getSerialised = PlutusScriptSerialised . BSS.toShort . BSL.toStrict . serialise
 
-mkTestnetAddress :: Testnet -> Validator -> AddressInEra BabbageEra
-mkTestnetAddress tn v = mkValidatorCardanoAddress nId $ Versioned v PlutusV2
-  where nId = Testnet . NetworkMagic . toEnum $ fromEnum tn + 1
+getContractAddress :: AsContractError e => Validator -> Contract w s e (AddressInEra BabbageEra)
+getContractAddress v = do
+  nId <- pNetworkId <$> getParams
+  return $ mkValidatorCardanoAddress nId $ Versioned v PlutusV2
 
-mkPreprodAddress, mkPreviewAddress :: Validator -> AddressInEra BabbageEra
-mkPreprodAddress = mkTestnetAddress Preprod
-mkPreviewAddress = mkTestnetAddress Preview
+wait1 :: EmulatorTrace ()
+wait1 = void $ waitNSlots 1
 
 viewCBOR :: PlutusScript PlutusScriptV2 -> ByteString
 viewCBOR = B16.encode . serialize'

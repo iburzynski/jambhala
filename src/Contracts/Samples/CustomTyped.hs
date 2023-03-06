@@ -63,7 +63,8 @@ give q = do
 -- 4. grab endpoint: consume UTXOs at the script address
 grab :: Integer -> Contract () Schema Text ()
 grab 42 = do
-    utxos <- utxosAt $ mkPreviewAddress validator
+    addr  <- getContractAddress validator
+    utxos <- utxosAt addr
     let lookups     = unspentOutputs utxos <> plutusV2OtherScript validator
         orefs       = Map.keys utxos
         redeemer    = Redeemer . toBuiltinData $ Redeem 42
@@ -83,13 +84,16 @@ endpoints = awaitPromise (give' `select` grab') >> endpoints
 -- 6. Define emulator trace test
 test :: EmulatorTrace ()
 test = do
-    h1 <- activateContractWallet (knownWallet 1) endpoints
-    h2 <- activateContractWallet (knownWallet 2) endpoints
-    callEndpoint @"give" h1 20000000
-    void $ waitUntilSlot 20
-    callEndpoint @"grab" h2 100
-    void $ waitNSlots 2
-    callEndpoint @"grab" h2 42
+  h1 <- activateContractWallet (knownWallet 1) endpoints
+  h2 <- activateContractWallet (knownWallet 2) endpoints
+  h3 <- activateContractWallet (knownWallet 3) endpoints
+  sequence_ [
+      callEndpoint @"give" h1 42000000
+    , wait1
+    , callEndpoint @"grab" h2 21
+    , wait1
+    , callEndpoint @"grab" h3 42
+    ]
 
 exports :: ContractExports -- Prepare exports for jamb CLI:
 exports = ContractExports { getValidator = validator, getTest = Just test }

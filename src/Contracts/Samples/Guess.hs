@@ -2,8 +2,8 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 -- Required for JSON conversion of give/grab params:
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Contracts.Samples.Guess where
 
@@ -52,8 +52,8 @@ type Schema =
 give :: GiveParams -> Contract () Schema Text ()
 give (GiveParams q a) = do
   submittedTxId <- getCardanoTxId <$> submitTxConstraintsWith @VTypes lookups constraints
-  awaitTxConfirmed submittedTxId
-  logInfo @String $ printf "Gave %d ADA" q
+  _ <- awaitTxConfirmed submittedTxId
+  logInfo @String $ printf "Gave %d lovelace" q
   where
     vHash       = validatorHash validator
     datum       = Datum . toBuiltinData $ Answer a
@@ -62,25 +62,25 @@ give (GiveParams q a) = do
 
 grab :: GrabParams -> Contract () Schema Text ()
 grab (GrabParams g) = do
-    utxos <- utxosAt $ mkPreviewAddress validator
-    let orefs = mapMaybe hasMatchingDatum $ Map.toList utxos
-    if null orefs then logInfo @String $ "No matching UTXOs"
+    addr  <- getContractAddress validator
+    validUtxos <- Map.mapMaybe hasMatchingDatum <$> utxosAt addr
+    if Map.null validUtxos then logInfo @String $ "No matching UTXOs"
       else do
-        let lookups     = unspentOutputs utxos <> plutusV2OtherScript validator
+        let lookups     = unspentOutputs validUtxos <> plutusV2OtherScript validator
             redeemer    = Redeemer . toBuiltinData $ Guess g
-            constraints = mconcat $ map (`mustSpendScriptOutput` redeemer) orefs
+            constraints = mconcat . map (`mustSpendScriptOutput` redeemer) $ Map.keys validUtxos
         submittedTxId <- getCardanoTxId <$> submitTxConstraintsWith @VTypes lookups constraints
         awaitTxConfirmed submittedTxId
         logInfo @String "Collected gifts"
   where
     -- ref: https://github.com/input-output-hk/plutus-apps/blob/main/plutus-ledger/src/Ledger/Tx.hs
-    hasMatchingDatum :: (TxOutRef, DecoratedTxOut) -> Maybe TxOutRef
-    hasMatchingDatum (oref, dto) = do
+    hasMatchingDatum :: DecoratedTxOut -> Maybe DecoratedTxOut
+    hasMatchingDatum dto = do
       (_, dfq) <- dto ^? decoratedTxOutDatum
       Datum  d <- dfq ^? datumInDatumFromQuery
       Answer a <- fromBuiltinData d
       guard (g == a) -- terminates with Nothing if guess doesn't match answer
-      pure oref -- else return the matching utxo
+      Just dto -- else return the matching utxo
 
 endpoints :: Contract () Schema Text ()
 endpoints = awaitPromise (give' `select` grab') >> endpoints
@@ -92,18 +92,19 @@ test :: EmulatorTrace ()
 test = do
   hs <- traverse ((`activateContractWallet` endpoints) . knownWallet) [1 .. 6]
   case hs of
-    [h1, h2, h3, h4, h5, h6] -> do
-      callEndpoint @"give" h1 $ GiveParams 10000000 42
-      _ <- waitNSlots 1
-      callEndpoint @"give" h2 $ GiveParams 10000000 42
-      _ <- waitNSlots 1
-      callEndpoint @"give" h3 $ GiveParams 10000000 21
-      _ <- waitNSlots 1
-      callEndpoint @"grab" h4 $ GrabParams 33
-      _ <- waitNSlots 1
-      callEndpoint @"grab" h5 $ GrabParams 21
-      _ <- waitNSlots 1
-      callEndpoint @"grab" h6 $ GrabParams 42
+    [h1, h2, h3, h4, h5, h6] -> sequence_
+        [ callEndpoint @"give" h1 $ GiveParams 10000000 42
+        , wait1
+        , callEndpoint @"give" h2 $ GiveParams 10000000 42
+        , wait1
+        , callEndpoint @"give" h3 $ GiveParams 10000000 21
+        , wait1
+        , callEndpoint @"grab" h4 $ GrabParams 33
+        , wait1
+        , callEndpoint @"grab" h5 $ GrabParams 21
+        , wait1
+        , callEndpoint @"grab" h6 $ GrabParams 42
+        ]
     _ -> pure ()
 
 exports :: ContractExports -- Prepare exports for jamb CLI:
