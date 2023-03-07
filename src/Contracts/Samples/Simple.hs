@@ -40,5 +40,4 @@ validator :: Validator
 validator = mkValidatorScript $$(compile [|| burn ||])
 
 exports :: ContractExports -- Prepare exports for jamb CLI
-exports = ContractExports { getValidator = validator, getTest = Nothing }
--- If no emulator test for the contract, pass `Nothing` as second argument to the constructor
+exports = exportValidator validator

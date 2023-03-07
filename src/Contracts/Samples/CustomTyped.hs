@@ -82,13 +82,13 @@ endpoints = awaitPromise (give' `select` grab') >> endpoints
     grab' = endpoint @"grab" grab
 
 -- 6. Define emulator trace test
-test :: EmulatorTrace ()
+test :: JambEmulatorTrace
 test = do
   h1 <- activateContractWallet (knownWallet 1) endpoints
   h2 <- activateContractWallet (knownWallet 2) endpoints
   h3 <- activateContractWallet (knownWallet 3) endpoints
   sequence_ [
-      callEndpoint @"give" h1 42000000
+      callEndpoint @"give" h1 42_000_000
     , wait1
     , callEndpoint @"grab" h2 21
     , wait1
@@ -96,4 +96,4 @@ test = do
     ]
 
 exports :: ContractExports -- Prepare exports for jamb CLI:
-exports = ContractExports { getValidator = validator, getTest = Just test }
+exports = exportValidatorWithTest validator test 3

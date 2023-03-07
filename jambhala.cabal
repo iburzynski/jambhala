@@ -43,8 +43,11 @@ library
 --  Contracts.MyContract
 
   other-modules:
+    Jambhala.CLI.Emulator
     Jambhala.CLI.Parsers
+    Jambhala.CLI.Types
     Jambhala.CLI.Update
+    Jambhala.CLI.Update.Parsers
 -- Sample contracts:
     Contracts.Samples.Simple
     Contracts.Samples.SimpleTyped
@@ -76,9 +79,11 @@ library
 -- Jambhala dependencies:
     , containers
     , foldl
+    , freer-simple
     , megaparsec
     , mtl
     , optparse-applicative
+    , row-types
     , time
     , turtle
   mixins:
@@ -91,6 +96,9 @@ library
 
     -- A syntactic convenience for writing single-argument lambdas containing case expressions (used by Jambhala's utilities):
     , LambdaCase
+
+    -- Allows more readable representations of large integers (i.e. 1_000_000), useful for lovelace quantities
+    , NumericUnderscores
 
     -- Allows construction of Text and other string-like values as string literals:
     , OverloadedStrings

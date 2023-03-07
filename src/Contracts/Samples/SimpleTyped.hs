@@ -1,7 +1,7 @@
 module Contracts.Samples.SimpleTyped where
 
 import Jambhala.Plutus
-import Jambhala.Utils ( ContractExports(..), wrap )
+import Jambhala.Utils
 
 simpleTyped :: () -> Integer -> ScriptContext -> Bool
 simpleTyped _ redeemer _ = traceIfFalse "Sorry, wrong guess!" (redeemer == 42)
@@ -12,5 +12,4 @@ validator = mkValidatorScript $$(compile [|| wrapped ||])
   where wrapped = wrap simpleTyped
 
 exports :: ContractExports -- Prepare exports for jamb CLI
-exports = ContractExports { getValidator = validator, getTest = Nothing }
--- If no emulator test for the contract, pass `Nothing` as second argument to the constructor
+exports = exportValidator validator

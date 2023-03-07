@@ -3,6 +3,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Contracts.Samples.Vesting where
 
@@ -65,8 +66,8 @@ give (GiveParams{..}) = do
 
 grab :: () -> Contract () Schema Text ()
 grab _ = do
-  now        <- uncurry interval <$> currentNodeClientTimeRange
   pkh        <- ownFirstPaymentPubKeyHash
+  now        <- uncurry interval <$> currentNodeClientTimeRange
   addr       <- getContractAddress validator
   validUtxos <- Map.mapMaybe (isEligible pkh now) <$> utxosAt addr
   if Map.null validUtxos then logInfo @String $ "No eligible gifts available"
@@ -94,31 +95,29 @@ endpoints = awaitPromise (give' `select` grab') >> endpoints
     give' = endpoint @"give" give
     grab' = endpoint @"grab" grab
 
-test :: EmulatorTrace ()
+test :: JambEmulatorTrace
 test = do
-  hs <- traverse ((`activateContractWallet` endpoints) . knownWallet) [1 .. 4]
-  case hs of
-    [h1, h2, h3, h4] ->
-      sequence_ [
-          callEndpoint @"give" h1 $ GiveParams {
-            gpBeneficiary = mockWalletPaymentPubKeyHash $ knownWallet 2
-          , gpDeadline    = slotToBeginPOSIXTime def 20
-          , gpAmount      = 30000000
-          }
-        , wait1
-        , callEndpoint @"give" h1 $ GiveParams {
-             gpBeneficiary = mockWalletPaymentPubKeyHash $ knownWallet 4
-           , gpDeadline    = slotToBeginPOSIXTime def 20
-           , gpAmount      = 30000000
-           }
-        , wait1
-        , callEndpoint @"grab" h2 () -- deadline not reached
-        , void $ waitUntilSlot 20
-        , callEndpoint @"grab" h3 () -- wrong beneficiary
-        , wait1
-        , callEndpoint @"grab" h4 () -- collect gift
-        ]
-    _ -> pure ()
+  hs <- activateWallets endpoints
+  sequence_
+    [
+      callEndpoint @"give" (hs ! 1) $ GiveParams {
+        gpBeneficiary = mockWalletPaymentPubKeyHash $ knownWallet 2
+      , gpDeadline    = slotToBeginPOSIXTime def 20
+      , gpAmount      = 30_000_000
+      }
+    , wait1
+    , callEndpoint @"give" (hs ! 1) $ GiveParams {
+          gpBeneficiary = mockWalletPaymentPubKeyHash $ knownWallet 4
+        , gpDeadline    = slotToBeginPOSIXTime def 20
+        , gpAmount      = 30_000_000
+        }
+    , wait1
+    , callEndpoint @"grab" (hs ! 2) () -- deadline not reached
+    , void $ waitUntilSlot 20
+    , callEndpoint @"grab" (hs ! 3) () -- wrong beneficiary
+    , wait1
+    , callEndpoint @"grab" (hs ! 4) () -- collect gift
+    ]
 
 exports :: ContractExports -- Prepare exports for jamb CLI:
-exports = ContractExports { getValidator = validator, getTest = Just test }
+exports = exportValidatorWithTest validator test 4

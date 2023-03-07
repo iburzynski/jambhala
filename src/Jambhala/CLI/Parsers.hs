@@ -1,76 +1,61 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleContexts #-}
 
-module Jambhala.CLI.Parsers (
-    CabalProjectData(..), Dependency(..)
-  , cabalProjectParser, prefetchGitParser ) where
+module Jambhala.CLI.Parsers ( commandParser, contractsPretty ) where
 
-import Prelude hiding (
-    Applicative(..), Functor(..), Monoid(..), Semigroup(..)
-  , (<$>), (<$), (<*), (*>), (/=), elem, notElem, mconcat )
-
+import Prelude hiding
+  ( Applicative(..), Functor(..), Monoid(..), Semigroup(..), (<$>), elem, mconcat )
+import Jambhala.CLI.Types
 import Jambhala.Haskell
-import Text.Megaparsec
-import Text.Megaparsec.Char ( char, eol, hspace, printChar, space, string )
-import Text.Megaparsec.Char.Lexer ( skipLineComment, charLiteral )
-import qualified Data.Text as T
+import Options.Applicative
+import qualified Data.Map.Strict as M
 
-type Parser = Parsec Void Text
-data Dependency = Dependency {
-    depType :: !Text
-  , depLoc :: !Text
-  , depTag :: !Text
-  , depSubdirs :: !(Maybe Text)
-  } deriving Show
+commandParser :: MonadReader Contracts m => m (ParserInfo Command)
+commandParser = do
+  pw <- parseWrite
+  ph <- parseHash
+  pt <- parseTest
+  let p = parseList <|> ph <|> pt <|> pw <|> parseUpdate
+  pure . info (helper <*> p) $ mconcat [fullDesc, progDesc "Jambhala Plutus Development Suite"]
 
-data CabalProjectData = CabalProjectData ![Dependency] !Text deriving Show
+parseList :: Parser Command
+parseList = flag' List (long "list" <> short 'l' <> help "List the available contracts")
 
-textParser :: Parser String
-textParser = choice ["\n" <$ eol, try (lineOrComment <* eol), lineOrComment <* eof]
-  where lineOrComment = choice ["" <$ try (space *> skipLineComment "--"), some printChar]
+parseHash :: MonadReader Contracts m => m (Parser Command)
+parseHash = fmap (fmap Hash) . parseContractName $ mconcat [
+    long "hash"
+  , short 's'
+  , metavar "CONTRACT"
+  , help "Hash validator for CONTRACT" ]
 
-cabalProjectParser :: Text -> Parser CabalProjectData
-cabalProjectParser tag = do
-  sect1 <- sectP $ string "packages:"
-  sds   <- subdirsParser "write-ghc-environment-files"
-  sect2 <- sectP . lookAhead $ void (string "source-repository-package") <|> eof
-  let plutusAppsSrp = Dependency {
-      depType    = "git"
-    , depLoc     = "https://github.com/input-output-hk/plutus-apps.git"
-    , depTag     = tag
-    , depSubdirs = Just sds
-    }
-  deps  <- (plutusAppsSrp :) <$> manyTill srpParser eof
-  pure . CabalProjectData deps $ mconcat ["packages: ./\n\n", sect1, sect2]
-  where sectP = fmap T.unlines . sectionParser
+parseTest :: MonadReader Contracts m => m (Parser Command)
+parseTest = fmap (fmap Test) . parseContractName $ mconcat [
+    long "test"
+  , short 't'
+  , metavar "CONTRACT"
+  , help "Test CONTRACT with emulator" ]
 
-sectionParser :: Parser a -> Parser [Text]
-sectionParser = fmap fmtSection . manyTill textParser
-  where fmtSection ls = [ T.pack $ if l /= "\n" then l else "" | l <- ls, not $ null l ]
+parseWrite :: MonadReader Contracts m => m (Parser Command)
+parseWrite = fmap ((<*> parseFName) . fmap Write) . parseContractName $ mconcat [
+    long "write"
+  , short 'w'
+  , metavar "CONTRACT"
+  , help "Write CONTRACT to file with optional FILENAME (default is CONTRACT.plutus)" ]
+  where parseFName = optional $ argument str (metavar "FILENAME")
 
-subdirsParser :: Text -> Parser Text
-subdirsParser t = fmtSds <$> manyTill textParser (lookAhead $ void (string t) <|> eof)
-  where fmtSds sds = T.unlines $
-          [ ("      " <>) . T.strip $ T.pack sd | sd <- sds, sd `notElem` ["", "\n"] ]
+parseUpdate :: Parser Command
+parseUpdate = flag' Update (mconcat [
+     long "update"
+   , short 'u'
+   , help "Update plutus-apps to optional TAG or COMMIT (default is latest commit)"
+   ]) <*> optional (argument str $ metavar "TAG/COMMIT")
 
-srpParser :: Parser Dependency
-srpParser = do
-  _ <- many (space *> skipLineComment "--" *> eol)
-  _ <- try $ lookAhead $ string "source-repository-package"
-  let fieldP fld = T.pack <$> (space *> string fld *> space *> manyTill anySingle eol)
-  _          <- string "source-repository-package" *> space
-  depType    <- fieldP "type:"
-  depLoc     <- fieldP "location:"
-  depTag     <- fieldP "tag:"
-  -- _          <- space *> string "subdir:" *> hspace *> eol
-  depSubdirs <- optional . try $ (space *> string "subdir:" *> hspace *> eol *> subdirsParser "source-repository-package")
+parseContractName :: MonadReader Contracts m => Mod OptionFields String -> m (Parser String)
+parseContractName fields = do
+  contracts <- ask
+  let readMName = eitherReader $ \c -> if c `M.member` contracts then Right c else Left $
+        "Error: contract not found - choose one of the contracts below:\n\n"
+        ++ contractsPretty contracts
+  pure $ option readMName fields
 
-  pure $ Dependency {..}
-
-prefetchGitParser :: Parser [Text]
-prefetchGitParser = some sha256Parser <* eof
-  where
-    sha256Parser = do
-      _ <- manyTill anySingle (string "\"sha256\": \"")
-      hash <- manyTill charLiteral (string "\",")
-      _ <- manyTill anySingle (lookAhead $ void (char '{') <|> eof)
-      pure $ T.pack hash
+contractsPretty :: Contracts -> String
+contractsPretty = unlines . map ('\t':) . M.keys

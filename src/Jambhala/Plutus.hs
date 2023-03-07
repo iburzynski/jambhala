@@ -7,8 +7,10 @@ module Jambhala.Plutus (
   , BabbageEra
   , CompiledCode
   , Contract
+  , ContractHandle
   , Datum(..)
   , DecoratedTxOut(..)
+  , EmulatorEffects
   , EmulatorTrace
   , Endpoint
   , Error(..)
@@ -66,6 +68,7 @@ module Jambhala.Plutus (
   , ownFirstPaymentPubKeyHash
   , plutusV2OtherScript
   , runEmulatorTraceIO
+  , runEmulatorTraceIOWithConfig
   , scriptHashAddress
   , scriptDataToJson
   , select
@@ -105,8 +108,9 @@ import Plutus.Script.Utils.Ada ( lovelaceValueOf )
 import Plutus.Script.Utils.Typed ( ValidatorTypes(..) )
 import Plutus.Script.Utils.V2.Scripts ( validatorHash )
 import Plutus.Trace
-  ( EmulatorTrace
-  , activateContractWallet, callEndpoint, runEmulatorTraceIO, waitNSlots, waitUntilSlot )
+  ( ContractHandle, EmulatorConfig, EmulatorEffects, EmulatorTrace, TraceConfig
+  , activateContractWallet, callEndpoint, runEmulatorTraceIO, runEmulatorTraceIO', waitNSlots
+  , waitUntilSlot )
 import Plutus.V1.Ledger.Address ( Address, scriptHashAddress )
 import Plutus.V2.Ledger.Api
   ( Datum(..), Interval(..), POSIXTime, Redeemer (..), ScriptContext(..), ToData(..), Validator
@@ -116,5 +120,8 @@ import PlutusTx
   ( CompiledCode, FromData(..), UnsafeFromData(..), builtinDataToData, compile, unstableMakeIsData )
 import Wallet.Emulator ( knownWallet, mockWalletPaymentPubKeyHash )
 
+import System.IO (IO)
 
-
+-- | Temporary replacement for deprecated function (not yet exported by Plutus.Trace.Emulator)
+runEmulatorTraceIOWithConfig :: TraceConfig -> EmulatorConfig -> EmulatorTrace () -> IO ()
+runEmulatorTraceIOWithConfig = runEmulatorTraceIO'

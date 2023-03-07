@@ -1,17 +1,19 @@
 {-# LANGUAGE FlexibleContexts #-}
 module Jambhala.CLI.Update ( updatePlutusApps ) where
 
-import Jambhala.CLI.Parsers ( CabalProjectData(..), Dependency(..), cabalProjectParser, prefetchGitParser )
 
-import Prelude hiding (
-    Applicative(..), Eq(..), Functor(..), Monoid(..), Semigroup(..), Traversable(..)
+
+import Prelude hiding
+  ( Applicative(..), Eq(..), Functor(..), Monoid(..), Semigroup(..), Traversable(..)
   , (<$>), decodeUtf8, elem, error, mconcat, unless )
 
+import Jambhala.CLI.Update.Parsers
+  ( CabalProjectData(..), Dependency(..), cabalProjectParser, prefetchGitParser )
 import Jambhala.Haskell
+
 import Data.Text.Encoding ( decodeUtf8 )
 import Data.Time ( getCurrentTime )
 import Data.Time.Format.ISO8601 ( iso8601Show )
-import GHC.Err ( error )
 import Text.Megaparsec ( runParser, errorBundlePretty )
 import Turtle ( ExitCode(..) )
 import qualified Data.ByteString as BS
