@@ -330,42 +330,45 @@ In the `jambhala.cabal` file, add your module name (i.e. `Contracts.MyContract`)
 
 You're now ready to write your contract, which should contain a ***Validator*** value (by convention in the samples this is called `validator`). See the contracts in `src/Contracts/Samples` for example validators.
 
-The `jamb` CLI can perform various operations on your contracts, including calculating its validator hash, testing it using the emulator, and compiling it into a `.plutus` file. To do this you need to prepare a ***ContractExports*** value in each of your contracts, which has the following type definition:
+### **Writing Emulator Tests**
+Jambhala provides an enhanced variant of the Plutus emulator with some additional conveniences.
+
+To define an emulator trace that is compatible with the `jamb` CLI, use the type `JambEmulatorTrace`.
+
+>`JambEmulatorTrace` is similar to the `EmulatorTrace ()` type used with the standard emulator, but subsumes the unit (`()`) type and includes an additional effect for more convenient management of mock wallets.
+
+All code used in the standard `EmulatorTrace` context is compatible with `JambEmulatorTrace`, but some additional emulator utilities are provided by `Jambhala.Utils` for convenience:
+
+* `activateWallets`: takes endpoints and activates all mock wallets in the test, returning their `ContractHandle` values in an `IntMap` with keys corresponding to the wallet numbers. Activated wallet handles can be referenced in the test via the (`!`) operator.
 
   ```haskell
-  data ContractExports = ContractExports { getValidator :: !Validator
-                                         , getTest      :: !(Maybe (EmulatorTrace ())) }
+  hs <- activateWallets endpoints
+  callEndpoint @"give" (hs ! 1) 33_000_000
   ```
 
-In our contract, we construct the exports value like this:
+* `wait1`: waits one slot in an emulator test. This is equivalent to `waitNSlots 1` but discards the resulting `Slot` value, making it more convenient to use.
+
+### **Using the `jamb` CLI**
+The `jamb` CLI can perform various operations on your contracts, including calculating its validator hash, testing it using a blockchain emulator, and compiling it into a `.plutus` file. To do this we need to prepare a ***ContractExports*** value in each of our contracts.
+
+For a contract without an emulator test, apply the `exportValidator` function (from `Jambhala.Utils`) to your validator to prepare it for use with the `jamb` CLI:
 
   ```haskell
-  -- Prepare exports for jamb CLI:
-  exports :: ContractExports
-  exports = ContractExports { getValidator = validator, getTest = Just test }
+  exports :: ContractExports -- Prepare exports for jamb CLI
+  exports = exportValidator validator
   ```
 
-  or in shorter notation:
-  ```haskell
-  exports :: ContractExports
-  exports = ContractExports validator $ Just test
-  ```
-
-  where `validator` and `test` are values defined in our contract of types ***Validator*** and ***EmulatorTrace* ()**, respectively.
-
-For a contract without an emulator test, construct the exports with a `Nothing` value:
+To export a contract with an emulator test, apply the `exportValidatorWithTest` function to the validator, the test, and the desired number of mock wallets to use in the test:
 
   ```haskell
-  exports :: ContractExports
-  exports = ContractExports validator Nothing
+  exports :: ContractExports -- Prepare exports for jamb CLI:
+  exports = exportValidatorWithTest validator test 4
   ```
 
+  where `validator` and `test` are values defined in our contract of types ***Validator*** and ***JambEmulatorTrace***, respectively.
 
-  ```haskell
-  module Contracts.MyContract where
-  ```
 
-In `src/Contracts/Contracts.hs`, import your contract module as a qualified import, i.e.:
+To make your contract visible to the CLI, in `src/Contracts/Contracts.hs` import your contract module as a qualified import, i.e.:
 
   ```haskell
   import qualified Contracts.MyContract as MyContract

@@ -34,13 +34,19 @@ runJambEmulator EmulatorExport{..} =
   where
     mkEmulatorConfig (WalletQuantity n) = EmulatorConfig (Left $ defaultDistFor $ take n knownWallets) def
 
--- | Activates all mock wallets and returns their ContractHandle values in an IntMap
--- with keys corresponding to wallet numbers, which can be referenced in EmulatorTrace tests
--- via the (!) operator.
+-- | Takes endpoints and activates all mock wallets in a `JambEmulatorTrace` test, returning their
+-- `ContractHandle` values in an `IntMap` with keys corresponding to wallet numbers. Activated
+-- wallet handles can be referenced in the test via the (`!`) operator.
 
 -- To use, apply to endpoints listener (endpoints :: Contract w s e a)
+-- Example:
+-- ```
+-- hs <- activateWallets endpoints
+-- callEndpoint @"give" (hs ! 1) 33_000_000
+-- ```
+
 -- This function can only be used in the enhanced `JambEmulatorTrace` context, not the
--- standard`EmulatorTrace` context.
+-- standard `EmulatorTrace` context.
 activateWallets :: forall (contract :: * -> Row * -> * -> * -> *) w (s :: Row *) e
        (effs :: [* -> *]). (IsContract contract, ContractConstraints s, Show e, ToJSON e,
  FromJSON e, ToJSON w, FromJSON w, Member StartContract effs, Member (Reader WalletQuantity) effs,
