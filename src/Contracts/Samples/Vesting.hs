@@ -41,18 +41,18 @@ instance ValidatorTypes VTypes where
     type instance DatumType VTypes    = VestingDatum
     type instance RedeemerType VTypes = ()
 
-data GiveParams = GiveParams
+data GiveParam = GiveParam
   { gpBeneficiary :: !PaymentPubKeyHash
   , gpDeadline    :: !POSIXTime
   , gpAmount      :: !Integer
   } deriving (Generic, ToJSON, FromJSON)
 
 type Schema =
-      Endpoint "give" GiveParams
+      Endpoint "give" GiveParam
   .\/ Endpoint "grab" ()
 
-give :: GiveParams -> Contract () Schema Text ()
-give (GiveParams{..}) = do
+give :: GiveParam -> Contract () Schema Text ()
+give (GiveParam{..}) = do
   submittedTxId <- getCardanoTxId <$> submitTxConstraintsWith @VTypes lookups constraints
   _ <- awaitTxConfirmed submittedTxId
   logInfo @String $ printf "Made a gift of %d lovelace to %s with deadline %s"
@@ -99,13 +99,13 @@ test = do
   hs <- activateWallets endpoints
   sequence_
     [
-      callEndpoint @"give" (hs ! 1) $ GiveParams {
+      callEndpoint @"give" (hs ! 1) $ GiveParam {
         gpBeneficiary = mockWalletPaymentPubKeyHash $ knownWallet 2
       , gpDeadline    = slotToBeginPOSIXTime def 20
       , gpAmount      = 30_000_000
       }
     , wait1
-    , callEndpoint @"give" (hs ! 1) $ GiveParams {
+    , callEndpoint @"give" (hs ! 1) $ GiveParam {
           gpBeneficiary = mockWalletPaymentPubKeyHash $ knownWallet 4
         , gpDeadline    = slotToBeginPOSIXTime def 20
         , gpAmount      = 30_000_000

@@ -37,20 +37,20 @@ instance ValidatorTypes VTypes where
   type instance DatumType    VTypes = Answer
   type instance RedeemerType VTypes = Guess
 
-data GiveParams = GiveParams {
+data GiveParam = GiveParam {
     giveAmount :: !Integer
   , giveAnswer :: !Integer }
   deriving (Generic, ToJSON, FromJSON)
 
-newtype GrabParams = GrabParams { grabGuess :: Integer }
+newtype GrabParam = GrabParam { grabGuess :: Integer }
   deriving (Generic, ToJSON, FromJSON)
 
 type Schema =
-      Endpoint "give" GiveParams
-  .\/ Endpoint "grab" GrabParams
+      Endpoint "give" GiveParam
+  .\/ Endpoint "grab" GrabParam
 
-give :: GiveParams -> Contract () Schema Text ()
-give (GiveParams q a) = do
+give :: GiveParam -> Contract () Schema Text ()
+give (GiveParam q a) = do
   submittedTxId <- getCardanoTxId <$> submitTxConstraintsWith @VTypes lookups constraints
   _ <- awaitTxConfirmed submittedTxId
   logInfo @String $ printf "Gave %d lovelace" q
@@ -60,8 +60,8 @@ give (GiveParams q a) = do
     lookups     = plutusV2OtherScript validator
     constraints = mustPayToOtherScriptWithDatumInTx vHash datum $ lovelaceValueOf q
 
-grab :: GrabParams -> Contract () Schema Text ()
-grab (GrabParams g) = do
+grab :: GrabParam -> Contract () Schema Text ()
+grab (GrabParam g) = do
     addr  <- getContractAddress validator
     validUtxos <- Map.mapMaybe hasMatchingDatum <$> utxosAt addr
     if Map.null validUtxos then logInfo @String $ "No matching UTXOs"
@@ -93,17 +93,17 @@ test = do
   hs <- traverse ((`activateContractWallet` endpoints) . knownWallet) [1 .. 6]
   case hs of
     [h1, h2, h3, h4, h5, h6] -> sequence_
-        [ callEndpoint @"give" h1 $ GiveParams 10_000_000 42
+        [ callEndpoint @"give" h1 $ GiveParam 10_000_000 42
         , wait1
-        , callEndpoint @"give" h2 $ GiveParams 10_000_000 42
+        , callEndpoint @"give" h2 $ GiveParam 10_000_000 42
         , wait1
-        , callEndpoint @"give" h3 $ GiveParams 10_000_000 21
+        , callEndpoint @"give" h3 $ GiveParam 10_000_000 21
         , wait1
-        , callEndpoint @"grab" h4 $ GrabParams 33
+        , callEndpoint @"grab" h4 $ GrabParam 33
         , wait1
-        , callEndpoint @"grab" h5 $ GrabParams 21
+        , callEndpoint @"grab" h5 $ GrabParam 21
         , wait1
-        , callEndpoint @"grab" h6 $ GrabParams 42
+        , callEndpoint @"grab" h6 $ GrabParam 42
         ]
     _ -> pure ()
 
