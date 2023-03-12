@@ -30,7 +30,7 @@ import qualified Data.ByteString.Lazy     as BSL
 import qualified Data.ByteString.Short    as BSS
 import qualified Plutus.V1.Ledger.Scripts as V1Scripts
 
--- | Replacement for the removed `mkUntypedValidator` function
+-- | Temporary replacement for the removed `mkUntypedValidator` function
 wrap :: (UnsafeFromData d, UnsafeFromData r)
      => (d -> r -> ScriptContext -> Bool)
      -> (BuiltinData -> BuiltinData -> BuiltinData -> ())

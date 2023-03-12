@@ -3,7 +3,6 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE FlexibleContexts #-}
 
 module Contracts.Samples.Vesting where
 
@@ -35,7 +34,7 @@ vesting (VestingDatum ben dline) _ sc =  traceIfFalse "Wrong pubkey hash"    sig
 
 validator :: Validator
 validator = mkValidatorScript $$(compile [|| wrapped ||])
-  where wrapped = wrap vesting
+  where wrapped = mkUntypedValidator vesting
 
 data VTypes
 instance ValidatorTypes VTypes where
@@ -43,10 +42,10 @@ instance ValidatorTypes VTypes where
     type instance RedeemerType VTypes = ()
 
 data GiveParams = GiveParams
-     { gpBeneficiary :: !PaymentPubKeyHash
-     , gpDeadline    :: !POSIXTime
-     , gpAmount      :: !Integer
-     } deriving (Generic, ToJSON, FromJSON)
+  { gpBeneficiary :: !PaymentPubKeyHash
+  , gpDeadline    :: !POSIXTime
+  , gpAmount      :: !Integer
+  } deriving (Generic, ToJSON, FromJSON)
 
 type Schema =
       Endpoint "give" GiveParams

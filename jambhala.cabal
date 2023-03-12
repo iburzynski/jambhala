@@ -54,6 +54,7 @@ library
     Contracts.Samples.CustomTyped
     Contracts.Samples.Guess
     Contracts.Samples.Vesting
+    Contracts.Samples.Parameterized
   hs-source-dirs:
       src
   build-depends:

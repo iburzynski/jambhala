@@ -30,7 +30,7 @@ guess (Answer a) (Guess g) _ = traceIfFalse "Sorry, wrong guess!" (g == a)
 
 validator :: Validator
 validator = mkValidatorScript $$(compile [|| wrapped ||])
-  where wrapped = wrap guess
+  where wrapped = mkUntypedValidator guess
 
 data VTypes
 instance ValidatorTypes VTypes where

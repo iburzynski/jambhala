@@ -9,7 +9,7 @@ simpleTyped _ redeemer _ = traceIfFalse "Sorry, wrong guess!" (redeemer == 42)
 
 validator :: Validator
 validator = mkValidatorScript $$(compile [|| wrapped ||])
-  where wrapped = wrap simpleTyped
+  where wrapped = mkUntypedValidator simpleTyped
 
 exports :: ContractExports -- Prepare exports for jamb CLI
 exports = exportValidator validator

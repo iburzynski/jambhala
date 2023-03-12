@@ -16,6 +16,7 @@ module Jambhala.Plutus (
   , Error(..)
   , FromData(..)
   , Interval(..)
+  , IsScriptContext(..)
   , Language(..)
   , NetworkId(..)
   , NetworkMagic(..)
@@ -40,6 +41,7 @@ module Jambhala.Plutus (
   , Versioned(..)
   , type (.\/)
   , activateContractWallet
+  , applyCode
   , awaitTxConfirmed
   , builtinDataToData
   , callEndpoint
@@ -56,8 +58,10 @@ module Jambhala.Plutus (
   , hashScript
   , interval
   , knownWallet
+  , liftCode
   , logInfo
   , lovelaceValueOf
+  , makeLift
   , mkValidatorCardanoAddress
   , mkValidatorScript
   , mockWalletPaymentPubKeyHash
@@ -75,6 +79,7 @@ module Jambhala.Plutus (
   , slotToBeginPOSIXTime
   , submitTxConstraintsWith
   , txSignedBy
+  , unitDatum
   , unitRedeemer
   , unspentOutputs
   , unstableMakeIsData
@@ -94,11 +99,12 @@ import Cardano.Node.Emulator ( slotToBeginPOSIXTime )
 import Ledger
   ( DecoratedTxOut(..), Language (..), PaymentPubKeyHash(..), TxOutRef, Versioned (..)
   , contains, datumInDatumFromQuery, decoratedTxOutDatum, from, getCardanoTxId, interval
-  , mkValidatorCardanoAddress, unitRedeemer )
+  , mkValidatorCardanoAddress, unitDatum, unitRedeemer )
 import Ledger.Tx.Constraints
   ( mustBeSignedBy, mustPayToOtherScriptWithDatumInTx, mustSpendScriptOutput
   , mustValidateInTimeRange, plutusV2OtherScript, unspentOutputs )
 import Ledger.Tx.Constraints.ValidityInterval ( fromPlutusInterval )
+import Ledger.Typed.Scripts (IsScriptContext(..))
 import Plutus.Contract
   ( AsContractError, Contract, Endpoint, Promise (..), type (.\/)
   , currentNodeClientTimeRange, logInfo, ownFirstPaymentPubKeyHash, submitTxConstraintsWith
@@ -117,7 +123,8 @@ import Plutus.V2.Ledger.Api
   , ValidatorHash, mkValidatorScript )
 import Plutus.V2.Ledger.Contexts ( TxInfo(..), txSignedBy )
 import PlutusTx
-  ( CompiledCode, FromData(..), UnsafeFromData(..), builtinDataToData, compile, unstableMakeIsData )
+  ( CompiledCode, FromData(..), UnsafeFromData(..)
+  , applyCode, builtinDataToData, compile, liftCode, makeLift, unstableMakeIsData )
 import Wallet.Emulator ( knownWallet, mockWalletPaymentPubKeyHash )
 
 import System.IO (IO)
