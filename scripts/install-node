@@ -25,9 +25,9 @@ if [ ! -d "$CARDANO_PATH" ]; then
   if [ ! -d "$HOME/cardano" ]; then
     mkdir "$HOME/cardano"
   fi
-  mkdir "$CARDANO_PATH"
-  mkdir "$DB_PATH"
-  mkdir "$CONFIG_PATH"
+  mkdir $CARDANO_PATH
+  mkdir $DB_PATH
+  mkdir $CONFIG_PATH
 fi
 
 cd $CONFIG_PATH
