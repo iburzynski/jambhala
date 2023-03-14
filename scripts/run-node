@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+cardano-node run \
+  --topology $NODE_CONFIG_PATH/topology.json \
+  --database-path $CARDANO_PATH/db \
+  --socket-path $CARDANO_NODE_SOCKET_PATH \
+  --port 3001 \
+  --config $NODE_CONFIG_PATH/config.json

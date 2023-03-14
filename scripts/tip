@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+cardano-cli query tip $TESTNET

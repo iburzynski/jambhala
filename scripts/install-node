@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+CARDANO_SRC="$HOME/cardano-src"
+
+echo "Installing Cardano Node and CLI..."
+
+if [ ! -d $CARDANO_SRC ]; then
+  mkdir $CARDANO_SRC
+fi
+
+cd $CARDANO_SRC
+
+if [ ! -d "cardano-node" ]; then
+  git clone "https://github.com/input-output-hk/cardano-node"
+fi
+
+cd "cardano-node"
+git reset --hard $NODE_RELEASE
+nix build ".#$NETWORK/node"
+nix-env -f . -iA cardano-node
+nix build ".#cardano-cli"
+nix-env -f . -iA cardano-cli
+
+if [ ! -d "$CARDANO_PATH" ]; then
+  if [ ! -d "$HOME/cardano" ]; then
+    mkdir "$HOME/cardano"
+  fi
+  mkdir "$CARDANO_PATH"
+  mkdir "$DB_PATH"
+  mkdir "$CONFIG_PATH"
+fi
+
+cd $CONFIG_PATH
+
+CONFIG_SRC_PATH="https://book.world.dev.cardano.org/environments/$TESTNET_NAME"
+
+config_files=(
+  "config"
+  "db-sync-config"
+  "submit-api-config"
+  "topology"
+  "alonzo-genesis"
+  "byron-genesis"
+  "shelley-genesis"
+)
+
+echo "Downloading config files..."
+for file in "${config_files[@]}"
+do
+  curl -O -J "$CONFIG_SRC_PATH/$file.json"
+done
+
+echo "Cardano Node installed and configured successfully."
+echo "Use 'run-node' command to start the node"
