@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-addr=$(cat "keys/$1.addr")
-
-cardano-cli query utxo --address $addr $TESTNET

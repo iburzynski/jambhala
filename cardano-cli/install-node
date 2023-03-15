@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 
-CARDANO_SRC="$HOME/cardano-src"
-
 echo "Installing Cardano Node and CLI..."
 
-if [ ! -d $CARDANO_SRC ]; then
-  mkdir $CARDANO_SRC
+if [ ! -d $CARDANO_SRC_PATH ]; then
+  mkdir $CARDANO_SRC_PATH
 fi
 
-cd $CARDANO_SRC
+cd $CARDANO_SRC_PATH
 
 if [ ! -d "cardano-node" ]; then
   git clone "https://github.com/input-output-hk/cardano-node"
@@ -50,5 +48,5 @@ do
   curl -O -J "$CONFIG_SRC_PATH/$file.json"
 done
 
-echo "Cardano Node installed and configured successfully."
+echo "cardano-node and cardano-cli installed and configured successfully."
 echo "Use 'run-node' command to start the node"

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+out="assets/protocol-parameters.json"
+
+cardano-cli query protocol-parameters \
+$TESTNET \
+--out-file $out
+
+echo "Protocol parameters saved to '${out}'"

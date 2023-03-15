@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+    >&2 echo "expected transaction name as argument"
+    exit 1
+fi
+
+cardano-cli transaction txid --tx-file "assets/tx/$1.signed"

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+echo $(cat "assets/keys/$1.addr")

@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+    >&2 echo "expected signer name as argument"
+    exit 1
+fi
+
+if [ -z "$2" ]; then
+    >&2 echo "expected transaction name as argument"
+    exit 1
+fi
+
+skey="assets/keys/$1.skey"
+tx="assets/tx/$2"
+
+cardano-cli transaction sign \
+  $TESTNET \
+--signing-key-file $skey \
+--tx-body-file "$tx.raw" \
+--out-file "$tx.signed"
