@@ -198,7 +198,7 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
 ***
 ### 7. **Install `cardano-node` & `cardano-cli`**
 ***
-You'll need a fully-synced `cardano-node` with `cardano-cli` to submit example transactions to the blockchain. Jambhala provides an [installation](./cardano-cli/tutorial/00-installation.md) script to easily install and configure these tools in a single step. If you've already installed `cardano-node` and `cardano-cli`, you can also **[configure](./cardano-cli/tutorial/00-installation.md#existing)** your existing installation to work with Jambhala.
+You'll need a fully-synced `cardano-node` with `cardano-cli` to submit example transactions to the blockchain. Jambhala provides an **[installation](./cardano-cli/tutorial/00-installation.md)** script to easily install and configure these tools in a single step. If you've already installed `cardano-node` and `cardano-cli`, you can also **[configure](./cardano-cli/tutorial/00-installation.md/#existing)** your existing installation to work with Jambhala.
 
 >A tutorial with guided exercises for learning to use `cardano-cli` is provided in the `cardano-cli/tutorial` directory.
 
