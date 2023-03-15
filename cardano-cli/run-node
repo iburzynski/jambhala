@@ -2,7 +2,7 @@
 
 cardano-node run \
   --topology $CONFIG_PATH/topology.json \
-  --database-path $CARDANO_PATH/db \
+  --database-path $DB_PATH \
   --socket-path $CARDANO_NODE_SOCKET_PATH \
   --port 1337 \
   --config $CONFIG_PATH/config.json
