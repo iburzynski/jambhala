@@ -32,12 +32,12 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
   * Serialize contracts to `.plutus` files.
 
 💎 #3: **Keeps projects in sync with `plutus-apps`**
-  * With Jambhala, we don't need to maintain a central clone of the [plutus-apps](https://github.com/input-output-hk/plutus-apps) repository and use its associated Nix shell as the entry point for development of every project.
+  * With Jambhala, we don't need to maintain a central clone of the **[plutus-apps](https://github.com/input-output-hk/plutus-apps)** repository and use its associated Nix shell as the entry point for development of every project.
   * Relying on a central `plutus-apps` instance forces us to use the same revision for every project we develop. If we update our `plutus-apps` to use a more recent revision:
     * we need to adjust all of our individual projects' `cabal.project` files by hand to reflect any changes in dependencies
     * we risk breaking our older projects if the API of `plutus-apps` has changed
   * Even setting up a single project with this approach is painful, because in the absence of an up-to-date template, we must manually copy and adjust boilerplate from `plutus-apps` into our `cabal.project` file. This in turn quickly becomes outdated given the pace of Plutus development.
-  * Jhambala uses [haskell.nix](https://input-output-hk.github.io/haskell.nix/) to provide a fully self-reliant Plutus development environment for each of your projects, which can be brought up to date with the current state of `plutus-apps` using a single command. No more wrangling of dependency boilerplate: just build your project environment and get to work, then bump `plutus-apps` for a specific project whenever you like.
+  * Jhambala uses **[haskell.nix](https://input-output-hk.github.io/haskell.nix/)** to provide a fully self-reliant Plutus development environment for each of your projects, which can be brought up to date with the current state of `plutus-apps` using a single command. No more wrangling of dependency boilerplate: just build your project environment and get to work, then bump `plutus-apps` for a specific project whenever you like.
   * Serve Haddock documentation for the specific `plutus-apps` revision your project uses with the `serve-docs` command.
 
 ***
@@ -46,7 +46,7 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
 
 ### 0. **Requirements**
 
-  * This project uses the Nix package manager, Nix flakes, and IOG's [haskell.nix](https://input-output-hk.github.io/haskell.nix/) infrastructure to build a fully-functioning and reproducible Plutus development environment.
+  * This project uses the Nix package manager, Nix flakes, and IOG's **[haskell.nix](https://input-output-hk.github.io/haskell.nix/)** infrastructure to build a fully-functioning and reproducible Plutus development environment.
   * Nix is only compatible with Unix-like operating systems, so you must be using a Linux distribution, MacOS, or WSL2 (Windows Subsystem for Linux) to install this project locally.
   * This project assumes the use of `VS Code` as editor and `bash` as shell. Other tools will require alternative workflows that are not covered here.
   * This project is storage-intensive. We suggest you have at least `30GB` of free disk space before proceeding further.
@@ -55,8 +55,8 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
 ***
 ### 1. **Install `nix`**
 ***
-  * If you're setting up Nix on your system for the first time, try Determinate Systems' [Zero-to-Nix](https://zero-to-nix.com) in lieu of the official installer, as it provides an easier tool for [installing](https://zero-to-nix.com/start/install) and [uninstalling](https://zero-to-nix.com/start/uninstall) Nix.
-  * Alternatively, you may follow the instructions for **multi-user installation** for your OS at [nixos.org](https://nixos.org/download.html). This approach will require some additional configuration and it will be harder to uninstall Nix if you need to. It is only recommended if you've previously installed Nix on your system, as it will detect and repair a previous installation as needed.
+  * If you're setting up Nix on your system for the first time, try Determinate Systems' **[Zero-to-Nix](https://zero-to-nix.com)** in lieu of the official installer, as it provides an easier tool for **[installing](https://zero-to-nix.com/start/install)** and **[uninstalling](https://zero-to-nix.com/start/uninstall)** Nix.
+  * Alternatively, you may follow the instructions for **multi-user installation** for your OS at **[nixos.org](https://nixos.org/download.html)**. This approach will require some additional configuration and it will be harder to uninstall Nix if you need to. It is only recommended if you've previously installed Nix on your system, as it will detect and repair a previous installation as needed.
   * When you are finished installing Nix, close the terminal session and open a fresh one.
 ***
 ### 2. **Configure `nix.conf`**
@@ -83,6 +83,12 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
     # (add to existing substituters and trusted-public-keys lines if present, separated by spaces)
     substituters = https://cache.nixos.org https://cache.iog.io https://cache.zw3rk.com
     trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk=
+
+    # Step 2d: Allow import from derivation
+    # This setting is included in IOG's instructions for installing cardano-node using Nix.
+    # If you install cardano-node/cardano-cli using Jambhala's `install-node` script this may be required
+    allow-import-from-derivation = true
+
     ```
 
     **🚨 IMPORTANT!** You must restart the `nix-daemon` to apply the changes
@@ -111,14 +117,14 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
   * This setup uses `direnv` to provide seamless loading of the Nix environment whenever you navigate into the project directory tree.
   * The `direnv` extension for VS Code integrates this environment with your editor, providing full IDE support for Plutus development.
   * Jambhala requires `direnv` version `>= 2.30`, which may not be available in the packaging systems for certain older operating systems (for instance, any Ubuntu system below version `22.10`).
-  * Visit the [direnv installation page](https://direnv.net/docs/installation.html) and check which version is available for your OS in the `Packaging status` section. If your `direnv` version `2.30` or higher is available, follow the instructions to install it and hook it into your shell.
+  * Visit the **[direnv installation page](https://direnv.net/docs/installation.html)** and check which version is available for your OS in the `Packaging status` section. If your `direnv` version `2.30` or higher is available, follow the instructions to install it and hook it into your shell.
   * If `direnv` version `2.30+` isn't available for your OS through the standard installation method above, you can use `nix` to install it. Just run the following:
 
     ```sh
     $ nix-env -iA nixpkgs.direnv
     ```
 
-  * When you load the project in VS Code for the first time, you will be prompted to install the [direnv extension](https://marketplace.visualstudio.com/items?itemName=cab404.vscode-direnv&ssr=false#review-details).
+  * When you load the project in VS Code for the first time, you will be prompted to install the **[direnv extension](https://marketplace.visualstudio.com/items?itemName=cab404.vscode-direnv&ssr=false#review-details)**.
 
 ***
 ### 4. **Create your repository**
@@ -154,7 +160,7 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
 
   * You can ignore the following warning: `direnv: ([/nix/store/.../bin/direnv export bash]) is taking a while to execute. Use CTRL-C to give up.`
 
-  * It will take significant time (~2 hours) to set up the environment the first time. You can recite the [Yellow Dzambhala Mantra](https://mantrasmeditation.com/buddhist-mantras/yellow-dzambhala-mantra/) while you wait:
+  * It will take significant time (~2 hours) to set up the environment the first time. You can recite the **[Yellow Dzambhala Mantra](https://mantrasmeditation.com/buddhist-mantras/yellow-dzambhala-mantra/)** while you wait:
 
     ```
                   _=_
@@ -198,7 +204,7 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
 ***
 ### 7. **Install `cardano-node` & `cardano-cli`**
 ***
-You'll need a fully-synced `cardano-node` with `cardano-cli` to submit example transactions to the blockchain. Jambhala provides an **[installation](./cardano-cli/tutorial/00-installation.md)** script to easily install and configure these tools in a single step. If you've already installed `cardano-node` and `cardano-cli`, you can also **[configure](./cardano-cli/tutorial/00-installation.md/#existing)** your existing installation to work with Jambhala.
+You'll need a fully-synced `cardano-node` with `cardano-cli` to submit example transactions to the blockchain. Jambhala provides an **[installation](./cardano-cli/tutorial/00-installation.md)** script to easily install and configure these tools in a single step. If you've already installed `cardano-node` and `cardano-cli`, you can also **[configure](./cardano-cli/tutorial/00-installation.md#existing)** your existing installation to work with Jambhala.
 
 >A tutorial with guided exercises for learning to use `cardano-cli` is provided in the `cardano-cli/tutorial` directory.
 
@@ -438,11 +444,11 @@ $ update-jambhala
 ```
 > *Note that this command is distinct from the `jamb -u` command, which updates only the `plutus-apps` dependency in `cabal.project`.*
 
-You will need to manually resolve the resulting merge conflicts. You may find a VS Code extension like [Git Merger](https://marketplace.visualstudio.com/items?itemName=shaharkazaz.git-merger) to be helpful with this.
+You will need to manually resolve the resulting merge conflicts. You may find a VS Code extension like **[Git Merger](https://marketplace.visualstudio.com/items?itemName=shaharkazaz.git-merger)** to be helpful with this.
 
 ***
 # **📥 Updating Plutus Dependencies**
-The non-Hackage dependencies in the `cabal.project` file are following the [plutus-apps](https://github.com/input-output-hk/plutus-apps) library, with `sha256` hashes calculated for each `source-repository-package` entry.
+The non-Hackage dependencies in the `cabal.project` file are following the **[plutus-apps](https://github.com/input-output-hk/plutus-apps)** library, with `sha256` hashes calculated for each `source-repository-package` entry.
 
 `jamb` provides a utility to easily update `plutus-apps` to the most recent revision and adjust all related dependencies. Run the `jamb -u` command to pull the latest revision and generate a new `cabal.project` file.
 
