@@ -6,5 +6,5 @@ if [ -z "$1" ]; then
 fi
 
 cardano-cli transaction submit \
---tx-file "assets/tx/$1.signed" \
-$TESTNET
+--tx-file "$TX_PATH/$1.signed" \
+$NET

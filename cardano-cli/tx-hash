@@ -5,4 +5,4 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-cardano-cli transaction txid --tx-file "assets/tx/$1.signed"
+cardano-cli transaction txid --tx-file "$TX_PATH/$1.signed"

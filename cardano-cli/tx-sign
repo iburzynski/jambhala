@@ -10,11 +10,11 @@ if [ -z "$2" ]; then
     exit 1
 fi
 
-skey="assets/keys/$1.skey"
-tx="assets/tx/$2"
+skey="$KEYS_PATH/$1.skey"
+tx="$TX_PATH/$2"
 
 cardano-cli transaction sign \
-  $TESTNET \
 --signing-key-file $skey \
 --tx-body-file "$tx.raw" \
---out-file "$tx.signed"
+--out-file "$tx.signed" \
+$NET

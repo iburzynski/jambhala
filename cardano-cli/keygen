@@ -5,9 +5,9 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-vkey="assets/keys/$1.vkey"
-skey="assets/keys/$1.skey"
-addr="assets/keys/$1.addr"
+vkey="$KEYS_PATH/$1.vkey"
+skey="$KEYS_PATH/$1.skey"
+addr="$KEYS_PATH/$1.addr"
 
 if [ -f "$vkey" ]; then
     >&2 echo "verification key file $vkey already exists"
@@ -25,12 +25,13 @@ if [ -f "$addr" ]; then
 fi
 
 cardano-cli address key-gen \
---verification-key-file "$vkey" \
---signing-key-file "$skey"
+--verification-key-file $vkey \
+--signing-key-file $skey
 
 cardano-cli address build \
---payment-verification-key-file "$vkey" \
---testnet-magic 2 --out-file "$addr"
+--payment-verification-key-file $vkey \
+--out-file $addr \
+$NET
 
 echo "wrote verification key to: $vkey"
 echo "wrote signing key to: $skey"
