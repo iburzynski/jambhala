@@ -12,7 +12,7 @@ $ install-node
 * To customize the installation process, see **[Custom installation](#custom)**.
 
 ***
-## Syncing the Node
+## <a id="syncing"></a> Starting and syncing the node
 ***
 Use the `run-node` script to start `cardano-node`:
 
@@ -49,12 +49,12 @@ Some prewritten shell scripts have been provided to make the process less labori
 For example, if we inspect the contents of the `tip` script at `cardano-cli/tip` we'll see the following:
 
 ```sh
-cardano-cli query tip $TESTNET
+cardano-cli query tip $NET
 ```
 
 This script uses `cardano-cli`'s `query` command to query information about the `tip` of the chain.
 
-`$TESTNET` is an environment variable set in the `.envrc` file. It has a value of `"--testnet-magic ${NETWORK_MAGIC}"`, where `${NETWORK_MAGIC}` is a number indicating which testnet we're using (`1` for `preprod`, `2` for `preview`). By default this is set to `2`.
+`NET` is an environment variable set in the `.envrc` file, which is used to specify the network we're using. By default this is set to the `preview` testnet.
 
 ***
 ## <a id="existing"></a> Configuring an existing installation
@@ -65,7 +65,7 @@ If you've already installed `cardano-node` and `cardano-cli`, you'll need to mod
 * `DB_PATH`: make sure this value is correct (by default it's a directory called `db` inside whichever directory `CARDANO_PATH`is set to).
 * `CONFIG_PATH`: replace this value with the path to the directory where your node configuration `.json` files are stored (`config.json`, `topology.json`, etc.).
 * `CARDANO_NODE_SOCKET_PATH`: make sure this value is correct (by default it's a file `node.socket` inside whichever directory `CARDANO_PATH`is set to).
-* `NETWORK_MAGIC`: make sure this value matches the testnet you are using.
+* `NETWORK_MAGIC`: make sure this value matches the testnet you are using (`1` for `preprod`, `2` for `preview`).
 
 >Run `direnv allow` in your terminal session before proceeding if you make any changes to `.envrc`.
 
