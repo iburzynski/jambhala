@@ -1,4 +1,4 @@
-# Installing `cardano-node` & `cardano-cli`
+# **Installing `cardano-node` & `cardano-cli`**
 
 Jambhala provides an easy installation script called `install-node`, which installs `cardano-node` and `cardano-cli` using Nix and configures the node so it's ready for use. If you haven't already installed `cardano-node`, this is the quickest and easiest way to get a node running on your system.
 

@@ -3,7 +3,7 @@
 out="assets/protocol-parameters.json"
 
 cardano-cli query protocol-parameters \
-$NET \
---out-file $out
+--out-file $out \
+$NET
 
 echo "Protocol parameters saved to '${out}'"
