@@ -11,6 +11,7 @@ In this exercise we'll submit a more complex transaction in which funds from a m
 7. **Witness the transaction for `alice`, `bob`, and `charlie`.**
 8. **[Assemble](#assemble) the transaction.**
 9. **Submit the transaction.**
+10. **Extra: [verify the script](#verify).**
 
 ## <a id="script"></a> **Create a multi-signature policy script**
 Create a file called `multisig.script` in the `assets/scripts/native` directory, and paste the following:
@@ -141,4 +142,11 @@ cardano-cli transaction assemble \
 --out-file "$TX_PATH/multisig.signed"
 ```
 
-You can now submit the transaction and verify the results.
+You can now submit the transaction and view the results.
+
+## <a id="verify"></a> **Extra: verify script**
+You can confirm the fidelity of a local copy of a Cardano native script to an address on-chain using `cardanoscan`.
+
+Search for the script address at [preview.cardanoscan.io](https://preview.cardanoscan.io) (use `preprod.cardanoscan.io` instead if using the `preprod` testnet).
+
+You should see a **Contract** heading for the address, and a `Verify` button next to it. Click the button and select `Native script` from the dropdown. Paste the entire JSON contents of the `multisig.script` file into the box and click on `Verify`. This will confirm that the contents accord with the script address.
