@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+    >&2 echo "expected transaction name as argument"
+    exit 1
+fi
+
+cardano-cli transaction view \
+--tx-body-file "$TX_PATH/$1.raw"

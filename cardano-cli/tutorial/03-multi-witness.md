@@ -1,4 +1,4 @@
-# **`cardano-cli` Exercise 03: Multi-witness Transactions**
+# **`cardano-cli` Exercise 03: Multi-witness Transaction**
 In this exercise we'll submit a more complex transaction involving two input UTXOs from different users (`alice` and `bob`) to transfer funds to a third user (`charlie`).
 
 This transaction requires use of the `witness` and `assemble` subcommands of the `transaction` command, which are explained below. The rest of the exercise is left to you to test your understanding of the UTXO model and what you've learned so far about `cardano-cli`, although the high-level steps are provided to guide you.
@@ -40,7 +40,6 @@ $ cardano-cli transaction assemble \
   * `U1` and `U2` as inputs
   * `charlie`'s address and the transfer amount as the output
   * `alice`'s address as the change address
-  * A witness override
 4. Create witness files for both senders.
 5. Assemble the transaction.
 6. Submit the transaction.

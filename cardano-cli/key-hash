@@ -5,4 +5,5 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-echo $(cat "$ADDR_PATH/$1.addr")
+cardano-cli address key-hash \
+--payment-verification-key-file "$KEYS_PATH/$1.vkey"

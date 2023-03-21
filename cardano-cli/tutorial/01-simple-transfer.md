@@ -34,7 +34,7 @@ Since we'll need to use this combination of subcommands multiple times over the 
 
 vkey="$KEYS_PATH/$1.vkey"
 skey="$KEYS_PATH/$1.skey"
-addr="$KEYS_PATH/$1.addr"
+addr="$ADDR_PATH/$1.addr"
 
 ...
 
@@ -48,7 +48,7 @@ cardano-cli address build \
 $NET
 ```
 
-The script first assigns variables for the three output files it will produce (`vkey`, `skey` and `addr`) using the `KEYS_PATH` filepath configured in our `.envrc` file and the name supplied as argument to the script (`$1`).
+The script first assigns variables for the three output files it will produce (`vkey`, `skey` and `addr`) using the `KEYS_PATH` and `ADDR_PATH` filepaths configured in our `.envrc` file and the name supplied as argument to the script (`$1`).
 
 It then runs the `key-gen` subcommand, providing out-filepaths for the `--verification-key-file` and `--signing-key-file` parameters.
 
@@ -61,16 +61,16 @@ Many `cardano-cli` commands require us to specify the network we're using (**tes
 * Jambhala creates an environment variable `NET` in the `.envrc` file, with its value set dynamically to one of these two network options based on the value of the `NETWORK` variable.
 * By default `NETWORK` is configured to use the testnet, and the testnet is configured to `preview`; the `NET` variable thus has a value of `--testnet-magic 2`, where `2` is network magic value corresponding to the `preview` testnet.
 
-### **Run the `keygen` script**
-Run the `keygen` script twice to create keypairs and addresses for `alice` and `bob`:
+### **Run the `key-gen` script**
+Run the `key-gen` script twice to create keypairs and addresses for `alice` and `bob`:
 
 ```sh
-$ keygen alice
+$ key-gen alice
 wrote verification key to: assets/keys/alice.vkey
 wrote signing key to: assets/keys/alice.skey
 wrote address to: assets/keys/alice.addr
 
-$ keygen bob
+$ key-gen bob
 wrote verification key to: assets/keys/bob.vkey
 wrote signing key to: assets/keys/bob.skey
 wrote address to: assets/keys/bob.addr
@@ -82,7 +82,7 @@ When using `cardano-cli`, we'll frequently need to reference user addresses (sto
 ```sh
 # cardano-cli/addr
 
-echo $(cat "$KEYS_PATH/$1.addr")
+echo $(cat "$ADDR_PATH/$1.addr")
 ```
 
 We can run this script to view a user's address in the terminal, and later to interpolate addresses into `cardano-cli` commands.
@@ -100,6 +100,8 @@ addr_test1vqa9qw00et75eqkfz6dnttaj0gtkw0mw67z75zr38xn95hgvh8v80
 We now have addresses for our transaction parties, but they don't contain any funds to make transactions with.
 
 Copy Alice's wallet address from the previous step and fund the wallet with 10,000 Test ADA from the [Testnet Faucet](https://docs.cardano.org/cardano-testnet/tools/faucet).
+
+>Make sure to select the correct `Environment` at the Testnet Faucet. By default Jambhala uses the `Preview Testnet`.
 
 >Make sure to use the address generated for **your** Alice wallet, not the sample output provided above - otherwise you'll fund the wrong Alice!
 

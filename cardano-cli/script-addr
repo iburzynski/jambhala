@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+    >&2 echo "expected script name as argument"
+    exit 1
+fi
+
+addr=$ADDR_PATH/$1.addr
+
+if [ -f "$addr" ]; then
+    >&2 echo "address file $addr already exists"
+    exit 1
+fi
+
+cardano-cli address build \
+--payment-script-file $NATIVE_SCRIPTS_PATH/$1.script \
+--out-file $addr \
+$NET
+
+echo "wrote address to: $addr"

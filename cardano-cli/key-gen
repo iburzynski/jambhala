@@ -7,7 +7,7 @@ fi
 
 vkey="$KEYS_PATH/$1.vkey"
 skey="$KEYS_PATH/$1.skey"
-addr="$KEYS_PATH/$1.addr"
+addr="$ADDR_PATH/$1.addr"
 
 if [ -f "$vkey" ]; then
     >&2 echo "verification key file $vkey already exists"
