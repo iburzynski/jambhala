@@ -93,7 +93,6 @@ Now we'll draft the transaction as follows, using the `build-raw` command:
 
 ```sh
 $ cardano-cli transaction build-raw \
---babbage-era \
 --tx-in $U \
 --tx-out $(addr bob)+250000000 \
 --tx-out $(addr alice)+0 \
@@ -185,7 +184,6 @@ We're now ready to build the transaction with all of the arguments (replacing th
 
 ```sh
 $ cardano-cli transaction build-raw \
-  --babbage-era \
   --tx-in $U \
   --tx-out $(addr bob)+250000000 \
   --tx-out $(addr alice)+$BALANCE \

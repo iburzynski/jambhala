@@ -150,7 +150,6 @@ We'll use the `build` subcommand to build a simple transaction that transfers 25
 
 ```sh
 $ cardano-cli transaction build \
---babbage-era \
 --tx-in $U \
 --tx-out $(addr bob)+250000000 \
 --change-address $(addr alice) \
@@ -159,7 +158,6 @@ $NET
 ```
 
 Note the various parameters that must be provided:
-* **Era**: transactions can differ between Cardano eras (e.g have new features such as multi-assets), so we must specify the era we are currently in. At the time of writing we're in the **Babbage** era, so we specify `--babbage-era`.
 * **Input(s)**: the `--tx-in` parameter specifies funds that will be spent by the transaction, which are outputs (UTXOs) from earlier transactions. A transaction can have multiple inputs, in which case we'd include multiple `--tx-in` lines with an associated UTXO. Here we are spending a single input, and its UTXO is the one from Alice's wallet we selected and stored in the variable `U`.
 * **Output(s)**: the `--tx-out` parameter specifies where funds (UTXOs) will be sent. An output consists of a payment address and an amount. A transaction can have multiple outputs, in which case we'd include multiple `--tx-out` lines with associated addresses and amounts. Here we are sending a single output to Bob, whose address we include by interpolating the output of the `addr` script with `bob` as argument. We then specify the amount of the transfer (`+250000000`, or 250 ADA).
 * **Change Address**: the `--change-address` parameter specifies which address the balance of funds will be sent to after the outputs and fees are deducted from the inputs. Since the input UTXOs must be spent in their entirety, any excess funds must be sent as an additional transaction output to some address (in this case Alice, who the input belongs to).
@@ -190,19 +188,18 @@ The next step is for Alice to sign the transaction with her secret key. For this
 Since we'll use this command multiple times over the course of these exercises with similar arguments, Jambhala provides a helper script called `tx-sign`, consisting of the following:
 
 ```sh
-skey="$KEYS_PATH/$1.skey"
 tx="$TX_PATH/$2"
 
 cardano-cli transaction sign \
---signing-key-file $skey \
+--signing-key-file "$KEYS_PATH/$1.skey" \
 --tx-body-file "$tx.raw" \
 --out-file "$tx.signed" \
 $NET
 ```
 
-The script first assigns variables `skey` and `tx` using the respective filepath locations configured in our `.envrc` file and the values supplied as the first (`$1`) and second (`$2`) arguments to the script.
+The script first assigns the variable `tx` using the transaction filepath location configured in our `.envrc` file, and the second (`$2`) argument to the script (the transaction name).
 
-It then runs the `transaction sign` command, providing the signing key, `.raw` file location, filepath/name for the out-file, and network option.
+It then runs the `transaction sign` command, providing the signing key (determined using the signer name provided as the first argument to the script), `.raw` file location, filepath/name for the out-file, and network option.
 
 Run the script by providing the signer name (`alice`) and transaction name (`transfer`) as arguments:
 

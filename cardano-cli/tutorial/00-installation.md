@@ -12,7 +12,7 @@ $ install-node
 * To customize the installation process, see **[Custom installation](#custom)**.
 
 ***
-## <a id="syncing"></a> Starting and syncing the node
+## **<a id="syncing"></a> Starting and syncing the node**
 ***
 Use the `run-node` script to start `cardano-node`:
 
@@ -40,7 +40,7 @@ $ tip
 }
 ```
 ***
-## `cardano-cli` Tutorial
+## **`cardano-cli` tutorial**
 ***
 Jambhala provides a tutorial with guided exercises for building/submitting various types of transactions using `cardano-cli`. The tutorial begins with the simplest possible transaction and progresses through increasingly complex examples.
 
@@ -57,7 +57,7 @@ This script uses `cardano-cli`'s `query` command to query information about the 
 `NET` is an environment variable set in the `.envrc` file, which is used to specify the network we're using. By default this is set to the `preview` testnet.
 
 ***
-## <a id="existing"></a> Configuring an existing installation
+## **<a id="existing"></a> Configuring an existing installation**
 ***
 If you've already installed `cardano-node` and `cardano-cli`, you'll need to modify certain environment variables in the `.envrc` file so Jambhala can communicate with your node:
 
@@ -70,7 +70,7 @@ If you've already installed `cardano-node` and `cardano-cli`, you'll need to mod
 >Run `direnv allow` in your terminal session before proceeding if you make any changes to `.envrc`.
 
 ***
-## <a id="custom"></a> Custom installation
+## **<a id="custom"></a> Custom installation**
 ***
 The`.envrc` file provides several environment variables, which can be changed to modify the installation process.
 

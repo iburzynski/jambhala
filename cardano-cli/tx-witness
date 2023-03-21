@@ -10,10 +10,8 @@ if [ -z "$2" ]; then
     exit 1
 fi
 
-tx="$TX_PATH/$2"
-
-cardano-cli transaction sign \
+cardano-cli transaction witness \
 --signing-key-file "$KEYS_PATH/$1.skey" \
---tx-body-file "$tx.raw" \
---out-file "$tx.signed" \
+--tx-body-file "$TX_PATH/$2.raw" \
+--out-file "$TX_PATH/$2-$1.witness" \
 $NET
