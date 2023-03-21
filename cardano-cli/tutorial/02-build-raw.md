@@ -210,7 +210,7 @@ $ tx-submit transfer-raw
 
 >Review the contents of the `tx-submit` script at `cardano-cli/tx-submit` if needed, to make sure you understand the `cardano-cli` command for submitting transactions.
 
-As in the previous exercise, you can run the `utxos` script for `bob` and `alice` to confirm the transfer of funds. The provided `tx-hash` script can also be used to get the hash of a transaction to look up transaction details on **[cexplorer.io](cexplorer.io)**:
+As in the previous exercise, you can run the `utxos` script for `bob` and `alice` to confirm the transfer of funds. The provided `tx-hash` script can also be used to get the hash of a transaction to look up transaction details on **[cardanoscan.io](cardanoscan.io)**:
 
 ```
 $ tx-hash transfer-raw

@@ -257,4 +257,4 @@ $ utxos bob
 215650738a6a1c3fd8495075091a5853d9d48f9c818d791bdf464e6b8ae674c7     0        250000000 lovelace + TxOutDatumNone
 ```
 
-You can copy the `TxHash` value and search for it on [cexplorer](https://preview.cexplorer.io/) to view the transaction details.
+You can copy the `TxHash` value and search for it on [preview.cardanoscan.io](https://preview.cardanoscan.io/) to view the transaction details (use `preprod.cardanoscan.io` instead if using the `preprod` testnet).
