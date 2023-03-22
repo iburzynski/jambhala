@@ -10,7 +10,7 @@ See the **[Starting and syncing the node](./00-installation.md#starting-and-sync
 We'll also be reusing the addresses and key pairs created during the previous exercise, so you'll need to have completed at least **Steps 1 & 2** of **[Exercise 1](./01-simple-transfer.md)** before proceeding further.
 
 ***
-In this exercise we'll take a deeper look at how Cardano transactions are constructed and practice using `cardano-cli`'s lower-level `transaction build-raw` command.
+In this exercise we'll take a deeper look at how Cardano transactions are constructed and practice using `cardano-cli`'s lower-level `transaction build-raw` command. We'll also create a more complex transaction by specifying a **validity interval** inside of which it must be submitted.
 
 Unlike the `transaction build` command, transactions constructed with `build-raw` aren't automatically balanced, so we'll need to calculate the fee and deduct it from the transaction's outputs manually. Raw-built transactions also require providing a **validity interval**, which specifies a window of time (measured in slots) during which the transaction can be processed.
 
@@ -112,7 +112,7 @@ $ cardano-cli transaction calculate-min-fee \
 --tx-in-count 1 \
 --tx-out-count 2 \
 --witness-count 1 \
---protocol-params-file assets/protocol-parameters.json \
+--protocol-params-file $ASSETS_PATH/protocol-parameters.json \
 $NET
 ```
 
@@ -140,10 +140,10 @@ $ BALANCE=$(expr $INPUT_AMT - 250000000 - $FEE)
 ```
 
 ## **4. <a id="validity"></a> Determine the validity interval**
-When building and submitting transactions with `build-raw`, we need to specify a time interval during which the transaction is valid (called the **validity interval**). This is done using two associated options:
+When building and submitting transactions with `build-raw`, we can specify a time interval during which the transaction is valid (called the **validity interval**). Validity intervals are defined using **slot numbers**, and are specified as absolute values rather than relative ones. This is done using two associated options:
 
-* **`--invalid-before`**: The slot that the transaction is valid from. We don't need to include this option unless we want to set a lower boundary for the validity interval (i.e. prevent a transaction from processing before some desired time).
-* **`--invalid-hereafter`**: - represents a deadline slot before which a transaction must be submitted. This is an absolute slot number, rather than a relative one, which means that the `--invalid-hereafter` value should be greater than the current slot number. A transaction becomes invalid when the `--invalid-hereafter` slot is reached.
+* **`--invalid-before`**: represents a slot that the transaction is valid from. We include this option if we want to set a lower boundary for the validity interval (i.e. prevent a transaction from processing before some desired time). A transaction remains invalid until the `--invalid-before` slot is reached.
+* **`--invalid-hereafter`**: represents a deadline slot before which a transaction must be submitted. The `--invalid-hereafter` value should be greater than the current slot number. A transaction becomes invalid when the `--invalid-hereafter` slot is reached.
 
 In this exercise we'll set the validity interval using just the `--invalid-hereafter` option.
 
@@ -217,6 +217,8 @@ $ tx-hash transfer-raw
 a4579dec4246dfd8cc26b373fdfb6a4ab614777e6b9d444250994314081e32d2
 ```
 
-## **Challenge**
+## **Challenges**
 Try to calculate the transaction fee using the information contained in `protocol-parameters.json`, using the formula `txFeeFixed + (txFeePerByte * TxSizeInBytes)`, and compare this to the fee calculated by `cardano-cli` in **Step 3**.
 >**Hint:** look at the CBOR Hex attribute of `transfer-raw.signed` and calculate the size in bytes given that one hex digit is 4 bits (two hex digits = 1 byte).
+
+Try building a "vesting" transaction that can only be submitted after a certain time (specify the validity interval using the `--invalid-before` option).
