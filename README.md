@@ -1,8 +1,3 @@
-<style>
-a {
-    color:#BD93F9;
-}
-</style>
 ```
   ,____          (\=-,
   \    `'-.______/ /
@@ -24,28 +19,28 @@ a {
 
 # **A Full-Featured Cardano Development Suite**
 
-* ## **[Features](#💎-features)**
-* ## **[Installation](#🏗️-installation)**
-  * 0. **[Requirements](#0-requirements)**
-  * 1. **[Install Nix](#1-install-nix)**
-  * 2. **[Configure `nix.conf`](#2-configure-nixconf)**
-  * 3. **[Set up `direnv`](#3-set-up-direnv)**
-  * 4. **[Create your repository](#4-create-your-repository)**
-  * 5. **[Build environment and set up project](#5-build-environment-and-set-up-project)**
-  * 6. **[Open project in VS Code](#6-open-project-in-vs-code)**
-* ## **[Using the `jamb` CLI](#👩‍💻-using-the-jamb-cli)**
-* ## **[Writing contracts](#✍️-writing-contracts)**
+* ### **[Features](#💎-features)**
+* ### **[Installation](#🏗️-installation)**
+  * **[Requirements](#0-requirements)**
+  * **[Install Nix](#1-install-nix)**
+  * **[Configure `nix.conf`](#2-configure-nixconf)**
+  * **[Set up `direnv`](#3-set-up-direnv)**
+  * **[Create your repository](#4-create-your-repository)**
+  * **[Build environment and set up project](#5-build-environment-and-set-up-project)**
+  * **[Open project in VS Code](#6-open-project-in-vs-code)**
+* ### **[Using the `jamb` CLI](#👩‍💻-using-the-jamb-cli)**
+* ### **[Writing contracts](#✍️-writing-contracts)**
   * **[Creating a contract](#📝-creating-a-contract)**
     * **[Writing emulator tests](#writing-emulator-tests)**
     * **[Using the `jamb` CLI](#using-the-jamb-cli)**
   * **[Using GHCi](#🤖-using-ghci)**
   * **[Serving `plutus-apps` docs](#📜-serving-plutus-apps-docs)**
-* ## **[Updating Jambhala](#📥-updating-jambhala)**
-* ## **[Updating Plutus dependencies](#📥-updating-plutus-dependencies)**
+* ### **[Updating Jambhala](#📥-updating-jambhala)**
+* ### **[Updating Plutus dependencies](#📥-updating-plutus-dependencies)**
   * **[Set `plutus-apps` to a specific commit/tag](#📑-set-plutus-apps-to-a-specific-committag)**
   * **[Restoring a previous version](#♻️-restoring-a-previous-version)**
   * **[Manually updating dependencies](#👷-manually-updating-dependencies)**
-* ## **[Troubleshooting](#⚕️-troubleshooting)**
+* ### **[Troubleshooting](#⚕️-troubleshooting)**
 
 ***
 # 💎 **Features**
