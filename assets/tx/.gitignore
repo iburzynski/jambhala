@@ -1,4 +1,5 @@
 *.draft
+*.json
 *.raw
 *.signed
 *.witness
