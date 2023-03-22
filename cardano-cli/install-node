@@ -9,10 +9,13 @@ fi
 cd $CARDANO_SRC_PATH
 
 if [ ! -d "cardano-node" ]; then
-  git clone "https://github.com/input-output-hk/cardano-node"
+    git clone "https://github.com/input-output-hk/cardano-node"
+    cd "cardano-node"
+  else
+    cd "cardano-node"
+    git fetch
 fi
 
-cd "cardano-node"
 git reset --hard $NODE_RELEASE
 nix build ".#$NETWORK/node"
 nix-env -f . -iA cardano-node

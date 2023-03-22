@@ -1,3 +1,8 @@
+<style>
+a {
+    color:#BD93F9;
+}
+</style>
 ```
   ,____          (\=-,
   \    `'-.______/ /
@@ -17,28 +22,61 @@
 
 ***
 
-# A Full-Featured Development Suite for Plutus
-Jambhala brings Plutus development nirvana by presenting three jewels:
+# **A Full-Featured Cardano Development Suite**
 
-💎 #1: **Minimizes contract boilerplate**
+* ## **[Features](#💎-features)**
+* ## **[Installation](#🏗️-installation)**
+  * 0. **[Requirements](#0-requirements)**
+  * 1. **[Install Nix](#1-install-nix)**
+  * 2. **[Configure `nix.conf`](#2-configure-nixconf)**
+  * 3. **[Set up `direnv`](#3-set-up-direnv)**
+  * 4. **[Create your repository](#4-create-your-repository)**
+  * 5. **[Build environment and set up project](#5-build-environment-and-set-up-project)**
+  * 6. **[Open project in VS Code](#6-open-project-in-vs-code)**
+* ## **[Using the `jamb` CLI](#👩‍💻-using-the-jamb-cli)**
+* ## **[Writing contracts](#✍️-writing-contracts)**
+  * **[Creating a contract](#📝-creating-a-contract)**
+    * **[Writing emulator tests](#writing-emulator-tests)**
+    * **[Using the `jamb` CLI](#using-the-jamb-cli)**
+  * **[Using GHCi](#🤖-using-ghci)**
+  * **[Serving `plutus-apps` docs](#📜-serving-plutus-apps-docs)**
+* ## **[Updating Jambhala](#📥-updating-jambhala)**
+* ## **[Updating Plutus dependencies](#📥-updating-plutus-dependencies)**
+  * **[Set `plutus-apps` to a specific commit/tag](#📑-set-plutus-apps-to-a-specific-committag)**
+  * **[Restoring a previous version](#♻️-restoring-a-previous-version)**
+  * **[Manually updating dependencies](#👷-manually-updating-dependencies)**
+* ## **[Troubleshooting](#⚕️-troubleshooting)**
+
+***
+# 💎 **Features**
+Jambhala brings Cardano development nirvana by presenting five jewels:
+
+💎 #1: **One-stop installation of Cardano tooling**
+  * Only `nix` and `direnv` are required as dependencies
+  * After configuring `nix` and `direnv`, Jambhala's setup wizard does the rest, including easy installation of `cardano-node` and `cardano-cli` using Nix.
+  * **[plutus-apps](https://github.com/input-output-hk/plutus-apps)** is installed internally to your project, so you don't need to maintain a central clone and use its associated Nix shell as the entry point for your projects (See **Jewel #4** below).
+
+💎 #2: **Minimize contract boilerplate**
   * `PlutusTx.Prelude` is enabled as prelude project-wide by default via mixin
   * Certain common Haskell language extensions are enabled by default
   * Common Plutus and Haskell types and functions are re-exported from their respective modules by `Jambhala.Plutus` and `Jambhala.Haskell`, so we don't need to keep track of messy import boilerplate. We can always import Plutus or Haskell modules explicitly if we prefer.
   * `Jambhala.Utils` provides common utility functions which are consumed by the `jamb` CLI, to avoid contract clutter.
 
-💎 #2: **Performs common Plutus tasks with simple commands**
-  * Compute validator hashes.
-  * Run emulator tests on contracts.
-  * Serialize contracts to `.plutus` files.
+💎 #3: **Perform common `cardano-cli` and Plutus tasks with simple commands**
+  * Jambhala provides utility scripts for common `cardano-cli` tasks, which can be run as terminal commands
+  * A Haskell-based executable CLI called `jamb` lets you easily perform common tasks with your Plutus contracts, including:
+    * Computing validator hashes and script addresses
+    * Running emulator tests
+    * Serializing contracts to `.plutus` files
 
-💎 #3: **Keeps projects in sync with `plutus-apps`**
-  * With Jambhala, we don't need to maintain a central clone of the **[plutus-apps](https://github.com/input-output-hk/plutus-apps)** repository and use its associated Nix shell as the entry point for development of every project.
-  * Relying on a central `plutus-apps` instance forces us to use the same revision for every project we develop. If we update our `plutus-apps` to use a more recent revision:
-    * we need to adjust all of our individual projects' `cabal.project` files by hand to reflect any changes in dependencies
-    * we risk breaking our older projects if the API of `plutus-apps` has changed
-  * Even setting up a single project with this approach is painful, because in the absence of an up-to-date template, we must manually copy and adjust boilerplate from `plutus-apps` into our `cabal.project` file. This in turn quickly becomes outdated given the pace of Plutus development.
-  * Jhambala uses **[haskell.nix](https://input-output-hk.github.io/haskell.nix/)** to provide a fully self-reliant Plutus development environment for each of your projects, which can be brought up to date with the current state of `plutus-apps` using a single command. No more wrangling of dependency boilerplate: just build your project environment and get to work, then bump `plutus-apps` for a specific project whenever you like.
+💎 #4: **Keep projects in sync with `plutus-apps`**
+  * Jhambala uses **[haskell.nix](https://input-output-hk.github.io/haskell.nix/)** to provide a fully self-reliant Plutus development environment for each of your projects, which can be brought up to date with the current state of `plutus-apps` using a single command.
+  * No wrangling of dependency boilerplate: just build your project environment and get to work, then bump `plutus-apps` for a specific project whenever you like.
   * Serve Haddock documentation for the specific `plutus-apps` revision your project uses with the `serve-docs` command.
+
+💎 #5: **Learn from a wealth of high-quality tutorials and samples**
+  * Jambhala provides a series of easy-to-follow `cardano-cli` tutorials that teach you how to build increasingly complex transactions and native scripts.
+  * Numerous sample contracts are included to help you learn Plutus quickly
 
 ***
 
@@ -49,7 +87,7 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
   * This project uses the Nix package manager, Nix flakes, and IOG's **[haskell.nix](https://input-output-hk.github.io/haskell.nix/)** infrastructure to build a fully-functioning and reproducible Plutus development environment.
   * Nix is only compatible with Unix-like operating systems, so you must be using a Linux distribution, MacOS, or WSL2 (Windows Subsystem for Linux) to install this project locally.
   * This project assumes the use of `VS Code` as editor and `bash` as shell. Other tools will require alternative workflows that are not covered here.
-  * This project is storage-intensive. We suggest you have at least `30GB` of free disk space before proceeding further.
+  * This project is storage-intensive. We suggest you have at least `50GB` of free disk space before proceeding further.
   * **NOTE for MacOS users:** MacOS may ship with versions of `bash` and `grep` that are incompatible with this workflow. You should install `bash`/`grep` using Homebrew first before proceeding.
 
 ***
@@ -129,15 +167,41 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
 ***
 ### 4. **Create your repository**
 ***
-  * On this repository's Github page, select the green `Use this template ` button and select `Create a new repository` to fork the template.
+There are two "modes" you can choose from to use Jambhala, depending on your use case:
+
+### **Learning Mode**
+**Learning Mode** is recommended if you are currently learning Cardano/Plutus or just experimenting with Jambhala, as opposed to developing a full-fledged project.
+
+Jambhala is under active development, with new features and learning materials being added on a continuous basis. To take advantage of the latest additions, it's better to work inside a fork of the repository. Your fork will maintain a historical link with the source repository upstream, which makes it easier to fetch and merge upstream changes into your local Jambhala setup (see **[Updating Jambhala](#📥-updating-jambhala)** for instructions).
+
+**Cons:**
+  * Github only allows one fork of a repository at a time
+  * Contributions to a fork aren't reflected in your activity on Github
+
+For these reasons, **Learning Mode** isn't well-suited for developing your own projects using Jambhala.
+
+To use Jambhala in **Learning Mode**, just click the **`Fork`** button at the top of this repository's page on Github to create your fork. Then proceed to **Step 5**.
+
+### **Development Mode**
+**Development Mode** allows you to generate a completely independent repository, which can be personalized for your project. You can generate as many repositories from the template as you like, and your contributions to them will be reflected in your Github activity.
+
+**Cons:**
+  * Generating from a Github template creates a new repository with no historical link to the upstream template.
+  * This makes it difficult to incorporate updates to Jambhala released after your repository is generated.
+
+It's still possible to update Jambhala in **Development Mode**, although it requires more manual labor to resolve merge conflicts (see **[Updating Jambhala](#📥-updating-jambhala)** for instructions).
+
+To use Jambhala in **Development Mode**, select the green **`Use this template`** button on this repository's Github page, and select **`Create a new repository`** to generate a new repository from the Jambhala template.
+
+***
+### 5. **Build environment and set up project**
+***
   * Clone your new repository in a `bash` terminal session:
 
     ```sh
     $ git clone https://github.com/PATH-TO/YOUR-REPO.git
     ```
-***
-### 5. **Build environment and set up project**
-***
+
   * Open the project root directory in your terminal session:
 
     ```sh
@@ -182,7 +246,13 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
     $ setup
     ```
 
-    Answer the prompts to personalize your project. Then the project will be built using `cabal`. This step will also take some time to complete:
+  * The setup wizard runs differently depending on whether you're using Jambhala in **Learning** or **Development** mode:
+    * If you created your repository by forking (**Learning Mode**), the wizard will simply build the project without any personalization.
+    * If you created your repository by generating from the template (**Development Mode**), the wizard will provide a series of prompts to personalize your project.
+      * Your `.cabal` and `LICENSE` files will be customized using your answers to the prompts.
+      * The Jambhala `README` file will be moved to the `docs` directory, and a new `README` for your project will be created
+
+  * The project will then be built using `cabal`. This step will also take some time to complete:
 
     ```
                   _=_
@@ -194,19 +264,20 @@ Jambhala brings Plutus development nirvana by presenting three jewels:
 
     Om Dzambhala Dzalentraye Svaha!
     ```
+
+  * **Installing `cardano-node` & `cardano-cli`**
+    * Once the project has built, the setup wizard will prompt you to install `cardano-node` and `cardano-cli`.
+    * You'll need a fully-synced `cardano-node` with `cardano-cli` to submit example transactions to the blockchain. The setup wizard runs an **[installation](./cardano-cli/tutorial/00-installation.md)** script to easily install and configure these tools in a single step.
+    * This installation method also makes it easy to update your node/cli to a new version later.
+    * If you've already installed `cardano-node` and `cardano-cli` through other means, you can also **[configure](./cardano-cli/tutorial/00-installation.md#existing)** your existing installation to work with Jambhala.
+    * A tutorial with guided exercises for learning to use `cardano-cli` is provided in the `cardano-cli/tutorial` directory.
+
 ***
 ### 6. **Open project in VS Code**
 ***
   * You can now start VS Code and use the `File > Open Folder...` menu option to load the starter kit.
   * You will be prompted to install some recommended extensions if you don't have them already: `haskell`, `direnv` and `Nix IDE`.
   * Accept any pop-up prompts from the `direnv` extension if you encounter them.
-
-***
-### 7. **Install `cardano-node` & `cardano-cli`**
-***
-You'll need a fully-synced `cardano-node` with `cardano-cli` to submit example transactions to the blockchain. Jambhala provides an **[installation](./cardano-cli/tutorial/00-installation.md)** script to easily install and configure these tools in a single step. If you've already installed `cardano-node` and `cardano-cli`, you can also **[configure](./cardano-cli/tutorial/00-installation.md#existing)** your existing installation to work with Jambhala.
-
->A tutorial with guided exercises for learning to use `cardano-cli` is provided in the `cardano-cli/tutorial` directory.
 
 ***
 # **👩‍💻 Using the `jamb` CLI**
@@ -435,6 +506,12 @@ To view the correct Haddock documentation for the revision you are using, open h
 #### **🛠️ This section is under construction...**
 Since Jambhala is under active development and is closely tracking the progress of `plutus-apps`, its codebase changes frequently.
 
+## **Learning Mode**
+If you created your repository by forking Jambhala (**Learning Mode**), you can easily update Jambhala using `git fetch`/`git merge` (or `git pull`).
+
+If you've made changes to any core Jambhala files, you may encounter a merge conflict that you'll need to resolve. You may find a VS Code extension like **[Git Merger](https://marketplace.visualstudio.com/items?itemName=shaharkazaz.git-merger)** to be helpful with this.
+
+## **Development Mode**
 Unlike forks, Github repositories generated from templates have unique histories, so they aren't able to fetch and merge upstream changes as smoothly. However it's still possible to merge updates from an upstream template into your project with a little manual effort.
 
 The `setup` wizard added the upstream template as a remote source. You can now run the `update-jambhala` command to fetch any changes to the template and attempt to merge them:

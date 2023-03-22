@@ -8,8 +8,17 @@ $ install-node
 
 >You can safely ignore any Nix-related warnings that occur during the installation process.
 
-* To configure an existing installation of `cardano-node`, see **[Configuring an existing installation](#existing)**.
-* To customize the installation process, see **[Custom installation](#custom)**.
+If you encounter the following prompts, answer `y` to all of them:
+```
+do you want to allow configuration setting 'extra-substituters' to be set to 'https://cache.iog.io' (y/N)? y
+do you want to permanently mark this value as trusted (y/N)? y
+do you want to allow configuration setting 'extra-trusted-public-keys' to be set to 'hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ=' (y/N)? y
+do you want to permanently mark this value as trusted (y/N)? y
+```
+
+**To configure an existing installation of `cardano-node`, see [Configuring an existing installation](#existing)**.
+
+**To customize the installation process, see [Custom installation](#custom)**.
 
 ***
 ## **<a id="syncing"></a> Starting and syncing the node**

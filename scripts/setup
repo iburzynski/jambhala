@@ -25,50 +25,52 @@ EOF
 echo "Welcome to Jambhala Setup Wizard..."
 
 PKGNAME_DEFAULT="$(basename "$(pwd)")"
-if [ "$PKGNAME_DEFAULT" = "jambhala" ]; then
-    PKGNAME_DEFAULT="jambhala"
+if [ "$PKGNAME_DEFAULT" != "jambhala" ]; then
+  read -r -p "Project Name [$PKGNAME_DEFAULT]: " PKGNAME
+  PKGNAME=${PKGNAME:-$PKGNAME_DEFAULT}
+
+  AUTHNAME_DEFAULT=$(git config --default "Firstname Lastname" --get user.name)
+  read -r -p "Project Author [$AUTHNAME_DEFAULT]: " AUTHNAME
+  AUTHNAME=${AUTHNAME:-$AUTHNAME_DEFAULT}
+
+  EMAIL_DEFAULT=$(git config --default "user@email.com" --get user.email)
+  read -r -p "Maintainer Email [$EMAIL_DEFAULT]: " EMAIL
+  EMAIL=${EMAIL:-$EMAIL_DEFAULT}
+
+  echo "Preparing ${PKGNAME}.cabal..."
+  (
+    set -x
+    git ls-files | xargs -I _ sed _ -i \
+        -e "s#jambhala#$PKGNAME#g" \
+        -e "s#Ian Burzynski#$AUTHNAME#g" \
+        -e "s#23251244+iburzynski@users.noreply.github.com#$EMAIL#g"
+    mv "jambhala.cabal" "$PKGNAME.cabal"
+  ) 2>&1 | indent
+
+  echo "Creating README..."
+  (
+    set -x
+    mv "README.md" "docs/README.md"
+    mv "README_TEMPLATE.md" "README.md"
+  ) 2>&1 | indent
+
+  echo "Removing wizard..."
+  (
+    set -x
+    rm "scripts/setup"
+  ) 2>&1 | indent
+
+  echo "Committing changes..."
+  (
+    set -x
+    git remote add template "https://github.com/iburzynski/jambhala"
+    git add -A
+    git commit -m "Set up project"
+  ) 2>&1 | indent
+
+  else
+    PKGNAME=$PKGNAME_DEFAULT
 fi
-read -r -p "Project Name [$PKGNAME_DEFAULT]: " PKGNAME
-PKGNAME=${PKGNAME:-$PKGNAME_DEFAULT}
-
-AUTHNAME_DEFAULT=$(git config --default "Firstname Lastname" --get user.name)
-read -r -p "Project Author [$AUTHNAME_DEFAULT]: " AUTHNAME
-AUTHNAME=${AUTHNAME:-$AUTHNAME_DEFAULT}
-
-EMAIL_DEFAULT=$(git config --default "user@email.com" --get user.email)
-read -r -p "Maintainer Email [$EMAIL_DEFAULT]: " EMAIL
-EMAIL=${EMAIL:-$EMAIL_DEFAULT}
-
-echo "Preparing ${PKGNAME}.cabal..."
-(
-  set -x
-  git ls-files | xargs -I _ sed _ -i \
-      -e "s#jambhala#$PKGNAME#g" \
-      -e "s#Ian Burzynski#$AUTHNAME#g" \
-      -e "s#23251244+iburzynski@users.noreply.github.com#$EMAIL#g"
-  mv "jambhala.cabal" "$PKGNAME.cabal"
-) 2>&1 | indent
-
-echo "Creating README..."
-(
-  set -x
-  mv "README.md" "docs/README.md"
-  mv "README_TEMPLATE.md" "README.md"
-) 2>&1 | indent
-
-echo "Removing wizard..."
-(
-  set -x
-  rm "scripts/setup"
-) 2>&1 | indent
-
-echo "Committing changes..."
-(
-  set -x
-  git remote add template "https://github.com/iburzynski/jambhala"
-  git add -A
-  git commit -m "Set up project"
-) 2>&1 | indent
 
 echo "Building project..."
 (
@@ -77,5 +79,14 @@ echo "Building project..."
   cabal update
   cabal build "$PKGNAME"
 ) 2>&1 | indent
+
+read -p "Install cardano-node/cardano-cli? [Y/n] " answer
+
+if [[ "$answer" == "Y" || "$answer" == "y" || "$answer" == "Yes" || "$answer" == "yes" || -z "$answer" ]]; then
+  install-node
+else
+  echo "Run `install-node` at any time to install cardano-node/cardano-cli."
+  echo "If you already installed the node/cli through other means, you can use your existing installation with Jambhala by configuring the environment variables in the `.envrc` file (see Jambhala README for help)."
+fi
 
 echo "Jambhala setup complete"
