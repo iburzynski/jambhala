@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+    >&2 echo "expected policy name as argument"
+    exit 1
+fi
+
+cardano-cli transaction policyid \
+--script-file $NATIVE_SCRIPTS_PATH/$1.script

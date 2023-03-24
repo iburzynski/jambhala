@@ -3,3 +3,5 @@
 *.raw
 *.signed
 *.witness
+
+!unit.json

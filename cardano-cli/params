@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-out="assets/protocol-parameters.json"
-
 cardano-cli query protocol-parameters \
---out-file $out \
-$NET
+$NET \
+--out-file $PARAMS_PATH
 
-echo "Protocol parameters saved to '${out}'"
+if [ $? -eq 0 ]; then
+  echo "saved protocol parameters to '$PARAMS_PATH'"
+fi

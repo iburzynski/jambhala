@@ -9,9 +9,8 @@ In this exercise we'll submit a more complex transaction in which funds from a m
 5. **[Fund the script address](#fund) with Test ADA.**
 6. **[Build the transaction](#build) using the `--witness-override` option.**
 7. **Witness the transaction for `alice`, `bob`, and `charlie`.**
-8. **[Assemble](#assemble) the transaction.**
-9. **Submit the transaction.**
-10. **Extra: [verify the script](#verify).**
+8. **[Witness, assemble and submit](#assemble) the transaction.**
+9. **Extra: [verify the script](#verify).**
 
 ## <a id="script"></a> **Create a multi-signature policy script**
 Create a file called `multisig.script` in the `assets/scripts/native` directory, and paste the following:
@@ -43,6 +42,8 @@ The `<KEY-HASH#>` placeholder values in `multisig.script` must be replaced with 
 Jambhala provides a `key-hash` script to conveniently display the key-hash of a user. It contains the following `cardano-cli` command:
 
 ```sh
+# cardano-cli/key-hash
+
 cardano-cli address key-hash \
 --payment-verification-key-file "$KEYS_PATH/$1.vkey"
 ```
@@ -50,7 +51,7 @@ cardano-cli address key-hash \
 Run the script with a user name argument to display the user's keyhash:
 
 ```sh
-$ key-hash alice
+key-hash alice
 3a5039efcafd4c82c9169b35afb27a17673f6ed785ea087139a65a5d
 ```
 
@@ -71,8 +72,8 @@ Jambhala provides a script called `script-addr`, which contains the following:
 
 cardano-cli address build \
 --payment-script-file $NATIVE_SCRIPTS_PATH/$1.script \
+$NET \
 --out-file $addr \
-$NET
 ```
 
 When run with a script name as argument, it does the following:
@@ -83,14 +84,14 @@ When run with a script name as argument, it does the following:
 Run the script to generate the script address:
 
 ```sh
-$ script-addr multisig
-wrote address to: assets/addr/multisig.addr
+script-addr multisig
+wrote address to 'assets/addr/multisig.addr'
 ```
 
 Now run the `addr` script to view the script address:
 
 ```sh
-$ addr multisig
+addr multisig
 ```
 
 ## <a id="fund"></a> **Fund the script address**
@@ -101,7 +102,7 @@ Copy the script address from the previous step and fund it with 10,000 Test ADA 
 Wait a few minutes, and then run the `utxos` script to confirm the receipt of funds at the script:
 
 ```sh
-$ utxos multisig
+utxos multisig
                            TxHash                                 TxIx        Amount
 --------------------------------------------------------------------------------------
 3f2a8e3292c7d34b54d4020aea2a4dc993334ab50376dab2fd4295bbdf48dad3     0        10000000000 lovelace + TxOutDatumNone
@@ -112,8 +113,8 @@ Copy the `TxHash` and `TxIx` values from your terminal output and assign the UTX
 ## <a id="build"></a> **Build the transaction**
 We'll build the transaction as usual with the `transaction build` command, but with two additional options:
 
-1. Building a transaction involving a script requires providing the script file as an argument to the **`--tx-in-script-file`** option.
-2. A **witness override** to correctly calculate the transaction fee.
+1. A **`--witness override`** to correctly calculate the transaction fee.
+2. The script file as an argument to the **`--tx-in-script-file`** option.
 
 ### **`witness-override`**
 The `--witness-override` option allows us to override the default number of witnesses (`1`) if our transaction requires signatures from multiple keys. Adding additional witnesses makes a transaction larger and thus more expensive: without including this option, `cardano-cli` will calculate the fee based on a single signature and the transaction will fail due to an insufficient fee. The option is provided to the `transaction build` command with a numeric argument corresponding to the number of necessary signatures.
@@ -121,25 +122,24 @@ The `--witness-override` option allows us to override the default number of witn
 Our transaction will be built as follows:
 
 ```sh
-$ cardano-cli transaction build \
---tx-in $U \
---change-address $(addr dan) \
---tx-in-script-file "$NATIVE_SCRIPTS_PATH/multisig.script" \
---out-file "$TX_PATH/multisig.raw" \
+cardano-cli transaction build \
+$NET \
 --witness-override 3 \
-$NET
+--tx-in $U \
+--tx-in-script-file "$NATIVE_SCRIPTS_PATH/multisig.script" \
+--change-address $(addr dan) \
+--out-file "$TX_PATH/multisig.raw"
 ```
 
-## <a id="assemble"></a> **Assemble the transaction**
-After witnessing the transaction for `alice`, `bob`, and `charlie` (i.e. `$ tx-witness alice multisig`), assemble it as follows:
+## <a id="assemble"></a> **Witness, assemble and submit the transaction**
+Witness the transaction for `alice`, `bob`, and `charlie`, then assemble it:
 
 ```sh
-cardano-cli transaction assemble \
---tx-body-file "$TX_PATH/multisig.raw" \
---witness-file "$TX_PATH/multisig-alice.witness" \
---witness-file "$TX_PATH/multisig-bob.witness" \
---witness-file "$TX_PATH/multisig-charlie.witness" \
---out-file "$TX_PATH/multisig.signed"
+tx-witness multisig alice bob charlie
+```
+
+```sh
+tx-assemble multisig alice bob charlie
 ```
 
 You can now submit the transaction and view the results.

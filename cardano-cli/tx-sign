@@ -1,19 +1,32 @@
 #!/usr/bin/env bash
 
 if [ -z "$1" ]; then
-    >&2 echo "expected signer name as argument"
-    exit 1
-fi
-
-if [ -z "$2" ]; then
     >&2 echo "expected transaction name as argument"
     exit 1
 fi
 
-tx="$TX_PATH/$2"
+if [ -z "$2" ]; then
+    >&2 echo "expected signer name as argument"
+    exit 1
+fi
+
+tx="$TX_PATH/$1"
+skeyfiles=""
+
+for user in "${@:2}"; do
+  skeyfiles+="--signing-key-file $KEYS_PATH/$user.skey "
+done
 
 cardano-cli transaction sign \
---signing-key-file "$KEYS_PATH/$1.skey" \
 --tx-body-file "$tx.raw" \
---out-file "$tx.signed" \
-$NET
+$skeyfiles \
+$NET \
+--out-file "$tx.signed"
+
+if [ $? -eq 0 ]; then
+  users=$(printf "%s, " "${@:2}")
+  users="${users%, }"
+
+  echo "signed transaction '$1' for $users"
+  echo "wrote signed transaction to '$tx.signed'"
+fi

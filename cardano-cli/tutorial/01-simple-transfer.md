@@ -20,7 +20,6 @@ The process consists of the following steps:
 
 ***
 ## **1. <a id="generate"></a> Generate keys and addresses**
-***
 To build a transaction between two parties, we first need to generate key pairs and addresses for the sender (`alice`) and recipient (`bob`).
 
 Recall that in the Cardano blockchain, each user has a **private** key (also referred to as the **signing** key), which is kept secret, and a **public** key (also referred to as the **verification** key), which is shared with others. The public key is used to derive a unique **address** that can receive and send transactions. Address derivation is performed by hashing the public key, encoding it in Bech32 format and adding a human-readable prefix.
@@ -96,7 +95,6 @@ addr_test1vqa9qw00et75eqkfz6dnttaj0gtkw0mw67z75zr38xn95hgvh8v80
 
 ***
 ## **2. <a id="fund"></a> Fund wallet from faucet and select UTXO**
-***
 We now have addresses for our transaction parties, but they don't contain any funds to make transactions with.
 
 Copy Alice's wallet address from the previous step and fund the wallet with 10,000 Test ADA from the [Testnet Faucet](https://docs.cardano.org/cardano-testnet/tools/faucet).
@@ -134,7 +132,6 @@ $ U=9c1203e214524e72f0e686b09821dc4c46a2b3cf0c6ee312f52a97cde00d1765#0
 
 ***
 ## **3. <a id="build"></a> Build the transaction**
-***
 `cardano-cli`'s `transaction` command has two subcommands for building transactions: `build` and `build-raw`.
 
 ### **`build` vs. `build-raw`**
@@ -151,20 +148,20 @@ The **`build-raw`** subcommand is a lower-level interface for building transacti
 We'll use the `build` subcommand to build a simple transaction that transfers 250 ADA from Alice to Bob:
 
 ```sh
-$ cardano-cli transaction build \
+cardano-cli transaction build \
 --tx-in $U \
 --tx-out $(addr bob)+250000000 \
 --change-address $(addr alice) \
---out-file $TX_PATH/transfer.raw \
-$NET
+$NET \
+--out-file $TX_PATH/transfer.raw
 ```
 
 Note the various parameters that must be provided:
 * **Input(s)**: the `--tx-in` parameter specifies funds that will be spent by the transaction, which are outputs (UTXOs) from earlier transactions. A transaction can have multiple inputs, in which case we'd include multiple `--tx-in` lines with an associated UTXO. Here we are spending a single input, and its UTXO is the one from Alice's wallet we selected and stored in the variable `U`.
 * **Output(s)**: the `--tx-out` parameter specifies where funds (UTXOs) will be sent. An output consists of a payment address and an amount. A transaction can have multiple outputs, in which case we'd include multiple `--tx-out` lines with associated addresses and amounts. Here we are sending a single output to Bob, whose address we include by interpolating the output of the `addr` script with `bob` as argument. We then specify the amount of the transfer (`+250000000`, or 250 ADA).
 * **Change Address**: the `--change-address` parameter specifies which address the balance of funds will be sent to after the outputs and fees are deducted from the inputs. Since the input UTXOs must be spent in their entirety, any excess funds must be sent as an additional transaction output to some address (in this case Alice, who the input belongs to).
-* **Out File**: the `--out-file` parameter specifies the file path where the transaction data will be stored. The data is stored in `json` format, but its file extension doesn't matter (by convention `.raw` is used). The filename we choose (here `transfer`) can be passed as an argument to helper scripts that Jambhala provides for convenience.
 * **Network Option**: supplied via the `NET` environment variable.
+* **Out File**: the `--out-file` parameter specifies the file path where the transaction data will be stored. The data is stored in `json` format, but its file extension doesn't matter (by convention `.raw` is used). The filename we choose (here `transfer`) can be passed as an argument to helper scripts that Jambhala provides for convenience.
 
 When we run this command, we'll see terminal output that includes the automatically calculated fee:
 
@@ -184,29 +181,37 @@ If we inspect the `transfer.raw` file created in the `assets/tx` directory, we s
 
 ***
 ## **4. <a id="sign"></a> Sign the transaction**
-***
 The next step is for Alice to sign the transaction with her secret key. For this we use the **`sign`** subcommand of `cardano-cli`'s `transaction` command.
 
 Since we'll use this command multiple times over the course of these exercises with similar arguments, Jambhala provides a helper script called `tx-sign`, consisting of the following:
 
 ```sh
-tx="$TX_PATH/$2"
+# cardano-cli/tx-sign
+
+tx="$TX_PATH/$1"
+skeyfiles=""
+
+for user in "${@:2}"; do
+  skeyfiles+="--signing-key-file $KEYS_PATH/$user.skey "
+done
 
 cardano-cli transaction sign \
---signing-key-file "$KEYS_PATH/$1.skey" \
 --tx-body-file "$tx.raw" \
---out-file "$tx.signed" \
-$NET
+$skeyfiles \
+$NET \
+--out-file "$tx.signed"
 ```
 
-The script first assigns the variable `tx` using the transaction filepath location configured in our `.envrc` file, and the second (`$2`) argument to the script (the transaction name).
+The script first assigns the variable `tx` using the transaction filepath location configured in our `.envrc` file, and the first (`$1`) argument to the script (the transaction name).
 
-It then runs the `transaction sign` command, providing the signing key (determined using the signer name provided as the first argument to the script), `.raw` file location, filepath/name for the out-file, and network option.
+It then assigns a variable `skeyfiles` to an empty string, and loops over the remaining (`user`) arguments (`@:2`), appending a `--signing-key-file` entry with the user's secret key file. This allows us to provide multiple signers to the script if needed (we'll see this in a later exercise).
 
-Run the script by providing the signer name (`alice`) and transaction name (`transfer`) as arguments:
+It then runs the `transaction sign` command, providing the `.raw` file location to the `--tx-body-file` option, the `skeyfiles` string produced by the loop, the network option, and the filepath/name for the out-file.
+
+Run the script by providing the transaction name (`transfer`) and signer name (`alice`) as arguments:
 
 ```sh
-$ tx-sign alice transfer
+tx-sign transfer alice
 ```
 
 Compare the contents of the out-file created at `assets/tx/transfer.signed` with the `.raw` file from the previous step:
@@ -223,12 +228,13 @@ Notice the value of the `type` attribute has changed from `Unwitnessed Tx Babbag
 
 ***
 ## **5. <a id="submit"></a> Submit the transaction**
-***
 The final step of the transaction process is to submit the signed transaction. For this we use the **`submit`** subcommand of `cardano-cli`'s `transaction` command.
 
 Like `transaction sign`, we'll use `transaction submit` multiple times over the course of these exercises with similar arguments, so Jambhala provides a helper script called `tx-submit`, consisting of the following:
 
 ```sh
+# cardano-cli/tx-submit
+
 cardano-cli transaction submit \
 --tx-file "$TX_PATH/$1.signed" \
 $NET
@@ -239,7 +245,7 @@ The `submit` subcommand is quite simple: we just provide the filepath of the sig
 Run the script by providing the transaction name (`transfer`) as argument:
 
 ```sh
-$ tx-submit transfer
+tx-submit transfer
 Transaction successfully submitted.
 ```
 
@@ -247,11 +253,10 @@ Transaction successfully submitted.
 
 ***
 ## **6. <a id="check"></a> Check the result**
-***
 After waiting a minute, run the `utxos` script again, this time with `bob` as argument, to confirm the funds were received:
 
 ```sh
-$ utxos bob
+utxos bob
                            TxHash                                 TxIx        Amount
 --------------------------------------------------------------------------------------
 215650738a6a1c3fd8495075091a5853d9d48f9c818d791bdf464e6b8ae674c7     0        250000000 lovelace + TxOutDatumNone

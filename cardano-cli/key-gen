@@ -33,6 +33,8 @@ cardano-cli address build \
 --out-file $addr \
 $NET
 
-echo "wrote verification key to: $vkey"
-echo "wrote signing key to: $skey"
-echo "wrote address to: $addr"
+if [ $? -eq 0 ]; then
+  echo "wrote verification key for $1 to '$vkey'"
+  echo "wrote signing key for $1 to '$skey'"
+  echo "wrote address for $1 to '$addr'"
+fi

@@ -47,7 +47,7 @@ To build a transaction that includes metadata, we'll use the `transaction build-
 Start by drafting the transaction. Instead of transfering funds between two users as we've done in previous examples, we can simply construct a single-user transaction that pays the transaction fee to publish the metadata on-chain, and returns the change to the original address:
 
 ```sh
-$ cardano-cli transaction build-raw \
+cardano-cli transaction build-raw \
 --tx-in $U \
 --tx-out $(addr alice)+0 \
 --fee 0 \
@@ -65,7 +65,7 @@ Follow the remaining steps from **[Exercise 2](./02-build-raw.md)** to submit th
 You can run the `tx-hash` script for your `metadata` transaction and search for it on **[preview.cardanoscan.io](https://preview.cardanoscan.io/)** to view the transaction metadata (use **[preprod.cardanoscan.io](https://preprod.cardanoscan.io)** instead if using the `preprod` testnet).
 
 ```sh
-$ tx-hash metadata
+tx-hash metadata
 ```
 
 On `cardanoscan.io`, beneath the **Transaction Details** section you'll see a section with three options: `Summary`, `UTXOs`, and `Metadata`. Click the `Metadata` tab to view your transaction's metadata.
@@ -83,7 +83,7 @@ Enter anything you like in the **`Project name`** field (i.e. "jambhala").
 In the **`Network`** dropdown, select the Cardano testnet your project is using (**`Cardano preview`** or **`Cardano preprod`**). By default Jambhala is configured to use **`Cardano preview`**. You can run the following command at any time to confirm which testnet your project is using:
 
 ```sh
-$ echo $TESTNET_NAME
+echo $TESTNET_NAME
 ```
 
 Once your project is created, you'll be taken to the project's page. Find the **`PROJECT ID`** field and click the copy icon to copy your
@@ -99,14 +99,14 @@ Then paste your Blockfrost project ID immediately after the equals sign. Save th
 Run the following command to confirm that the variable is available:
 
 ```sh
-$ echo $BLOCKFROST_ID
+echo $BLOCKFROST_ID
 ```
 
 ### **Query transaction metadata by label**
 You can now view transactions containing a particular metadata label by running the command below:
 
 ```sh
-$ curl -H "project_id: $BLOCKFROST_ID" "https://cardano-$TESTNET_NAME.blockfrost.io/api/v0/metadata/txs/labels/$LABEL" | jq
+curl -H "project_id: $BLOCKFROST_ID" "https://cardano-$TESTNET_NAME.blockfrost.io/api/v0/metadata/txs/labels/$LABEL" | jq
 ```
 
 You should see your transaction and its metadata appear in the results, as well as any other transactions submitted with the same label. You can replace the `$LABEL` variable in the URL to view transactions with a different label.

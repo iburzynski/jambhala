@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+  >&2 echo "expected user name as argument"
+  exit 1
+fi
+
+if [ -z "$2" ]; then
+  >&2 echo "expected asset quantity as argument"
+  exit 1
+fi
+
+if [ -z "$3" ]; then
+  >&2 echo "expected asset as argument"
+  exit 1
+fi
+
+if [ ! -f $PARAMS_PATH ]; then
+  params
+fi
+
+cardano-cli transaction calculate-min-required-utxo \
+--protocol-params-file $PARAMS_PATH \
+--tx-out $(addr $1)+"$2 $3" | cut -d' ' -f2

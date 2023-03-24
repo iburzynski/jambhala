@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+# Parse tx name argument
+if [ $# -gt 0 ]; then
+  tx_name="$1"
+  shift
+else
+  echo "expected transaction name as argument" >&2
+  exit 1
+fi
+
+# Parse named arguments using getopts
+while getopts ":i:o:w:" opt; do
+  case $opt in
+    i) in_count="$OPTARG";;
+    o) out_count="$OPTARG";;
+    w) witness_count="$OPTARG";;
+    \?) echo "invalid option: -$OPTARG" >&2;;
+    :) echo "option -$OPTARG requires an argument" >&2;;
+  esac
+done
+
+# Check that all named arguments have been provided
+
+if [ -z "$in_count" ] || [ -z "$out_count" ] || [ -z "$witness_count" ]; then
+  opt_missing=true
+  else opt_missing=false
+fi
+
+if [ -z "$in_count" ]; then
+  echo "missing option: -i (in-count)" >&2
+fi
+if [ -z "$out_count" ]; then
+  echo "missing option: -o (out-count)" >&2
+fi
+if [ -z "$witness_count" ]; then
+  echo "missing option: -w (witness-count)" >&2
+fi
+if [ "$opt_missing" = true ]; then
+  exit 1
+fi
+
+if [ ! -f $PARAMS_PATH ]; then
+  params
+fi
+
+cardano-cli transaction calculate-min-fee \
+--tx-body-file $TX_PATH/$tx_name.draft \
+--tx-in-count $in_count \
+--tx-out-count $out_count \
+--witness-count $witness_count \
+$NET \
+--protocol-params-file $PARAMS_PATH | cut -d' ' -f1

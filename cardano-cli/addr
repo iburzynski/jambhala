@@ -5,4 +5,4 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-echo $(cat "$ADDR_PATH/$1.addr")
+echo -n $(cat "$ADDR_PATH/$1.addr")

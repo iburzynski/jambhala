@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+    >&2 echo "expected transaction name as argument"
+    exit 1
+fi
+
+if [ -z "$2" ]; then
+    >&2 echo "expected witness name as argument"
+    exit 1
+fi
+
+tx="$TX_PATH/$1"
+witfiles=""
+
+for user in "${@:2}"; do
+  witfiles+="--witness-file $TX_PATH/$1-$user.witness "
+done
+
+cardano-cli transaction assemble \
+--tx-body-file $tx.raw \
+$witfiles \
+--out-file $tx.signed
+
+if [ $? -eq 0 ]; then
+  echo "wrote assembled transaction to '$tx.signed'"
+fi

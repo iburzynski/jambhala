@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+    >&2 echo "expected token name as argument"
+    exit 1
+fi
+
+echo -n $1 | xxd -ps | tr -d '\n'

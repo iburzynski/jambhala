@@ -14,7 +14,9 @@ fi
 
 cardano-cli address build \
 --payment-script-file $NATIVE_SCRIPTS_PATH/$1.script \
---out-file $addr \
-$NET
+$NET \
+--out-file $addr
 
-echo "wrote address to: $addr"
+if [ $? -eq 0 ]; then
+  echo "wrote script address to '$addr'"
+fi

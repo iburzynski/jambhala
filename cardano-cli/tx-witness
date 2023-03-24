@@ -1,17 +1,26 @@
 #!/usr/bin/env bash
 
 if [ -z "$1" ]; then
-    >&2 echo "expected signer name as argument"
-    exit 1
-fi
-
-if [ -z "$2" ]; then
     >&2 echo "expected transaction name as argument"
     exit 1
 fi
 
-cardano-cli transaction witness \
---signing-key-file "$KEYS_PATH/$1.skey" \
---tx-body-file "$TX_PATH/$2.raw" \
---out-file "$TX_PATH/$2-$1.witness" \
-$NET
+if [ -z "$2" ]; then
+    >&2 echo "expected witness name as argument"
+    exit 1
+fi
+
+for user in "${@:2}"; do
+  out="$TX_PATH/$1-$user.witness"
+
+  cardano-cli transaction witness \
+  --tx-body-file "$TX_PATH/$1.raw" \
+  --signing-key-file "$KEYS_PATH/$user.skey" \
+  $NET \
+  --out-file $out
+
+  if [ $? -eq 0 ]; then
+    echo "wrote witness file for $user to '$out'"
+  fi
+
+done

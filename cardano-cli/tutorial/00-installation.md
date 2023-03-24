@@ -3,7 +3,7 @@
 Jambhala provides an easy installation script called `install-node`, which installs `cardano-node` and `cardano-cli` using Nix and configures the node so it's ready for use. If you haven't already installed `cardano-node`, this is the quickest and easiest way to get a node running on your system.
 
 ```sh
-$ install-node
+install-node
 ```
 
 >You can safely ignore any Nix-related warnings that occur during the installation process.
@@ -26,7 +26,7 @@ do you want to permanently mark this value as trusted (y/N)? y
 Use the `run-node` script to start `cardano-node`:
 
 ```sh
-$ run-node
+run-node
 ```
 
 It's normal for the node to encounter occasional errors, which it will recover from and continue running. To tell if your node is working properly, look for `Chain extended` log entries with the following format:
@@ -38,7 +38,7 @@ Chain extended, new tip: c472036b83c119b875e3fc230435b741598677ffa45ea3ad8ad9cda
 Your node must be `100%` synced before you can proceed. Use the `tip` script to query the sync progress:
 
 ```sh
-$ tip
+tip
 {
     "block": 546242,
     "epoch": 141,
@@ -58,6 +58,8 @@ Some prewritten shell scripts have been provided to make the process less labori
 For example, if we inspect the contents of the `tip` script at `cardano-cli/tip` we'll see the following:
 
 ```sh
+# cardano-cli/tip
+
 cardano-cli query tip $NET
 ```
 
