@@ -97,7 +97,7 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
   * Edit `/etc/nix/nix.conf`: this requires root access to edit. Use a terminal-based editor like `nano` (i.e.):
 
       ```sh
-      $ sudo nano /etc/nix/nix.conf
+      sudo nano /etc/nix/nix.conf
       ```
 
   * Modify the file following the instructions below:
@@ -129,20 +129,20 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
     **Linux:**
 
       ```sh
-      $ sudo systemctl restart nix-daemon
+      sudo systemctl restart nix-daemon
       ```
 
     **MacOS:** first find the name of the `nix-daemon` service
 
       ```sh
-      $ sudo launchctl list | grep nix
+      sudo launchctl list | grep nix
       ```
 
       Then stop and restart the service
 
       ```sh
-      $ sudo launchctl stop <NAME>
-      $ sudo launchctl start <NAME>
+      sudo launchctl stop <NAME>
+      sudo launchctl start <NAME>
       ```
 ***
 ### 3. **Set up `direnv`**
@@ -154,7 +154,7 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
   * If `direnv` version `2.30+` isn't available for your OS through the standard installation method above, you can use `nix` to install it. Just run the following:
 
     ```sh
-    $ nix-env -iA nixpkgs.direnv
+    nix-env -iA nixpkgs.direnv
     ```
 
   * When you load the project in VS Code for the first time, you will be prompted to install the **[direnv extension](https://marketplace.visualstudio.com/items?itemName=cab404.vscode-direnv&ssr=false#review-details)**.
@@ -194,19 +194,19 @@ To use Jambhala in **Development Mode**, select the green **`Use this template`*
   * Clone your new repository in a `bash` terminal session:
 
     ```sh
-    $ git clone https://github.com/PATH-TO/YOUR-REPO.git
+    git clone https://github.com/PATH-TO/YOUR-REPO.git
     ```
 
   * Open the project root directory in your terminal session:
 
     ```sh
-    $ cd path-to-your-project
+    cd path-to-your-project
     ```
 
     You should now see the following message:
 
     ```sh
-    $ direnv: error /home/path-to-your-project/.envrc is blocked. Run `direnv allow` to approve its content
+    direnv: error /home/path-to-your-project/.envrc is blocked. Run `direnv allow` to approve its content
     ```
 
     This is a security measure, since `.envrc` files can run arbitrary shell commands. Make sure you always trust the author of a project and inspect the contents of its `.envrc` file before running `direnv allow`.
@@ -214,7 +214,7 @@ To use Jambhala in **Development Mode**, select the green **`Use this template`*
     When you're ready, enter `direnv allow` to approve the content:
 
     ```sh
-    $ direnv allow
+    direnv allow
     ```
 
   * You can ignore the following warning: `direnv: ([/nix/store/.../bin/direnv export bash]) is taking a while to execute. Use CTRL-C to give up.`
@@ -238,7 +238,7 @@ To use Jambhala in **Development Mode**, select the green **`Use this template`*
   * Once the Nix environment build process completes, run `setup` to launch the setup wizard:
 
     ```sh
-    $ setup
+    setup
     ```
 
   * The setup wizard runs differently depending on whether you're using Jambhala in **Learning** or **Development** mode:
@@ -282,14 +282,14 @@ Jambhala includes a simple command-line utility called `jamb`, which reduces boi
 You can run the following command to view the names of available contracts in your project, for use with other commands:
 
   ```sh
-   $ jamb -l
+   jamb -l
   ```
 
 ### **Hashing Validators**
 You can calculate the validator hash for any available contract like this:
 
   ```sh
-  $ jamb -s CONTRACT
+  jamb -s CONTRACT
   ```
 
 where `CONTRACT` is the name of the contract to hash.
@@ -298,7 +298,7 @@ where `CONTRACT` is the name of the contract to hash.
 You can run the emulator test defined for a contract with the following command:
 
   ```sh
-  $ jamb -t CONTRACT
+  jamb -t CONTRACT
   ```
 
 where `CONTRACT` is the name of the contract to test.
@@ -307,7 +307,7 @@ where `CONTRACT` is the name of the contract to test.
 you can run the following command from the workspace terminal to write a contract to a `.plutus` file:
 
   ```sh
-  $ jamb -w CONTRACT [FILENAME]
+  jamb -w CONTRACT [FILENAME]
   ```
 
   where `CONTRACT` is the name of the contract to compile, and `[FILENAME]` is an optional file name (the contract name is used as the filename by default if no argument is given). When the command finishes, you should get a `compiled/CONTRACT.plutus` file that contains a JSON envelope of the UPLC code.
@@ -464,9 +464,9 @@ Then add a new tuple entry to the `contracts` ***Map***, containing a name strin
 Once your contract has been added to the map, it can now be operated on by the `jamb` CLI:
 
   ```sh
-  $ jamb -s my-contract
-  $ jamb -t my-contract
-  $ jamb -w my-contract
+  jamb -s my-contract
+  jamb -t my-contract
+  jamb -w my-contract
   ```
 
 ***
@@ -475,7 +475,7 @@ Once your contract has been added to the map, it can now be operated on by the `
 To start a GHCi REPL session, run `repl` and then load your contract:
 
   ```sh
-  $ repl
+  repl
 
   Prelude Contracts λ > :m Contracts.MyContract
   Prelude Contracts.MyContract λ >
@@ -487,7 +487,7 @@ To start a GHCi REPL session, run `repl` and then load your contract:
 To serve docs for the specific revision of `plutus-apps` this project is using, open a new bash terminal from the project root directory and run the following command:
 
   ```sh
-  $ serve-docs
+  serve-docs
   ```
 
 **Note:** This will require significant additional build time and storage space the first time the docs are served.
@@ -512,7 +512,7 @@ Unlike forks, Github repositories generated from templates have unique histories
 The `setup` wizard added the upstream template as a remote source. You can now run the `update-jambhala` command to fetch any changes to the template and attempt to merge them:
 
 ```sh
-$ update-jambhala
+update-jambhala
 ```
 > *Note that this command is distinct from the `jamb -u` command, which updates only the `plutus-apps` dependency in `cabal.project`.*
 
@@ -525,7 +525,7 @@ The non-Hackage dependencies in the `cabal.project` file are following the **[pl
 `jamb` provides a utility to easily update `plutus-apps` to the most recent revision and adjust all related dependencies. Run the `jamb -u` command to pull the latest revision and generate a new `cabal.project` file.
 
   ```sh
-  $ jamb -u
+  jamb -u
   ```
 
 🚨 **WARNING!** This operation rewrites your `cabal.project` file according to the most recent `plutus-apps` commit, and may cause your environment and/or contracts to break. You should use at your own risk, but you can also easily restore a previous `cabal.project` file by following the instructions for **Restoring a previous version** below.
@@ -535,13 +535,13 @@ The non-Hackage dependencies in the `cabal.project` file are following the **[pl
 You can also use the `jamb -u` command with an additional argument to set `plutus-apps` to a specific commit hash or tag:
 
   ```sh
-  $ jamb -u 38979da68816ab84faf6bfec6d0e7b6d47af651a
+  jamb -u 38979da68816ab84faf6bfec6d0e7b6d47af651a
   ```
 
 You can run the `pa-history` command to view the full commit history for `plutus-apps`:
 
   ```sh
-  $ pa-history
+  pa-history
   ```
 
 Use the up/down keys to navigate or type `q` to quit.
@@ -563,13 +563,13 @@ While not recommended, if you need to change the revision of Plutus dependencies
 Use the following command to calculate a hash:
 
   ```
-  $ nix-prefetch-git LOCATION TAG
+  nix-prefetch-git LOCATION TAG
   ```
 
 Here is an example of how we'd calculate a hash for the `plutus-apps` dependency with tag `5dda0323ef30c92bfebd520ac8d4bc5a46580c5c`:
 
   ```sh
-  $ nix-prefetch-git https://github.com/input-output-hk/plutus-apps.git 5dda0323ef30c92bfebd520ac8d4bc5a46580c5c
+  nix-prefetch-git https://github.com/input-output-hk/plutus-apps.git 5dda0323ef30c92bfebd520ac8d4bc5a46580c5c
 
   ...
 
@@ -620,7 +620,7 @@ You need to **stage** your new module file in `git` so it becomes visible to the
 * **`rebuild`:** cleaning the `dist-newstyle` directory of all build artifacts and rebuilding the project may resolve certain issues
 
   ```sh
-  $ rebuild
+  rebuild
   ```
 
   Note that it will be time-consuming to rebuild the project from scratch, so be sure to exhaust all other troubleshooting options before attempting.
