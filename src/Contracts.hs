@@ -11,6 +11,7 @@ import qualified Contracts.Samples.CustomTyped   as CustomTyped
 import qualified Contracts.Samples.Guess         as Guess
 import qualified Contracts.Samples.Vesting       as Vesting
 import qualified Contracts.Samples.Parameterized as Parameterized
+import qualified Contracts.Samples.FreeMinting   as FreeMinting
 -- Import your contracts here, i.e.:
 -- import qualified Contracts.MyContract as MyContract
 
@@ -29,4 +30,5 @@ samples = M.fromList [
   , ("guess",         Guess.exports)
   , ("vesting",       Vesting.exports)
   , ("parameterized", Parameterized.exports)
+  , ("free-minting",  FreeMinting.exports)
   ]

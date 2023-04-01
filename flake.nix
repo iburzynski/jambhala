@@ -56,6 +56,7 @@
   #   ];
   #   allow-import-from-derivation = true;
   #   accept-flake-config = true;
+  #   substitute = true;
   # };
 
 }

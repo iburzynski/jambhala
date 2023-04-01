@@ -8,17 +8,33 @@ import Jambhala.CLI.Types
 import Jambhala.Haskell
 import Options.Applicative
 import qualified Data.Map.Strict as M
+import Cardano.Ledger.BaseTypes (Network(..))
 
 commandParser :: MonadReader Contracts m => m (ParserInfo Command)
 commandParser = do
   pw <- parseWrite
+  pa <- parseAddress
   ph <- parseHash
   pt <- parseTest
-  let p = parseList <|> ph <|> pt <|> pw <|> parseUpdate
+  let p = parseList <|> pa <|> ph <|> pt <|> pw <|> parseUpdate
   pure . info (helper <*> p) $ mconcat [fullDesc, progDesc "Jambhala Plutus Development Suite"]
 
 parseList :: Parser Command
 parseList = flag' List (long "list" <> short 'l' <> help "List the available contracts")
+
+parseAddress :: MonadReader Contracts m => m (Parser Command)
+parseAddress = fmap ((<*> parseNetwork) . fmap Addr) . parseContractName $ mconcat [
+    long "address"
+  , short 'a'
+  , metavar "CONTRACT"
+  , help "Display CONTRACT address with optional mainnet flag (default is testnet)" ]
+
+parseNetwork :: Parser Network
+parseNetwork = flag Testnet Mainnet $ mconcat [
+    long "main"
+  , short 'm'
+  , help "Display mainnet address instead of testnet"
+  ]
 
 parseHash :: MonadReader Contracts m => m (Parser Command)
 parseHash = fmap (fmap Hash) . parseContractName $ mconcat [

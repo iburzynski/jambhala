@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveGeneric  #-}
 
 module Jambhala.CLI.Types where
 
@@ -10,15 +11,26 @@ import Jambhala.Plutus
 import Control.Monad.Freer ( Eff )
 import Control.Monad.Freer.Reader (Reader)
 import Data.IntMap.Strict ( IntMap )
+import Codec.Serialise (Serialise(..))
+import Cardano.Ledger.BaseTypes (Network)
 
 type ContractName = String
 type Contracts    = Map ContractName ContractExports
 type FileName     = String
 
-data ContractExports = ContractExports { validator :: !Validator
-                                       , test      :: !(Maybe EmulatorExport) }
+data JambScript = JambValidator     !Validator
+                | JambMintingPolicy !MintingPolicy
+  deriving Generic
+
+instance Serialise JambScript where
+  encode (JambValidator v)     = encode v
+  encode (JambMintingPolicy p) = encode p
+
+data ContractExports = ContractExports { script :: !JambScript
+                                       , test   :: !(Maybe EmulatorExport) }
 
 data Command = List
+             | Addr   !ContractName !Network
              | Hash   !ContractName
              | Test   !ContractName
              | Write  !ContractName !(Maybe FileName)

@@ -55,6 +55,7 @@ library
     Contracts.Samples.Guess
     Contracts.Samples.Vesting
     Contracts.Samples.Parameterized
+    Contracts.Samples.FreeMinting
   hs-source-dirs:
       src
   build-depends:
@@ -63,6 +64,7 @@ library
     , bytestring
     , cardano-api
     , cardano-binary
+    , cardano-ledger-core
     , cardano-node-emulator
     , data-default
     , freer-extras

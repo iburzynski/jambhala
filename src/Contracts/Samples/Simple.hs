@@ -37,7 +37,7 @@ burn _ _ _ = error ()
 
 -- 4. Boilerplate:
 validator :: Validator
-validator = mkValidatorScript $$(compile [|| burn ||])
+validator = mkValidatorScript $$(compile [|| gift ||])
 
 exports :: ContractExports -- Prepare exports for jamb CLI
 exports = exportValidator validator

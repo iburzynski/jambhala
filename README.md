@@ -310,7 +310,7 @@ you can run the following command from the workspace terminal to write a contrac
   jamb -w CONTRACT [FILENAME]
   ```
 
-  where `CONTRACT` is the name of the contract to compile, and `[FILENAME]` is an optional file name (the contract name is used as the filename by default if no argument is given). When the command finishes, you should get a `compiled/CONTRACT.plutus` file that contains a JSON envelope of the UPLC code.
+  where `CONTRACT` is the name of the contract to compile, and `[FILENAME]` is an optional file name (the contract name is used as the filename by default if no argument is given). When the command finishes, you'll get a `CONTRACT.plutus` file at `assets/scripts/plutus` that contains a JSON envelope of the UPLC code.
 
   ```json
   {

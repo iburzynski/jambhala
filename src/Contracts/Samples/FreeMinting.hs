@@ -1,9 +1,7 @@
 module Contracts.Samples.FreeMinting where
 
 import Jambhala.Plutus
-import Jambhala.Haskell
 import Jambhala.Utils
-
 
 freeMinting :: () -> ScriptContext -> Bool
 freeMinting _ _ = True

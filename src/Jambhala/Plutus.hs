@@ -1,13 +1,15 @@
 {-# LANGUAGE TypeOperators #-} -- Required for using `.\/` in schema type declaration
 
 module Jambhala.Plutus (
-    Address
+    Address(..)
   , AddressInEra
   , AsContractError
   , BabbageEra
   , CompiledCode
   , Contract
   , ContractHandle
+  , Credential(..)
+  , CurrencySymbol(..)
   , Datum(..)
   , DecoratedTxOut(..)
   , EmulatorEffects
@@ -18,6 +20,8 @@ module Jambhala.Plutus (
   , Interval(..)
   , IsScriptContext(..)
   , Language(..)
+  , MintingPolicy(..)
+  , Network
   , NetworkId(..)
   , NetworkMagic(..)
   , PaymentPubKeyHash(..)
@@ -31,11 +35,12 @@ module Jambhala.Plutus (
   , ScriptDataJsonSchema(..)
   , ScriptContext(..)
   , SerialiseAsRawBytes(..)
+  , StakeReference(..)
   , ToData(..)
   , TxInfo(..)
   , TxOutRef
   , UnsafeFromData(..)
-  , Validator
+  , Validator(..)
   , ValidatorHash
   , ValidatorTypes(..)
   , Versioned(..)
@@ -61,7 +66,9 @@ module Jambhala.Plutus (
   , liftCode
   , logInfo
   , lovelaceValueOf
+  , makeIsDataIndexed
   , makeLift
+  , mkMintingPolicyScript
   , mkValidatorCardanoAddress
   , mkValidatorScript
   , mockWalletPaymentPubKeyHash
@@ -73,14 +80,18 @@ module Jambhala.Plutus (
   , plutusV2OtherScript
   , runEmulatorTraceIO
   , runEmulatorTraceIOWithConfig
-  , scriptHashAddress
+  , scriptCurrencySymbol
   , scriptDataToJson
+  , scriptHashAddress
   , select
+  , serialiseToBech32
   , slotToBeginPOSIXTime
   , submitTxConstraintsWith
+  , toShelleyScriptHash
   , txSignedBy
   , unitDatum
   , unitRedeemer
+  , unMintingPolicyScript
   , unspentOutputs
   , unstableMakeIsData
   , utxosAt
@@ -90,11 +101,14 @@ module Jambhala.Plutus (
   , writeFileTextEnvelope
 ) where
 
-import Cardano.Api ( AddressInEra, BabbageEra, NetworkId(..), NetworkMagic (..) )
+import Cardano.Api ( AddressInEra, BabbageEra, NetworkId(..), NetworkMagic(..) )
 import Cardano.Api.Shelley
-  ( Error(..), PlutusScript(..), PlutusScriptV2, PlutusScriptVersion(..), Script(..)
+  ( Address(..), Error(..), PlutusScript(..), PlutusScriptV2, PlutusScriptVersion(..), Script(..)
   , ScriptDataJsonSchema(..), SerialiseAsRawBytes(..)
-  , fromPlutusData, hashScript, scriptDataToJson, writeFileTextEnvelope )
+  , fromPlutusData, hashScript, scriptDataToJson, serialiseToBech32, toShelleyScriptHash
+  , writeFileTextEnvelope )
+import Cardano.Ledger.BaseTypes ( Network )
+import Cardano.Ledger.Credential ( Credential(..), StakeReference(..) )
 import Cardano.Node.Emulator ( slotToBeginPOSIXTime )
 import Ledger
   ( DecoratedTxOut(..), Language (..), PaymentPubKeyHash(..), TxOutRef, Versioned (..)
@@ -112,19 +126,20 @@ import Plutus.Contract
 import Plutus.Contract.Request ( utxosAt )
 import Plutus.Script.Utils.Ada ( lovelaceValueOf )
 import Plutus.Script.Utils.Typed ( ValidatorTypes(..) )
-import Plutus.Script.Utils.V2.Scripts ( validatorHash )
+import Plutus.Script.Utils.V2.Scripts ( scriptCurrencySymbol, validatorHash )
 import Plutus.Trace
   ( ContractHandle, EmulatorConfig, EmulatorEffects, EmulatorTrace, TraceConfig
   , activateContractWallet, callEndpoint, runEmulatorTraceIO, runEmulatorTraceIO', waitNSlots
   , waitUntilSlot )
-import Plutus.V1.Ledger.Address ( Address, scriptHashAddress )
+import Plutus.V1.Ledger.Address ( scriptHashAddress )
 import Plutus.V2.Ledger.Api
-  ( Datum(..), Interval(..), POSIXTime, Redeemer (..), ScriptContext(..), ToData(..), Validator
-  , ValidatorHash, mkValidatorScript )
+  ( CurrencySymbol(..), Datum(..), Interval(..), MintingPolicy(..), POSIXTime, Redeemer (..)
+  , ScriptContext(..), ToData(..), Validator(..), ValidatorHash
+  , mkMintingPolicyScript, mkValidatorScript, unMintingPolicyScript )
 import Plutus.V2.Ledger.Contexts ( TxInfo(..), txSignedBy )
 import PlutusTx
   ( CompiledCode, FromData(..), UnsafeFromData(..)
-  , applyCode, builtinDataToData, compile, liftCode, makeLift, unstableMakeIsData )
+  , applyCode, builtinDataToData, compile, liftCode, makeIsDataIndexed, makeLift, unstableMakeIsData )
 import Wallet.Emulator ( knownWallet, mockWalletPaymentPubKeyHash )
 
 import System.IO (IO)
