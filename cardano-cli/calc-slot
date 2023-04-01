@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+    >&2 echo "expected duration (in slots) as argument"
+    exit 1
+fi
+
+tip_output=$(cardano-cli query tip $NET)
+
+current_slot=$(echo "$tip_output" | grep -oP '(?<="slot": )[0-9]+')
+
+echo -n $(expr $current_slot + $1)

@@ -8,3 +8,8 @@ fi
 cardano-cli transaction submit \
 --tx-file "$TX_PATH/$1.signed" \
 $NET
+
+if [ $? -eq 0 ]; then
+  echo -e "View transaction:\n"
+  echo -e "\thttps://$TESTNET_NAME.cardanoscan.io/transaction/$(tx-hash $1)"
+fi

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [ -z "$1" ]; then
-    >&2 echo "expected policy names as argument"
+    >&2 echo "expected policy name as argument"
     exit 1
 fi
 
