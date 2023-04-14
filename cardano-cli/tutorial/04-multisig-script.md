@@ -65,26 +65,26 @@ Do this for `alice`, `bob` and `charlie` and paste their key-hashes into `multis
 ```
 
 ## <a id="address"></a> **Generate a script address**
-Jambhala provides a script called `script-addr`, which contains the following:
+Jambhala provides a script called `script-addr`, which contains the following `cardano-cli` command:
 
 ```sh
 # cardano-cli/script-addr
 
 cardano-cli address build \
---payment-script-file $NATIVE_SCRIPTS_PATH/$1.script \
+--payment-script-file $scripts_path/$script_name.$file_ext \
 $NET \
 --out-file $addr \
 ```
 
-When run with a script name as argument, it does the following:
- * Locates the corresponding `.script` file at the filepath specified by the `NATIVE_SCRIPTS_PATH` variable in the `.envrc` file
+When run with a mode option (`-n` for Native or `-p` for Plutus) and script name argument, it does the following:
+ * Locates the corresponding `.script` or `.plutus` file at the filepath specified by the `NATIVE_SCRIPTS_PATH` or `PLUTUS_SCRIPTS_PATH` variable in the `.envrc` file
  * Provides this as argument to the `--payment-script-file` option of the `address build` command
  * Generates a Cardano address for the script and saves it to a `.addr` file at the filepath specified by the `addr` variable.
 
-Run the script to generate the script address:
+Run the script with the `-n` option and `multisig` filename to generate the script address for our native script:
 
 ```sh
-script-addr multisig
+script-addr -n multisig
 wrote address to 'assets/addr/multisig.addr'
 ```
 

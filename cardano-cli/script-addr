@@ -1,19 +1,50 @@
 #!/usr/bin/env bash
 
-if [ -z "$1" ]; then
-    >&2 echo "expected script name as argument"
-    exit 1
+while getopts ":n:p:" opt; do
+  case $opt in
+    n)
+      if [ -z "${OPTARG}" ]; then
+        >&2 echo "error: missing script name argument"
+        exit 1
+      fi
+      scripts_path=$NATIVE_SCRIPTS_PATH
+      script_name=$OPTARG
+      file_ext="script"
+      ;;
+    p)
+      if [ -z "${OPTARG}" ]; then
+        >&2 echo "error: missing script name argument"
+        exit 1
+      fi
+      scripts_path="$PLUTUS_SCRIPTS_PATH"
+      script_name=$OPTARG
+      file_ext="plutus"
+      ;;
+    \?)
+      >&2 echo "Usage: script-addr [-n FILENAME] [-p FILENAME]"
+      exit 1
+      ;;
+    :)
+      >&2 echo "option -$OPTARG requires an argument"
+      exit 1
+      ;;
+  esac
+done
+
+if [ -z "$script_name" ]; then
+  >&2 echo "Usage: script-addr [-n FILENAME] [-p FILENAME]"
+  exit 1
 fi
 
-addr=$ADDR_PATH/$1.addr
+addr=$ADDR_PATH/$script_name.addr
 
 if [ -f "$addr" ]; then
-    >&2 echo "address file $addr already exists"
-    exit 1
+  >&2 echo "address file '$addr' already exists"
+  exit 1
 fi
 
 cardano-cli address build \
---payment-script-file $NATIVE_SCRIPTS_PATH/$1.script \
+--payment-script-file $scripts_path/$script_name.$file_ext \
 $NET \
 --out-file $addr
 
