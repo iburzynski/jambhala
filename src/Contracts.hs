@@ -24,7 +24,8 @@ contracts = M.fromList [
 
 samples :: Contracts
 samples = M.fromList [
-    ("simple",        Simple.exports)
+    ("gift",          Simple.giftExports)
+  , ("burn",          Simple.burnExports)
   , ("simple-typed",  SimpleTyped.exports)
   , ("custom-typed",  CustomTyped.exports)
   , ("guess",         Guess.exports)

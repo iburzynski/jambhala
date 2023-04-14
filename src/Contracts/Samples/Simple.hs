@@ -36,8 +36,14 @@ burn _ _ _ = error ()
 {-# INLINABLE burn #-}
 
 -- 4. Boilerplate:
-validator :: Validator
-validator = mkValidatorScript $$(compile [|| gift ||])
+giftValidator :: Validator
+giftValidator = mkValidatorScript $$(compile [|| gift ||])
 
-exports :: ContractExports -- Prepare exports for jamb CLI
-exports = exportValidator validator
+giftExports :: ContractExports -- Prepare exports for jamb CLI
+giftExports = exportValidator giftValidator
+
+burnValidator :: Validator
+burnValidator = mkValidatorScript $$(compile [|| burn ||])
+
+burnExports :: ContractExports
+burnExports = exportValidator burnValidator
