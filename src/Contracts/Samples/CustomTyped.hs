@@ -95,5 +95,12 @@ test = do
     , callEndpoint @"grab" h3 42
     ]
 
+-- Exports
+redeemerSuccess :: DataExport
+redeemerSuccess = DataExport "ctr42" $ Redeem 42
+
+redeemerFail :: DataExport
+redeemerFail = DataExport "ctr21" $ Redeem 21
+
 exports :: ContractExports -- Prepare exports for jamb CLI:
-exports = exportValidatorWithTest validator test 3
+exports = exportValidatorWithTest validator [redeemerSuccess, redeemerFail] test 3

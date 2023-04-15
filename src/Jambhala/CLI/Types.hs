@@ -1,6 +1,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveGeneric  #-}
+{-# LANGUAGE GADTs #-}
 
 module Jambhala.CLI.Types where
 
@@ -12,7 +13,6 @@ import Control.Monad.Freer ( Eff )
 import Control.Monad.Freer.Reader (Reader)
 import Data.IntMap.Strict ( IntMap )
 import Codec.Serialise (Serialise(..))
-import Cardano.Ledger.BaseTypes (Network)
 
 type ContractName = String
 type Contracts    = Map ContractName ContractExports
@@ -26,8 +26,10 @@ instance Serialise JambScript where
   encode (JambValidator v)     = encode v
   encode (JambMintingPolicy p) = encode p
 
-data ContractExports = ContractExports { script :: !JambScript
-                                       , test   :: !(Maybe EmulatorExport) }
+data ContractExports = ContractExports { script      :: !JambScript
+                                       , dataExports :: ![DataExport]
+                                       , test        :: !(Maybe EmulatorExport)
+                                       }
 
 data Command = List
              | Addr   !ContractName !Network
@@ -47,3 +49,9 @@ type ContractHandles w s e = IntMap (ContractHandle w s e)
 
 newtype WalletQuantity = WalletQuantity { walletQuantity :: Integer }
   deriving ( Eq, Ord, Num )
+
+data DataExport where
+  DataExport :: (ToData a) => String -> a -> DataExport
+
+instance ToData DataExport where
+  toBuiltinData (DataExport _ x) = toBuiltinData x

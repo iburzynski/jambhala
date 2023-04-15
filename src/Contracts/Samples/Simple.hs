@@ -39,11 +39,15 @@ burn _ _ _ = error ()
 giftValidator :: Validator
 giftValidator = mkValidatorScript $$(compile [|| gift ||])
 
-giftExports :: ContractExports -- Prepare exports for jamb CLI
-giftExports = exportValidator giftValidator
-
 burnValidator :: Validator
 burnValidator = mkValidatorScript $$(compile [|| burn ||])
 
+-- Exports:
+unitExport :: DataExport
+unitExport = DataExport "unit" ()
+
+giftExports :: ContractExports -- Prepare exports for jamb CLI
+giftExports = exportValidator giftValidator [unitExport]
+
 burnExports :: ContractExports
-burnExports = exportValidator burnValidator
+burnExports = exportValidator burnValidator []

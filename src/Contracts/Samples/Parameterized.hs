@@ -119,7 +119,7 @@ test = do
     ]
 
 exports :: ContractExports -- Prepare exports for jamb CLI:
-exports = exportValidatorWithTest (validator p) test 4
+exports = exportValidatorWithTest (validator p) [] test 4
   where
     -- validator must be applied to some parameter to generate a hash or write script to file
     p = VestingParam

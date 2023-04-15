@@ -108,4 +108,4 @@ test = do
     _ -> pure ()
 
 exports :: ContractExports -- Prepare exports for jamb CLI:
-exports = exportValidatorWithTest validator test 6
+exports = exportValidatorWithTest validator [] test 6

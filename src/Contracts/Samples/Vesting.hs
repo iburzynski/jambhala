@@ -119,4 +119,4 @@ test = do
     ]
 
 exports :: ContractExports -- Prepare exports for jamb CLI:
-exports = exportValidatorWithTest validator test 4
+exports = exportValidatorWithTest validator [] test 4

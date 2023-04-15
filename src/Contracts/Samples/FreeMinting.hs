@@ -14,4 +14,4 @@ curSymbol :: CurrencySymbol
 curSymbol = scriptCurrencySymbol policy
 
 exports :: ContractExports
-exports = exportMintingPolicy policy
+exports = exportMintingPolicy policy []
