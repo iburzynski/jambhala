@@ -24,12 +24,13 @@ contracts = M.fromList [
 
 samples :: Contracts
 samples = M.fromList [
-    ("gift",          Simple.giftExports)
-  , ("burn",          Simple.burnExports)
-  , ("simple-typed",  SimpleTyped.exports)
-  , ("custom-typed",  CustomTyped.exports)
-  , ("guess",         Guess.exports)
-  , ("vesting",       Vesting.exports)
-  , ("parameterized", Parameterized.exports)
-  , ("free-minting",  FreeMinting.exports)
+    ("gift",           Simple.giftExports)
+  , ("burn",           Simple.burnExports)
+  , ("simple-typed",   SimpleTyped.typedExports)
+  , ("simple-untyped", SimpleTyped.untypedExports)
+  , ("custom-typed",   CustomTyped.exports)
+  , ("guess",          Guess.exports)
+  , ("vesting",        Vesting.exports)
+  , ("parameterized",  Parameterized.exports)
+  , ("free-minting",   FreeMinting.exports)
   ]

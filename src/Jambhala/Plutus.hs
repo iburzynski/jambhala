@@ -68,6 +68,7 @@ module Jambhala.Plutus (
   , lovelaceValueOf
   , makeIsDataIndexed
   , makeLift
+  , mkI
   , mkMintingPolicyScript
   , mkValidatorCardanoAddress
   , mkValidatorScript
@@ -140,6 +141,7 @@ import Plutus.V2.Ledger.Contexts ( TxInfo(..), txSignedBy )
 import PlutusTx
   ( CompiledCode, FromData(..), UnsafeFromData(..)
   , applyCode, builtinDataToData, compile, liftCode, makeIsDataIndexed, makeLift, unstableMakeIsData )
+import PlutusTx.Builtins (mkI)
 import Wallet.Emulator ( knownWallet, mockWalletPaymentPubKeyHash )
 
 import System.IO (IO)
