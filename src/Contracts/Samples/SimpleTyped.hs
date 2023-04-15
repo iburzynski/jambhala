@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications #-}
 module Contracts.Samples.SimpleTyped where
 
 import Jambhala.Plutus
@@ -5,8 +6,8 @@ import Jambhala.Utils ( exportValidator, ContractExports )
 
 simpleUntyped :: BuiltinData -> BuiltinData -> BuiltinData -> ()
 simpleUntyped _ redeemer _
-  | redeemer == mkI 42 = ()
-  | otherwise          = traceError "expected 42"
+  | redeemer == toBuiltinData @Integer 42 = ()
+  | otherwise                             = traceError "expected 42"
 {-# INLINABLE simpleUntyped #-}
 
 untypedValidator :: Validator
