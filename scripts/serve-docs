@@ -6,5 +6,6 @@ if [ -n "$dir" ]; then
   cd "dist-newstyle/src/$(basename "$dir")"
   nix develop --command "serve-docs"
 else
-  echo "Error: plutus-apps directory not found"
+  >&2 echo "Error: plutus-apps directory not found"
+  exit 1
 fi

@@ -1,0 +1,3 @@
+[submodule "jambhalucid"]
+	path = jambhalucid
+	url = https://github.com/iburzynski/jambhalucid

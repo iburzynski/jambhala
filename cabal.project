@@ -11,11 +11,11 @@ repository cardano-haskell-packages
     c00aae8461a256275598500ea0e187588c35a5d5d7454fb57eac18d9edb86a56
     d4a35cd3121aa00d18544bb0ac01c3e1691d618f462c46129271bccf39f7e8ee
 
-index-state: 2023-02-20T00:00:00Z
+index-state: 2023-02-25T00:00:00Z
 
 index-state:
-  , hackage.haskell.org 2023-02-20T00:00:00Z
-  , cardano-haskell-packages 2022-12-22T00:00:00Z
+  , hackage.haskell.org 2023-02-25T00:00:00Z
+  , cardano-haskell-packages 2023-02-25T00:00:00Z
 
 write-ghc-environment-files: never
 
@@ -31,6 +31,8 @@ allow-newer:
   , servant:aeson
   , servant-client-core:aeson
   , servant-server:aeson
+  , servant-foreign:lens
+  , blockfrost-api:lens
 
 constraints:
   , protolude <0.3.1
@@ -55,6 +57,8 @@ constraints:
   , resource-pool <0.4.0.0
 
   , http2 <4.0.0
+
+  , ouroboros-consensus-protocol==0.1.0.1
 
 package plutus-ledger
   haddock-options: "--optghc=-fplugin-opt PlutusTx.Plugin:defer-errors"
@@ -85,8 +89,8 @@ package cardano-wallet-core-integration
 source-repository-package
     type: git
     location: https://github.com/input-output-hk/plutus-apps.git
-    tag: 68efca7eda4afd1c14698adf697d70acb5a489e2
-    --sha256: 1ng8h0njfc4lrrvlpd6a05019ap79h861nn5zx3rnhg59i8j2wjm
+    tag: dbdbcbe608797fcda0aacc35522a4e6744dfd62a
+    --sha256: 0krscsiklsd3gkjckljph9sigdhag29fqvyld9y7w6mqmb98vsaz
     subdir:
       cardano-node-emulator
       cardano-streaming
@@ -125,14 +129,6 @@ source-repository-package
       lib/strict-non-empty-containers
       lib/test-utils
       lib/text-class
-
-source-repository-package
-    type: git
-    location: https://github.com/Quviq/quickcheck-contractmodel
-    tag: cc43f13f98c704e0d53dbdef6a98367918f8c5c1
-    --sha256: 1ya604zn6jaq2qis1qgrlc21q08a7qmwwaj19f9m86y6dmvq5gk5
-    subdir:
-      contractmodel
 
 source-repository-package
     type: git

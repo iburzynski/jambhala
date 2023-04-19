@@ -32,6 +32,8 @@
               shell.buildInputs = with pkgs; [
                 nixpkgs-fmt
                 nix-prefetch-git
+                nodejs
+                nodePackages.pnpm
               ];
               inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = CHaP; };
             };

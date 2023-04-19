@@ -13,3 +13,8 @@ package trace-dispatcher
 
 package HsOpenSSL
   flags: -homebrew-openssl
+
+allow-newer:
+  -- servant-docs-0.12 pre-02-25-2023 revision is incompatible with lens 5.2
+ -- remove this after haskell.nix HLS bug is resolved and flake/index-state can be updated
+  , servant-docs:lens
