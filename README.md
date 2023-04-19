@@ -191,11 +191,13 @@ To use Jambhala in **Development Mode**, select the green **`Use this template`*
 ***
 ### 5. **Build environment and set up project**
 ***
-  * Clone your new repository in a `bash` terminal session:
+  * Clone your new repository with submodules in a `bash` terminal session:
 
     ```sh
-    git clone https://github.com/PATH-TO/YOUR-REPO.git
+    git clone https://github.com/PATH-TO/YOUR-REPO.git --recurse-submodules
     ```
+
+    >**Note:** Jambhala uses git submodules to incorporate companion projects (like `jambhalucid`, which provides an interactive demonstration of the sample contracts using Lucid). These projects are maintained as separate repositories. To include them when you clone your fork, you must use the `--recurse-submodules` flag.
 
   * Open the project root directory in your terminal session:
 
