@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+cd jambhalucid
+
+if [ ! -d "node_modules" ]; then
+  # Install the dependencies using pnpm
+  pnpm install
+fi
+
+pnpm dev
