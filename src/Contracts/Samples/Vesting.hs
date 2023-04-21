@@ -24,7 +24,7 @@ data VestingDatum = VestingDatum {
 unstableMakeIsData ''VestingDatum
 
 vesting :: VestingDatum -> () -> ScriptContext -> Bool
-vesting (VestingDatum ben dline) _ sc =  traceIfFalse "Wrong pubkey hash"    signedByBeneficiary
+vesting (VestingDatum ben dline) _ sc =  traceIfFalse "Beneficiary's signature missing" signedByBeneficiary
                                       && traceIfFalse "Deadline not reached" dlineReached
   where
     txInfo              = scriptContextTxInfo sc

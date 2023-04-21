@@ -17,7 +17,6 @@ import Jambhala.Utils
 import Text.Printf ( printf )
 import qualified Data.Map.Strict as Map
 
-
 newtype Redeem = Redeem { guess :: Integer }
 -- `unstableMakeIsData` uses TemplateHaskell to generate ToData/FromData instances for a custom type
 -- These classes have toBuiltInData/fromBuiltInData methods to convert between Haskell/Plutus data.

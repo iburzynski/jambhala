@@ -26,7 +26,6 @@ typedValidator :: Validator
 typedValidator = mkValidatorScript $$(compile [|| wrapped ||])
   where wrapped = mkUntypedValidator simpleTyped
 
-
 typedRedeemerSuccess :: DataExport
 typedRedeemerSuccess = DataExport "tr42" (42 :: Integer)
 
