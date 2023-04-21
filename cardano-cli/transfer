@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ] || [ -z "$4" ]; then
+  >&2 echo "Usage: transfer SENDER RECIPIENT ADA_AMOUNT UTXO"
+  exit 1
+fi
+
+cardano-cli transaction build \
+$NET \
+--tx-in $4 \
+--tx-out "$(addr $2)+$(ada $3)" \
+--change-address $(addr $1) \
+--out-file $TX_PATH/transfer.raw
+
+tx-sign transfer $1
+tx-submit transfer

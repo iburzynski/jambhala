@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+    >&2 echo "expected value in ADA as argument"
+    exit 1
+fi
+
+echo -n "$(expr $1 \* 1000000)"
