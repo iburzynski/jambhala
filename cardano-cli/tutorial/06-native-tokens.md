@@ -20,7 +20,7 @@ In this example, we'll create a new address for our minting policy, but it's pos
 Use the `key-gen` script to generate a new key-pair/address for our minting policy:
 
 ```sh
-key-gen policy
+key-gen native-policy
 ```
 
 Now create a file called `native.script` in the `assets/scripts/native` directory and paste the following:
@@ -32,10 +32,10 @@ Now create a file called `native.script` in the `assets/scripts/native` director
 }
 ```
 
-Now use the `key-hash` script to get the key-hash for `policy`:
+Now use the `key-hash` script to get the key-hash for `native-policy`:
 
 ```sh
-key-hash policy
+key-hash native-policy
 ```
 
 Copy the key-hash value from the terminal and replace the `<KEY-HASH>` placeholder in `native.script`.
@@ -128,7 +128,7 @@ Calculate the transaction fee, storing it in a temporary variable `FEE`:
 FEE=$(min-fee native-mint -i 1 -o 1 -w 2)
 ```
 
->Note that the transaction has a `witness-count` of 2: one signature will be provided by the `policy` and the other by the user who is minting the tokens (`alice`).
+>Note that the transaction has a `witness-count` of 2: one signature will be provided by the `native-policy` and the other by the user who is minting the tokens (`alice`).
 
 Then calculate the remaining balance after paying the fee by subtracting `FEE` from `INPUT_AMT`, and assign it to a variable `BALANCE`:
 
@@ -151,10 +151,10 @@ cardano-cli transaction build-raw \
 ***
 
 ### **Sign and submit the minting transaction**
-For this transaction we won't create witness files and use `transaction assemble` to produce the signed transaction: we'll assume the person minting the tokens (`alice`) is in possession of the `policy` keys, and simply use the `tx-sign` script with multiple user arguments:
+For this transaction we won't create witness files and use `transaction assemble` to produce the signed transaction: we'll assume the person minting the tokens (`alice`) is in possession of the `native-policy` keys, and simply use the `tx-sign` script with multiple user arguments:
 
 ```sh
-tx-sign native-mint policy alice
+tx-sign native-mint native-policy alice
 ```
 
 Now submit the minting transaction. After a few minutes, you can query the UTXOs of the recipient to confirm the receipt of the minted tokens.
@@ -292,6 +292,6 @@ cardano-cli transaction build-raw \
 --out-file $TX_PATH/native-burn.raw
 ```
 
-Sign the transaction for `policy` and `alice` and submit.
+Sign the transaction for `native-policy` and `alice` and submit.
 
 Wait a few minutes, then query Alice's UTXOs to confirm that the tokens were burned.

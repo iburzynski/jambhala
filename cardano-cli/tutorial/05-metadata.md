@@ -74,7 +74,7 @@ On `cardanoscan.io`, beneath the **Transaction Details** section you'll see a se
 We can query **[Blockfrost](https://blockfrost.io/)**'s API to view transactions submitted with a particular label. You'll need a Blockfrost account and **Project ID** (API key) to submit requests.
 
 ### **Create and store a Blockfrost Project ID**
-Visit **[blockfrost.io](https://blockfrost.io/)** and click the blue **`BUILD APPS NOW`** button in the top right corner to create a free account.
+If you haven't done so already, visit **[blockfrost.io](https://blockfrost.io/)** and click the blue **`BUILD APPS NOW`** button in the top right corner to create a free account.
 
 Once your account is created, you'll be taken to the **`DASHBOARD`**. Click **`+ADD PROJECT`** to create a new project.
 
@@ -86,27 +86,39 @@ In the **`Network`** dropdown, select the Cardano testnet your project is using 
 echo $TESTNET_NAME
 ```
 
-Once your project is created, you'll be taken to the project's page. Find the **`PROJECT ID`** field and click the copy icon to copy your
+Once your project is created, you'll be taken to the project's page. Find the **`PROJECT ID`** field and click the copy icon to copy your ID.
 
-Open the `.env` file in the root directory of your project and type the following line:
+Open the `.env` file in the root directory of your project and replace the placeholder value for the corresponding variable with your project ID (paste it immediately after the equals sign):
 
 ```sh
-BLOCKFROST_ID=
+BLOCKFROST_PROJECT_ID_PREVIEW=previewProjectId
 ```
 
-Then paste your Blockfrost project ID immediately after the equals sign. Save the file and run `direnv allow` in your terminal session to make the new variable available.
+or...
+
+```sh
+BLOCKFROST_PROJECT_ID_PREPROD=preprodProjectId
+```
+
+Save the file and run `direnv allow` in your terminal session to make the new variable available.
 
 Run the following command to confirm that the variable is available:
 
 ```sh
-echo $BLOCKFROST_ID
+echo $BLOCKFROST_PROJECT_ID_PREVIEW
+```
+
+or...
+
+```sh
+echo $BLOCKFROST_PROJECT_ID_PREPROD
 ```
 
 ### **Query transaction metadata by label**
 You can now view transactions containing a particular metadata label by running the command below:
 
 ```sh
-curl -H "project_id: $BLOCKFROST_ID" "https://cardano-$TESTNET_NAME.blockfrost.io/api/v0/metadata/txs/labels/$LABEL" | jq
+curl -H "project_id: $BLOCKFROST_PROJECT_ID_PREVIEW" "https://cardano-$TESTNET_NAME.blockfrost.io/api/v0/metadata/txs/labels/$LABEL" | jq
 ```
 
 You should see your transaction and its metadata appear in the results, as well as any other transactions submitted with the same label. You can replace the `$LABEL` variable in the URL to view transactions with a different label.
