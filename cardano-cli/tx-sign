@@ -27,6 +27,6 @@ if [ $? -eq 0 ]; then
   users=$(printf "%s, " "${@:2}")
   users="${users%, }"
 
-  echo "signed transaction '$1' for $users"
-  echo "wrote signed transaction to '$tx.signed'"
+  echo "Signed transaction '$1' for $users."
+  echo "Wrote signed transaction to '$tx.signed'."
 fi
