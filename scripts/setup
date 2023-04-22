@@ -78,6 +78,9 @@ echo "Building project..."
   nix build .
   cabal update
   cabal build "$PKGNAME"
+  cd jambhalucid
+  pnpm install
+  cd $PROJECT_ROOT
 ) 2>&1 | indent
 
 read -p "Install cardano-node/cardano-cli? [Y/n] " answer
