@@ -145,23 +145,9 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
       sudo launchctl stop <NAME>
       sudo launchctl start <NAME>
       ```
-***
-### 3. **Set up `direnv`**
-***
-  * This setup uses `direnv` to provide seamless loading of the Nix environment whenever you navigate into the project directory tree.
-  * The `direnv` extension for VS Code integrates this environment with your editor, providing full IDE support for Plutus development.
-  * Jambhala requires `direnv` version `>= 2.30`, which may not be available in the packaging systems for certain older operating systems (for instance, any Ubuntu system below version `22.10`).
-  * Visit the **[direnv installation page](https://direnv.net/docs/installation.html)** and check which version is available for your OS in the `Packaging status` section. If your `direnv` version `2.30` or higher is available, follow the instructions to install it and hook it into your shell.
-  * If `direnv` version `2.30+` isn't available for your OS through the standard installation method above, you can use `nix` to install it. Just run the following:
-
-    ```sh
-    nix-env -iA nixpkgs.direnv
-    ```
-
-  * When you load the project in VS Code for the first time, you will be prompted to install the **[direnv extension](https://marketplace.visualstudio.com/items?itemName=cab404.vscode-direnv&ssr=false#review-details)**.
 
 ***
-### 4. **Create your repository**
+### 3. **Create your repository**
 ***
 There are two "modes" you can choose from to use Jambhala, depending on your use case:
 
@@ -176,7 +162,7 @@ Jambhala is under active development, with new features and learning materials b
 
 For these reasons, **Learning Mode** isn't well-suited for developing your own projects using Jambhala.
 
-To use Jambhala in **Learning Mode**, just click the **`Fork`** button at the top of this repository's page on Github to create your fork. Then proceed to **Step 5**.
+To use Jambhala in **Learning Mode**, just click the **`Fork`** button at the top of this repository's page on Github to create your fork. Then proceed to **Step 4**.
 
 ### **Development Mode**
 **Development Mode** allows you to generate a completely independent repository, which can be personalized for your project. You can generate as many repositories from the template as you like, and your contributions to them will be reflected in your Github activity.
@@ -190,23 +176,70 @@ It's still possible to update Jambhala in **Development Mode**, although it requ
 To use Jambhala in **Development Mode**, select the green **`Use this template`** button on this repository's Github page, and select **`Create a new repository`** to generate a new repository from the Jambhala template.
 
 ***
-### 5. **Build environment and set up project**
+### 4. **Clone repository**
 ***
-  * Clone your new repository in a `bash` terminal session:
 
+Clone your new repository in a `bash` terminal session:
+
+  ```sh
+  git clone https://github.com/PATH-TO/YOUR-REPO.git --recurse-submodules
+  ```
+
+  >**Note:** Jambhala uses git submodules to incorporate companion projects (like `jambhalucid`, which provides an interactive demonstration of the sample contracts using Lucid). These projects are maintained as separate repositories. To include them when you clone your fork, you must use the `--recurse-submodules` flag.
+
+***
+### 5. **Set up `direnv`**
+***
+  * Jambhala uses `direnv` to provide seamless loading of the Nix environment whenever you navigate into the project directory tree.
+  * The `direnv` extension for VS Code/Codium integrates this environment with your editor, providing full IDE support for Plutus development.
+  * Jambhala requires `direnv` version `>= 2.30`, which may not be available in the packaging systems for certain older operating systems (for instance, any Ubuntu system below version `22.10`). For convenience, a setup script is provided to install a compatible version using Nix.
+
+  #### **Install `direnv` using setup script**
+  * Run the following command in a `bash` terminal to check if a compatible version of `direnv` is already installed on your machine:
+    
     ```sh
-    git clone https://github.com/PATH-TO/YOUR-REPO.git --recurse-submodules
+    direnv --version
     ```
 
-    >**Note:** Jambhala uses git submodules to incorporate companion projects (like `jambhalucid`, which provides an interactive demonstration of the sample contracts using Lucid). These projects are maintained as separate repositories. To include them when you clone your fork, you must use the `--recurse-submodules` flag.
+  * If the response displays `direnv: command not found`, run the following setup script to install `direnv` using Nix and hook it into your `bash` shell:
+    
+    ```sh
+    . direnv-setup.sh
+    ```
 
-  * Open the project root directory in your terminal session:
+  * If `direnv --version` displays a version number `>= 2.30`, you already have a compatible version of `direnv` installed. Run the following setup script to hook `direnv` into your `bash` shell (if already hooked, the script will make no changes):
+    
+    ```sh
+    . direnv-setup.sh
+    ```
+
+  * If `direnv --version` displays a version number `< 2.30`, you should uninstall `direnv` (i.e. `sudo apt remove direnv` for Ubuntu, `brew uninstall direnv` for MacOS). Then run the setup script to install a compatible version using Nix:
+
+    ```sh
+    . direnv-setup.sh
+    ```
+
+  #### **Manual installation**
+  While not recommended, if you prefer to install `direnv` through a different method you may do the following:
+  
+  * Visit the **[direnv installation page](https://direnv.net/docs/installation.html)** and check which version is available for your OS in the `Packaging status` section. If `direnv` version `2.30` or higher is available for your machine, follow the instructions to install it. Otherwise follow the instructions above to **Install `direnv` using setup script**.
+  * The final step is to hook `direnv` into your `bash` shell. Add the following line at the end of your `~/.bashrc` file:
+    
+    ```sh
+    eval "$(direnv hook bash)"
+    ```
+
+***
+### 6. **Build environment and set up project**
+***
+
+  * Open a new `bash` terminal window and navigate to your project directory:
 
     ```sh
     cd path-to-your-project
     ```
 
-    You should now see the following message:
+    You should now see the following message (if not, complete **[Step 5](#5-set-up-direnv)**):
 
     ```sh
     direnv: error /home/path-to-your-project/.envrc is blocked. Run `direnv allow` to approve its content
@@ -235,13 +268,13 @@ To use Jambhala in **Development Mode**, select the green **`Use this template`*
     Om Dzambhala Dzalentraye Svaha!
     ```
 
-  * Some dependencies will need to be built from source, but if you see "building" for certain packages that should be downloadable from a binary cache (particularly GHC, the Linux kernel, and other non-Haskell related dependencies) or if you see any warning such as `warning: ignoring substitute`, this means your binary cache was not set up correctly and Nix is attempting to build packages from source that it should be fetching from a cache. Exit with `CTRL + c` and repeat **Step 2**, then try again. Make sure to restart the `nix-daemon`!
+  * Some dependencies will need to be built from source, but if you see "building" for certain packages that should be downloadable from a binary cache (particularly GHC, the Linux kernel, and other non-Haskell related dependencies) or if you see any warning such as `warning: ignoring substitute`, this means your binary cache was not set up correctly and Nix is attempting to build packages from source that it should be fetching from a cache. Exit with `CTRL + c` and repeat **[Step 2](#2-configure-nixconf)**, then try again. Make sure to restart the `nix-daemon`!
   * **If you see any HTTP-related errors**, it means the IOG binary cache is non-responsive. Wait a bit and try again later.
 
-  * Once the Nix environment build process completes, run `setup` to launch the setup wizard:
+  * Once the Nix environment build process completes, run `jsetup` to launch the Jambhala setup wizard:
 
     ```sh
-    setup
+    jsetup
     ```
 
   * The setup wizard runs differently depending on whether you're using Jambhala in **Learning** or **Development** mode:
@@ -271,7 +304,7 @@ To use Jambhala in **Development Mode**, select the green **`Use this template`*
     * A tutorial with guided exercises for learning to use `cardano-cli` is provided in the `cardano-cli/tutorial` directory.
 
 ***
-### 6. **Start coding**
+### 7. **Start coding**
 ***
 Jambhala's development environment includes a preconfigured instance of VS Codium (a community-driven, freely-licensed distribution of VS Code without Microsoft branding or telemetry). The Jambhala Editor comes with all the required extensions for Cardano development already installed via Nix. 
 
@@ -536,10 +569,9 @@ Once your contract has been added to the map, it can now be operated on by the `
 ***
 ## **🤖 Using GHCi**
 ***
-To start a GHCi REPL session, run `repl` and then load your contract:
-
-  ```sh
-  repl
+To start a GHCi REPL session, run `jrepl` and then load your contract:
+ ```sh
+  jrepl
 
   Prelude Contracts λ > :m Contracts.MyContract
   Prelude Contracts.MyContract λ >
@@ -573,10 +605,10 @@ If you've made changes to any core Jambhala files, you may encounter a merge con
 ## **Development Mode**
 Unlike forks, Github repositories generated from templates have unique histories, so they aren't able to fetch and merge upstream changes as smoothly. However it's still possible to merge updates from an upstream template into your project with a little manual effort.
 
-The `setup` wizard added the upstream template as a remote source. You can now run the `update-jambhala` command to fetch any changes to the template and attempt to merge them:
+The `jsetup` wizard added the upstream template as a remote source. You can now run the `jupdate` command to fetch any changes to the template and attempt to merge them:
 
 ```sh
-update-jambhala
+jupdate
 ```
 > *Note that this command is distinct from the `jamb -u` command, which updates only the `plutus-apps` dependency in `cabal.project`.*
 
@@ -681,12 +713,12 @@ You need to **stage** your new module file in `git` so it becomes visible to the
 
 ### **General Troubleshooting Techniques**
 * **Restart Haskell LSP Server:** restarting `haskell-language-server` often fixes common issues with Haskell in VS Code. Open the command palette (`Ctrl + Shift + p`) and begin typing `Restart Haskell LSP Server` until you see this option, and select it. In the future it will be pinned to the top of the command palette options and easier to find.
-* **`rebuild`:** cleaning the `dist-newstyle` directory of all build artifacts and rebuilding the project may resolve certain issues
+* **`jrebuild`:** cleaning the `dist-newstyle` directory of all build artifacts and rebuilding the project may resolve certain issues
 
   ```sh
-  rebuild
+  jrebuild
   ```
 
-  Note that it will be time-consuming to rebuild the project from scratch, so be sure to exhaust all other troubleshooting options before attempting.
+  Note that it will be time-consuming to `cabal build` the project from scratch, so be sure to exhaust all other troubleshooting options before attempting.
 
 **For assistance or bug reporting, file an issue or email `ian.burzynski@emurgo.io`.**
