@@ -80,8 +80,8 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
 ### 0. **Requirements**
 
   * This project uses the Nix package manager, Nix flakes, and IOG's **[haskell.nix](https://input-output-hk.github.io/haskell.nix/)** infrastructure to build a fully-functioning and reproducible Plutus development environment.
-  * Nix is only compatible with Unix-like operating systems, so you must be using a Linux distribution, MacOS, or WSL2 (Windows Subsystem for Linux) to install this project locally.
-  * This project assumes the use of `VS Code` as editor and `bash` as shell. Other tools will require alternative workflows that are not covered here.
+  * Nix is only compatible with Unix-like operating systems, so you must be using a Linux distribution, MacOS, or WSL2 (Windows Subsystem for Linux) to install Jambhala.
+  * This project assumes the use of `VS Codium` (a preconfigured installation is provided) or `VS Code` as editor and `bash` as shell (also provided in the Nix development environment). Other tools will require alternative workflows that are not covered here.
   * This project is storage-intensive. We suggest you have at least `50GB` of free disk space before proceeding further.
   * **NOTE for MacOS users:** MacOS may ship with versions of `bash` and `grep` that are incompatible with this workflow. You should install `bash`/`grep` using Homebrew first before proceeding.
 
@@ -249,7 +249,7 @@ To use Jambhala in **Development Mode**, select the green **`Use this template`*
       * Your `.cabal` and `LICENSE` files will be customized using your answers to the prompts.
       * The Jambhala `README` file will be moved to the `docs` directory, and a new `README` for your project will be created
 
-  * The project will then be built using `cabal`. This step will also take some time to complete:
+  * The project will then be built using `cabal`. While seemingly redundant (since the project's dependencies have already been built using Nix), a `cabal build` is necessary for proper Haskell Language Server support in VS Code/Codium and for building/serving `plutus-apps` docs locally. This step will also take some time to complete:
 
     ```
                   _=_
@@ -270,11 +270,72 @@ To use Jambhala in **Development Mode**, select the green **`Use this template`*
     * A tutorial with guided exercises for learning to use `cardano-cli` is provided in the `cardano-cli/tutorial` directory.
 
 ***
-### 6. **Open project in VS Code**
+### 6. **Start coding**
 ***
-  * You can now start VS Code and use the `File > Open Folder...` menu option to load the starter kit.
-  * You will be prompted to install some recommended extensions if you don't have them already: `haskell`, `direnv` and `Nix IDE`.
-  * Accept any pop-up prompts from the `direnv` extension if you encounter them.
+Jambhala's development environment includes a preconfigured instance of VS Codium (a community-driven, freely-licensed distribution of VS Code without Microsoft branding or telemetry). The Jambhala Editor comes with all the required extensions for Cardano development already installed via Nix. 
+
+Simply use the `jcode` command from your project's root directory in your terminal to open the Jambhala editor and start coding!
+
+#### **Adding Extensions to Jambhala Editor**
+Because the Jambhala Editor is installed via Nix, it isn't possible to install additional extensions from within the application. Instead, they can be added to `flake.nix` and installed via Nix when you load the development environment using `direnv`. To add an extension:
+* Click the `Extensions` icon in the left menu panel and look up the extension in the marketplace. 
+* Click on the extension you wish to install and click the **gear icon** next to the `Install` button. 
+* Select `Copy Extension ID`. 
+* Visit **[https://search.nixos.org/packages?channel=unstable](https://search.nixos.org/packages?channel=unstable)** and paste the Extension ID into the search. If a matching result is returned, your extension is available in the `nixpkgs` repository and can be added to VS Codium.*
+  >**Note:** in some rare cases, extensions are proprietary and thus aren't compatible with VS Codium (only VS Code). 
+* Open `flake.nix` and find the following section:
+
+  ```nix
+    # flake.nix
+    {
+      ...
+                vscodeExtensions = with pkgs.vscode-extensions; [
+                            asvetliakov.vscode-neovim
+                            dracula-theme.theme-dracula
+                            haskell.haskell
+                            jnoortheen.nix-ide
+                            justusadam.language-haskell
+                            mkhl.direnv
+                          ];
+      ...
+    }
+  ```
+* Paste the Extension ID into the list of extensions on a new line and save the changes.
+* Close VS Codium, and run `direnv reload` in your terminal (inside your project root directory).
+* Run the `jcode` command to relaunch VS Codium. Your extension should now be installed and ready for use.
+
+\* If your desired extension isn't available in `nixpkgs`, it is still possible to add it to `flake.nix`, but the process is more complex and will not be covered here. You can **file an issue** to request a particular extension be added if you feel it will be beneficial to Jambhala users, and I will consider adding it to the flake upstream.
+
+#### **Vim Mode**
+Jambhala's VS Codium editor comes with the `neovim` extension installed, but it's disabled by default when you load the editor using `jcode`. If you prefer to use Vim keybindings, you can enable `neovim` by changing the `VIM_MODE` environment variable in the `.env` file:
+
+```sh
+VIM_MODE=true
+```
+
+#### **Use Jambhala with your own VS Code/VS Codium**
+While the Jambhala Editor provides the most rapid route to start coding, you can also use Jambhala with your existing VS Code/Codium installation.
+
+Loading the editor from within the Nix environment provides the most reliable experience, as it prevents errors that can be encountered when extensions (particularly the Haskell extension) load before the Nix environment has finished loading via `direnv`.
+
+Open the project root directory in your terminal and run one of the following, depending on your preferred editor:
+
+
+```sh
+code .
+```
+
+or...
+
+```sh
+codium .
+```
+
+Alternatively, you can simply start VS Code/Codium and use the `File > Open Folder...` menu option to load your project directory. This method is more convenient, but occasionally results in errors indicating the Haskell extension is unable to determine the project's version of GHC. This is caused by the issue explained above, and may require occasionally reloading the project or require you to `Restart Haskell LSP Server` from the command palette (`CTRL + SHIFT + P`). For the best experience, launch your editor from your terminal inside the project directory.
+
+The first time you open the project, you'll be prompted to install some recommended extensions if you don't have them already: `haskell`, `direnv` and `Nix IDE`. Follow the prompt to install these, and close/relaunch your editor before continuing. 
+
+Accept any pop-up prompts from the `direnv` extension when you encounter them.
 
 ***
 # **👩‍💻 Using the `jamb` CLI**

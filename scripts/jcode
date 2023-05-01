@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+if [[ "$VIM_MODE" == "true" ]]; then
+  codium .
+else
+  codium . --disable-extension asvetliakov.vscode-neovim
+fi

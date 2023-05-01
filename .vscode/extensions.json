@@ -1,6 +1,6 @@
 {
   "recommendations": [
-    "cab404.vscode-direnv",
+    "mkhl.direnv",
     "jnoortheen.nix-ide",
     "haskell.haskell",
   ]
