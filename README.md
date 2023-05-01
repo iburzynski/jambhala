@@ -50,6 +50,7 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
   * Only `nix` and `direnv` are required as dependencies
   * After configuring `nix` and `direnv`, Jambhala's setup wizard does the rest, including easy installation of `cardano-node` and `cardano-cli` using Nix.
   * **[plutus-apps](https://github.com/input-output-hk/plutus-apps)** is installed internally to your project, so you don't need to maintain a central clone and use its associated Nix shell as the entry point for your projects (See **Jewel #4** below).
+  * A preconfigured VS Codium editor is included, allowing you to start coding immediately.
 
 💎 #2: **Minimize contract boilerplate**
   * `PlutusTx.Prelude` is enabled as prelude project-wide by default via mixin
