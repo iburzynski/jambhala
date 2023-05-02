@@ -8,4 +8,5 @@
   "vscode-neovim.neovimExecutablePaths.darwin": "nvim",
   "editor.minimap.enabled": false,
   "editor.formatOnSave": true,
+  "editor.renderWhitespace": "all"
 }
