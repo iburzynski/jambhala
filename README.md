@@ -24,10 +24,10 @@
   * **[Requirements](#0-requirements)**
   * **[Install Nix](#1-install-nix)**
   * **[Configure `nix.conf`](#2-configure-nixconf)**
-  * **[Set up `direnv`](#3-set-up-direnv)**
-  * **[Create your repository](#4-create-your-repository)**
-  * **[Build environment and set up project](#5-build-environment-and-set-up-project)**
-  * **[Open project in VS Code](#6-open-project-in-vs-code)**
+  * **[Create your repository](#3-create-your-repository)**
+  * **[Clone repository & test readiness](#4-clone-repository--test-readiness)**
+  * **[Build environment & set up project](#5-build-environment--set-up-project)**
+  * **[Start coding](#6-start-coding)**
 * ### **[Using the `jamb` CLI](#👩‍💻-using-the-jamb-cli)**
 * ### **[Writing contracts](#✍️-writing-contracts)**
   * **[Creating a contract](#📝-creating-a-contract)**
@@ -209,7 +209,7 @@ Jambhala uses the `direnv` utility to provide seamless loading of the Nix enviro
 After the `./ready?` script completes, correct any issues and re-run it until all tests pass.
 
 ***
-### 5. **Build environment and set up project**
+### 5. **Build environment & set up project**
 ***
 
   * Open a new `bash` terminal window and navigate to your project directory:
@@ -283,7 +283,7 @@ After the `./ready?` script completes, correct any issues and re-run it until al
     * A tutorial with guided exercises for learning to use `cardano-cli` is provided in the `cardano-cli/tutorial` directory.
 
 ***
-### 7. **Start coding**
+### 6. **Start coding**
 ***
 Jambhala's development environment includes a preconfigured instance of VS Codium (a community-driven, freely-licensed distribution of VS Code without Microsoft branding or telemetry). The Jambhala Editor comes with all the required extensions for Cardano development already installed via Nix. 
 
