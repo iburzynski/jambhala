@@ -36,7 +36,7 @@
                   neovim
                   nixpkgs-fmt
                   nix-prefetch-git
-                  nodejs
+                  nodejs-18_x
                   nodePackages.pnpm
                   python311
                   python311Packages.autopep8

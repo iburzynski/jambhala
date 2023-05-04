@@ -54,12 +54,6 @@ if [ "$PKGNAME_DEFAULT" != "jambhala" ]; then
     mv "README_TEMPLATE.md" "README.md"
   ) 2>&1 | indent
 
-  echo "Removing wizard..."
-  (
-    set -x
-    rm "scripts/setup"
-  ) 2>&1 | indent
-
   echo "Committing changes..."
   (
     set -x
@@ -92,4 +86,6 @@ else
   echo "If you already installed the node/cli through other means, you can use your existing installation with Jambhala by configuring the environment variables in the `.envrc` file (see Jambhala README for help)."
 fi
 
-echo "Jambhala setup complete"
+echo "Cleaning up..."
+nix-collect-garbage -d
+echo "Jambhala setup complete. Run `jcode` to start coding!"

@@ -292,6 +292,14 @@ Jambhala's development environment includes a preconfigured instance of VS Codiu
 
 Simply use the `jcode` command from your project's root directory in your terminal to open the Jambhala editor and start coding!
 
+>**Note:** when you open a Haskell (`*.hs`) file for the first time in your editor, you may see the following popup appear:
+  ```
+    How do you want the extension to manage/discover HLS and the relevant toolchain?
+
+    Manually via PATH   Cancel    Automatically via GHCup
+  ```
+  Select **`Manually via PATH`**. Our project is using the Haskell tooling installed via Nix in the development environment, *not* a system-wide installation via GHCup. If you select GHCup the Haskell Language Server (HLS) won't work in the editor.
+
 #### **Adding Extensions to Jambhala Editor**
 Because the Jambhala Editor is installed via Nix, it isn't possible to install additional extensions from within the application. Instead, they can be added to `flake.nix` and installed via Nix when you load the development environment using `direnv`. To add an extension:
 * Click the `Extensions` icon in the left menu panel and look up the extension in the marketplace. 
