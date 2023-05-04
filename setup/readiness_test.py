@@ -140,7 +140,7 @@ def check_trusted_user(nix_conf_json: dict[str, Any]) -> bool:
     passed, _ = check_attr(
         nix_conf_json,
         "trusted-users",
-        lambda users: (user in users, None),
+        lambda users: ("root" in users and user in users, None),
         err)
 
     return passed
