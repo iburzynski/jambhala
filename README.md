@@ -47,8 +47,8 @@
 Jambhala brings Cardano development nirvana by presenting five jewels:
 
 💎 #1: **One-stop installation of Cardano tooling**
-  * Only `nix` and `direnv` are required as dependencies
-  * After configuring `nix` and `direnv`, Jambhala's setup wizard does the rest, including easy installation of `cardano-node` and `cardano-cli` using Nix.
+  * Only `bash`, `git`, and `nix` are required to get started.
+  * After configuring `nix`, Jambhala's setup wizard does the rest, including easy installation of `cardano-node` and `cardano-cli` using Nix.
   * **[plutus-apps](https://github.com/input-output-hk/plutus-apps)** is installed internally to your project, so you don't need to maintain a central clone and use its associated Nix shell as the entry point for your projects (See **Jewel #4** below).
   * A preconfigured VS Codium editor is included, allowing you to start coding immediately.
 
@@ -80,17 +80,18 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
 
 ### 0. **Requirements**
 
-  * This project uses the Nix package manager, Nix flakes, and IOG's **[haskell.nix](https://input-output-hk.github.io/haskell.nix/)** infrastructure to build a fully-functioning and reproducible Plutus development environment.
+  * This project uses the Nix package manager to build a fully-functioning and reproducible Cardano development environment.
   * Nix is only compatible with Unix-like operating systems, so you must be using a Linux distribution, MacOS, or WSL2 (Windows Subsystem for Linux) to install Jambhala.
+  * Your system must have `bash` and `git` installed. Run `bash --version` and `git -v` in a terminal window to confirm.
+    * **NOTE for MacOS users:** MacOS may ship with versions of `bash` and `grep` that are incompatible with this workflow. You should install `bash`/`grep` using Homebrew first before proceeding.
   * This project assumes the use of `VS Codium` (a preconfigured installation is provided) or `VS Code` as editor and `bash` as shell (also provided in the Nix development environment). Other tools will require alternative workflows that are not covered here.
-  * This project is storage-intensive. We suggest you have at least `50GB` of free disk space before proceeding further.
-  * **NOTE for MacOS users:** MacOS may ship with versions of `bash` and `grep` that are incompatible with this workflow. You should install `bash`/`grep` using Homebrew first before proceeding.
+  * Jambhala and `cardano-node` are storage-intensive. We suggest you have at least `50GB` of free disk space before proceeding further.
 
 ***
 ### 1. **Install `nix`**
 ***
   * If you're setting up Nix on your system for the first time, try Determinate Systems' **[Zero-to-Nix](https://zero-to-nix.com)** in lieu of the official installer, as it provides an easier tool for **[installing](https://zero-to-nix.com/start/install)** and **[uninstalling](https://zero-to-nix.com/start/uninstall)** Nix.
-  * Alternatively, you may follow the instructions for **multi-user installation** for your OS at **[nixos.org](https://nixos.org/download.html)**. This approach will require some additional configuration and it will be harder to uninstall Nix if you need to. It is only recommended if you've previously installed Nix on your system, as it will detect and repair a previous installation as needed.
+  * Alternatively, you may follow the instructions for **multi-user installation** for your OS at **[nixos.org](https://nixos.org/download.html)**. This approach will require some additional configuration and it will be harder to uninstall Nix should you need to. It is only recommended if you've previously installed Nix on your system, as it will detect and repair a previous installation as needed.
   * When you are finished installing Nix, close the terminal session and open a fresh one.
 ***
 ### 2. **Configure `nix.conf`**
@@ -111,14 +112,8 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
 
     # Step 2b: Avoid unwanted garbage collection with nix-direnv
     keep-outputs = true
-    keep-derivations = true
 
-    # Step 2c: Set up binary cache
-    # (add to existing substituters and trusted-public-keys lines if present, separated by spaces)
-    substituters = https://cache.nixos.org https://cache.iog.io https://cache.zw3rk.com
-    trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk=
-
-    # Step 2d: Allow import from derivation
+    # Step 2c: Allow import from derivation
     # This setting is included in IOG's instructions for installing cardano-node using Nix.
     # If you install cardano-node/cardano-cli using Jambhala's `install-node` script this may be required
     allow-import-from-derivation = true
@@ -145,6 +140,7 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
       sudo launchctl stop <NAME>
       sudo launchctl start <NAME>
       ```
+
 
 ***
 ### 3. **Create your repository**
@@ -176,7 +172,7 @@ It's still possible to update Jambhala in **Development Mode**, although it requ
 To use Jambhala in **Development Mode**, select the green **`Use this template`** button on this repository's Github page, and select **`Create a new repository`** to generate a new repository from the Jambhala template.
 
 ***
-### 4. **Clone repository**
+### 4. **Clone repository & test readiness**
 ***
 
 Clone your new repository in a `bash` terminal session:
@@ -187,50 +183,33 @@ Clone your new repository in a `bash` terminal session:
 
   >**Note:** Jambhala uses git submodules to incorporate companion projects (like `jambhalucid`, which provides an interactive demonstration of the sample contracts using Lucid). These projects are maintained as separate repositories. To include them when you clone your fork, you must use the `--recurse-submodules` flag.
 
-***
-### 5. **Set up `direnv`**
-***
-  * Jambhala uses `direnv` to provide seamless loading of the Nix environment whenever you navigate into the project directory tree.
-  * The `direnv` extension for VS Code/Codium integrates this environment with your editor, providing full IDE support for Plutus development.
-  * Jambhala requires `direnv` version `>= 2.30`, which may not be available in the packaging systems for certain older operating systems (for instance, any Ubuntu system below version `22.10`). For convenience, a setup script is provided to install a compatible version using Nix.
+Before proceeding to Step 5, navigate to your project directory in a terminal window and run the **Jambhala Readiness Test** to confirm whether your system is ready to install the Jambhala environment:
 
-  #### **Install `direnv` using setup script**
-  * Run the following command in a `bash` terminal to check if a compatible version of `direnv` is already installed on your machine:
-    
-    ```sh
-    direnv --version
-    ```
+  ```sh
+  ./ready?
+  ```
 
-  * If the response displays `direnv: command not found`, run the following setup script to install `direnv` using Nix and hook it into your `bash` shell:
-    
-    ```sh
-    . direnv-setup.sh
-    ```
+The script will prepare your system to use Jambhala and check for any issues with your Nix configuration.
 
-  * If `direnv --version` displays a version number `>= 2.30`, you already have a compatible version of `direnv` installed. Run the following setup script to hook `direnv` into your `bash` shell (if already hooked, the script will make no changes):
-    
-    ```sh
-    . direnv-setup.sh
-    ```
+#### **Installing `direnv`**
+Jambhala uses the `direnv` utility to provide seamless loading of the Nix environment whenever you navigate into the project directory tree. The **Readiness Test** will prompt you to install `direnv` using Nix and configure it to work with your `bash` shell if you don't already have a compatible version installed and configured.
 
-  * If `direnv --version` displays a version number `< 2.30`, you should uninstall `direnv` (i.e. `sudo apt remove direnv` for Ubuntu, `brew uninstall direnv` for MacOS). Then run the setup script to install a compatible version using Nix:
-
-    ```sh
-    . direnv-setup.sh
-    ```
-
-  #### **Manual installation**
+##### **Installing `direnv` manually**
+  Jambhala requires `direnv` version `>= 2.30`, which may not be available in the packaging systems for certain older operating systems (for instance, any Ubuntu system below version `22.10`). For convenience, the **Readiness Test** allows you to install a compatible version using Nix.
+  
   While not recommended, if you prefer to install `direnv` through a different method you may do the following:
   
-  * Visit the **[direnv installation page](https://direnv.net/docs/installation.html)** and check which version is available for your OS in the `Packaging status` section. If `direnv` version `2.30` or higher is available for your machine, follow the instructions to install it. Otherwise follow the instructions above to **Install `direnv` using setup script**.
-  * The final step is to hook `direnv` into your `bash` shell. Add the following line at the end of your `~/.bashrc` file:
+  * Visit the **[direnv installation page](https://direnv.net/docs/installation.html)** and check which version is available for your OS in the `Packaging status` section. If `direnv` version `2.30` or higher is available for your machine, follow the instructions to install it. Otherwise use the **Readiness Test** to install a compatible version using Nix.
+  * The final step is to hook `direnv` into your `bash` shell. Running the **Readiness Test** (`./ready?`) will complete this step for you, but if you prefer to do it manually you can add the following line at the end of your `~/.bashrc` file:
     
     ```sh
     eval "$(direnv hook bash)"
     ```
 
+After the `./ready?` script completes, correct any issues and re-run it until all tests pass.
+
 ***
-### 6. **Build environment and set up project**
+### 5. **Build environment and set up project**
 ***
 
   * Open a new `bash` terminal window and navigate to your project directory:
@@ -239,7 +218,7 @@ Clone your new repository in a `bash` terminal session:
     cd path-to-your-project
     ```
 
-    You should now see the following message (if not, complete **[Step 5](#5-set-up-direnv)**):
+    You should now see the following message (if not, return to **[Step 4](#4-clone-repository--test-readiness)** and complete the **Readiness Test**):
 
     ```sh
     direnv: error /home/path-to-your-project/.envrc is blocked. Run `direnv allow` to approve its content
@@ -268,7 +247,7 @@ Clone your new repository in a `bash` terminal session:
     Om Dzambhala Dzalentraye Svaha!
     ```
 
-  * Some dependencies will need to be built from source, but if you see "building" for certain packages that should be downloadable from a binary cache (particularly GHC, the Linux kernel, and other non-Haskell related dependencies) or if you see any warning such as `warning: ignoring substitute`, this means your binary cache was not set up correctly and Nix is attempting to build packages from source that it should be fetching from a cache. Exit with `CTRL + c` and repeat **[Step 2](#2-configure-nixconf)**, then try again. Make sure to restart the `nix-daemon`!
+  * Some dependencies will need to be built from source, but if you see "building" for certain packages that should be downloadable from a binary cache (particularly GHC, the Linux kernel, and other non-Haskell related dependencies) or if you see any warning such as `warning: ignoring substitute`, this means your system is not configured correctly and Nix is attempting to build packages from source that it should be fetching from a cache. Exit with `CTRL + c` and repeat **[Step 4](#2-configure-nixconf)**, then try again. Make sure to restart the `nix-daemon`!
   * **If you see any HTTP-related errors**, it means the IOG binary cache is non-responsive. Wait a bit and try again later.
 
   * Once the Nix environment build process completes, run `jsetup` to launch the Jambhala setup wizard:
@@ -319,20 +298,20 @@ Because the Jambhala Editor is installed via Nix, it isn't possible to install a
   >**Note:** in some rare cases, extensions are proprietary and thus aren't compatible with VS Codium (only VS Code). 
 * Open `flake.nix` and find the following section:
 
-  ```nix
+  ```
     # flake.nix
-    {
       ...
-                vscodeExtensions = with pkgs.vscode-extensions; [
-                            asvetliakov.vscode-neovim
-                            dracula-theme.theme-dracula
-                            haskell.haskell
-                            jnoortheen.nix-ide
-                            justusadam.language-haskell
-                            mkhl.direnv
-                          ];
+      vscodeExtensions = with pkgs.vscode-extensions; [
+        asvetliakov.vscode-neovim
+        dracula-theme.theme-dracula
+        haskell.haskell
+        jnoortheen.nix-ide
+        justusadam.language-haskell
+        mkhl.direnv
+        ms-python.python
+        ms-python.vscode-pylance
+      ];
       ...
-    }
   ```
 * Paste the Extension ID into the list of extensions on a new line and save the changes.
 * Close VS Codium, and run `direnv reload` in your terminal (inside your project root directory).

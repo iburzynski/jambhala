@@ -81,12 +81,14 @@ def get_direnv_status() -> DirenvStatus:
 def check_direnv() -> bool:
     print_neutral(ind("> Checking direnv..."))
     direnv_status = get_direnv_status()
+    installed = direnv_status["installed"]
+    installing = direnv_status["install?"]
     ready: bool = True
 
-    if not direnv_status["installed"] and not direnv_status["install?"]:
+    if not installed and not installing:
         ready = False
 
-    if direnv_status["install?"]:
+    if installing:
         result = subprocess.run(
             ['nix-env', '-iA', 'nixpkgs.direnv'], stderr=subprocess.PIPE)
 
@@ -103,10 +105,11 @@ def check_direnv() -> bool:
             print_neutral(ind2(f"Creating .bashrc file at '{bashrc_path}'..."))
             open(bashrc_path, 'a').close()
 
-        with open(bashrc_path, 'r+') as bashrc_file:
-            if 'eval "$(direnv hook bash)"' not in bashrc_file.read():
-                print_neutral(ind2("Hooking direnv into bash shell..."))
-                bashrc_file.write('\neval "$(direnv hook bash)"\n')
+        if installed or installing:
+            with open(bashrc_path, 'r+') as bashrc_file:
+                if 'eval "$(direnv hook bash)"' not in bashrc_file.read():
+                    print_neutral(ind2("Hooking direnv into bash shell..."))
+                    bashrc_file.write('\neval "$(direnv hook bash)"\n')
     except:
         print_fail(ind2("Unable to configure .bashrc file"))
         ready = False
