@@ -115,12 +115,6 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
 
     # Step 2c: Avoid unwanted garbage collection with nix-direnv
     keep-outputs = true
-
-    # Step 2d: Allow import from derivation
-    # This setting is included in IOG's instructions for installing cardano-node using Nix.
-    # If you install cardano-node/cardano-cli using Jambhala's `install-node` script this may be required
-    allow-import-from-derivation = true
-
     ```
 
     **🚨 IMPORTANT!** You must restart the `nix-daemon` to apply the changes
