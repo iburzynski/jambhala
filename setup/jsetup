@@ -75,7 +75,7 @@ fi
 echo "Building project..."
 (
   set -x
-  nix build .
+  nix build . --accept-flake-config
   cabal update
   cabal build "$PKGNAME"
   cd jambhalucid

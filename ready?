@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Performs Python Readiness Test in a temporary Nix shell:
-nix-shell -p python3 --run "
+nix-shell -p python311 --run "
   python setup/readiness_test.py
   exit
 "

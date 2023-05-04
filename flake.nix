@@ -30,33 +30,36 @@
                   haskell-language-server = "1.8.0.0";
                 };
                 # Non-Haskell applications required by Jambhala
-                shell.buildInputs = [
-                  pkgs.bashInteractive
-                  pkgs.gnugrep
-                  pkgs.neovim
-                  pkgs.nixpkgs-fmt
-                  pkgs.nix-prefetch-git
-                  pkgs.nodejs
-                  pkgs.nodePackages.pnpm
-                  codiumWithExtensions
+                shell.buildInputs = with pkgs; [
+                  bashInteractive
+                  gnugrep
+                  neovim
+                  nixpkgs-fmt
+                  nix-prefetch-git
+                  nodejs
+                  nodePackages.pnpm
+                  python311
+                  python311Packages.autopep8
+                  (vscode-with-extensions.override {
+                    vscode = pkgs.vscodium;
+                    vscodeExtensions = with pkgs.vscode-extensions; [
+                      asvetliakov.vscode-neovim
+                      dracula-theme.theme-dracula
+                      haskell.haskell
+                      jnoortheen.nix-ide
+                      justusadam.language-haskell
+                      mkhl.direnv
+                      ms-python.python
+                      ms-python.vscode-pylance
+                    ];
+                  }
+                  )
                 ];
                 inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = CHaP; };
               };
           })
         ];
         pkgs = import nixpkgs { inherit system overlays; inherit (haskellNix) config; };
-        codiumWithExtensions = (pkgs.vscode-with-extensions.override {
-          vscode = pkgs.vscodium;
-          vscodeExtensions = with pkgs.vscode-extensions; [
-            asvetliakov.vscode-neovim
-            dracula-theme.theme-dracula
-            haskell.haskell
-            jnoortheen.nix-ide
-            justusadam.language-haskell
-            mkhl.direnv
-          ];
-        }
-        );
         flake = pkgs.jambhala.flake { };
       in
       flake // {
@@ -64,17 +67,14 @@
         packages.default = flake.packages."jambhala:exe:jamb";
       });
 
-  # nixConfig = {
-  #   bash-prompt = "\\[\\e[0;92m\\][\\[\\e[0;92m\\]Jambhala:\\[\\e[0;92m\\]\\w\\[\\e[0;92m\\]]\\[\\e[0;92m\\]$ \\[\\e[0m\\]";
-  #   extra-substituters = [
-  #     "https://cache.iog.io"
-  #     "https://cache.zw3rk.com"
-  #   ];
-  #   extra-trusted-public-keys = [
-  #     "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
-  #     "loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk="
-  #   ];
-  #   allow-import-from-derivation = true;
-  #   accept-flake-config = true;
-  # };
+  nixConfig = {
+    extra-substituters = [
+      "https://cache.iog.io"
+      "https://cache.zw3rk.com"
+    ];
+    extra-trusted-public-keys = [
+      "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
+      "loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk="
+    ];
+  };
 }

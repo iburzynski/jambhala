@@ -8,5 +8,11 @@
   "vscode-neovim.neovimExecutablePaths.darwin": "nvim",
   "editor.minimap.enabled": false,
   "editor.formatOnSave": true,
-  "editor.renderWhitespace": "all"
+  "editor.renderWhitespace": "all",
+  "python.analysis.typeCheckingMode": "basic",
+  "python.formatting.autopep8Args": [
+    "--max-line-length",
+    "80",
+    "--experimental"
+  ]
 }
