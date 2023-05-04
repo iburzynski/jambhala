@@ -52,8 +52,7 @@
                       ms-python.python
                       ms-python.vscode-pylance
                     ];
-                  }
-                  )
+                  })
                 ];
                 inputMap = { "https://input-output-hk.github.io/cardano-haskell-packages" = CHaP; };
               };
