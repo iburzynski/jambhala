@@ -110,10 +110,13 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
     # Step 2a: Add this line to enable Flakes if missing (if you used the Zero-to-Nix installer this should already be added)
     experimental-features = nix-command flakes
 
-    # Step 2b: Avoid unwanted garbage collection with nix-direnv
+    # Step 2b: Add your username to trusted-users (also include 'root' to prevent overriding default setting)
+    trusted-users = root your-username
+
+    # Step 2c: Avoid unwanted garbage collection with nix-direnv
     keep-outputs = true
 
-    # Step 2c: Allow import from derivation
+    # Step 2d: Allow import from derivation
     # This setting is included in IOG's instructions for installing cardano-node using Nix.
     # If you install cardano-node/cardano-cli using Jambhala's `install-node` script this may be required
     allow-import-from-derivation = true

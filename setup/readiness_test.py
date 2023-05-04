@@ -136,7 +136,7 @@ def check_attr(
 
 def check_trusted_user(nix_conf_json: dict[str, Any]) -> bool:
     user = getpass.getuser()
-    err = f"Current user {user} is missing from trusted-users in nix.conf."
+    err = f"'trusted-users = root {user}' is missing in nix.conf."
     passed, _ = check_attr(
         nix_conf_json,
         "trusted-users",
@@ -147,7 +147,7 @@ def check_trusted_user(nix_conf_json: dict[str, Any]) -> bool:
 
 
 def check_flag_attr(nix_conf_json: dict[str, Any], attribute: str) -> bool:
-    err = f"'{attribute} = true;' missing in nix.conf."
+    err = f"'{attribute} = true' missing in nix.conf."
     passed, _ = check_attr(nix_conf_json, attribute, lambda v: (v, None), err)
 
     return passed
