@@ -17,9 +17,9 @@ if [ ! -d "cardano-node" ]; then
 fi
 
 git reset --hard $NODE_RELEASE
-nix build ".#$NETWORK/node"
+nix build --accept-flake-config ".#$NETWORK/node"
 nix-env -f . -iA cardano-node
-nix build ".#cardano-cli"
+nix build --accept-flake-config ".#cardano-cli"
 nix-env -f . -iA cardano-cli
 
 if [ ! -d "$CARDANO_PATH" ]; then
