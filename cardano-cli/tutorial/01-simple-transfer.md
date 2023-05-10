@@ -1,9 +1,7 @@
 # **`cardano-cli` Exercise 01: Simple Transfer**
-**Note**: you'll need your local node to be running and fully synced to complete this exercise. If your node is correctly installed and configured for use with Jambhala, you can use the `run-node` script to start your node:
-
-```sh
-$ run-node
-```
+**Note**: you'll need your local node to be running and fully synced to complete this exercise. If your node is correctly installed and configured for use with Jambhala, you can use  the appropriate alias in your terminal to start `cardano-node`:
+- `preprod-node` for preprod testnet
+- `preview-node` for preview testnet
 
 See the **[Starting and syncing the node](./00-installation.md#starting-and-syncing-the-node)** section of the installation guide if you face any difficulty.
 

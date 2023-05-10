@@ -1,3 +1,6 @@
 [submodule "jambhalucid"]
 	path = jambhalucid
 	url = https://github.com/iburzynski/jambhalucid
+[submodule "cardano-ez-installer"]
+	path = cardano-ez-installer
+	url = https://github.com/iburzynski/cardano-ez-installer

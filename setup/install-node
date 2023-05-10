@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+python3 cardano-ez-installer/main.py
+
+if [ $? -eq 0 ]; then
+  source ~/.bashrc
+  # echo "Cleaning up nix-store..."
+  # nix-collect-garbage
+fi
