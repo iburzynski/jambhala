@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -e
 
 indent() {
@@ -77,15 +78,25 @@ echo "Building project..."
   cd $PROJECT_ROOT
 ) 2>&1 | indent
 
-read -p "Install cardano-node/cardano-cli? [Y/n] " answer
-
-if [[ "$answer" == "Y" || "$answer" == "y" || "$answer" == "Yes" || "$answer" == "yes" || -z "$answer" ]]; then
-  install-node
+read -p "Install cardano-node/cardano-cli? [Y/n] " input
+input=${input:-Y}
+if [[ $input =~ ^[Yy]$ ]]; then
+  install_node=true
 else
-  echo "Run `install-node` at any time to install cardano-node/cardano-cli."
-  echo "If you already installed the node/cli through other means, you can use your existing installation with Jambhala by configuring the environment variables in the `.env` file (see Jambhala README for help)."
+  install_node=false
+fi
+if $install_node; then
+  install-node
+  source ~/.bashrc
+else
+  echo "Run \`install-node\` at any time to install cardano-node/cardano-cli."
+  echo "If you already installed the node/cli through other means, you can use your existing installation with Jambhala by configuring the environment variables in the \`.env\` file (see Jambhala README for help)."
 fi
 
-echo "Cleaning up..."
-nix-collect-garbage -d
-echo "Jambhala setup complete. Run `jcode` to start coding!"
+read -p "Clean up nix-store? [Y/n] " clean_store
+clean_store=${clean_store:-Y}
+if [[ $clean_store =~ ^[Yy]$ ]]; then
+  nix-collect-garbage -d
+fi
+
+echo "Jambhala setup complete. Run \`jcode\` to start coding!"
