@@ -11,5 +11,5 @@ $NET
 
 if [ $? -eq 0 ]; then
   echo -e "View transaction:\n"
-  echo -e "\thttps://$TESTNET_NAME.cardanoscan.io/transaction/$(tx-hash $1)"
+  echo -e "\thttps://$TESTNET.cardanoscan.io/transaction/$(tx-hash $1)"
 fi
