@@ -6,10 +6,14 @@ if [ -z "$1" ]; then
 fi
 
 cardano-cli transaction submit \
---tx-file "$TX_PATH/$1.signed" \
-$NET
+--tx-file "$TX_PATH/$1.signed"
 
 if [ $? -eq 0 ]; then
+  cscan_url="cardanoscan.io/transaction/$(tx-hash $1)"
   echo -e "View transaction:\n"
-  echo -e "\thttps://$TESTNET.cardanoscan.io/transaction/$(tx-hash $1)"
+  if [[ $CARDANO_NODE_NETWORK_ID -eq "mainnet" ]]; then
+    echo -e "\thttps://$cscan_url"
+  else
+    echo -e "\thttps://$TESTNET.$cscan_url"
+  fi
 fi

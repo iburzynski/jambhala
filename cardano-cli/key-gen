@@ -30,8 +30,7 @@ cardano-cli address key-gen \
 
 cardano-cli address build \
 --payment-verification-key-file $vkey \
---out-file $addr \
-$NET
+--out-file $addr
 
 if [ $? -eq 0 ]; then
   echo "wrote verification key for $1 to '$vkey'"

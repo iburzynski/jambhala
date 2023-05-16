@@ -19,7 +19,7 @@ Use the appropriate alias in your terminal to start `cardano-node`, i.e.:
 - `preprod-node` for preprod testnet
 - `preview-node` for preview testnet
 
->If you're using an existing installation of `cardano-node`, see **[Configuring an existing installation](#existing)** for an example alias definition that you can add to your `.bashrc` file.
+>If you're using an existing installation of `cardano-node`, see **[Configuring an existing installation](#existing)** for an example alias definition that you can add to your shell dotfile.
 
 It's normal for the node to encounter occasional errors, which it will recover from and continue running. To tell if your node is working properly, look for `Chain extended` log entries with the following format:
 
@@ -52,46 +52,37 @@ For example, if we inspect the contents of the `tip` script at `cardano-cli/tip`
 ```sh
 # cardano-cli/tip
 
-cardano-cli query tip $NET
+cardano-cli query tip
 ```
 
 This script uses `cardano-cli`'s `query` command to query information about the `tip` of the chain.
 
-`NET` is an environment variable set in the `.envrc` file, which is used to specify the network we're using. By default this is set to the `preview` testnet.
-
 ***
 ## **<a id="existing"></a> Configuring an existing installation**
 ***
-If you've already installed `cardano-node` and `cardano-cli`, you'll need to modify certain environment variables in the `.env` file and adjust your directory structure so Jambhala can communicate with your node:
+If you've already installed `cardano-node` and `cardano-cli`, and want to use your existing installation with the Jambhala scripts and `cardano-cli` tutorial, simply modify the `.env` file in your project's root directory as follows.
 
-* `NETWORK`: the value should correspond to the type of network your node is running on (`testnet` or `mainnet`).
-* `NETWORK_MAGIC`: make sure this value matches the testnet your node is configured to use (`1` for `preprod`, `2` for `preview`).
-* `CARDANO_PATH`: replace this value with the base path to the directory where your node files (database, socket, etc.) are stored. To work correctly with Jambhala:
-    * Your `CARDANO_PATH` directory must contain a subdirectory with a name corresponding to the `NETWORK` your node is running on (`testnet` or `mainnet`). For `testnet`, this subdirectory must contain an additional subdirectory with a name corresponding to the specific testnet your node is using (`preprod` or `preview`).
-    * Your database should be located in a subdirectory of this directory called `db` (i.e. `/$CARDANO_PATH/testnet/preview/db`).
-    * Your configuration `.json` files should be in a subdirectory of this directory called `config` (i.e. `/$CARDANO_PATH/testnet/preview/config`)).
-
-You can rename/move files in your `CARDANO_PATH` directory as needed to conform with the requirements above.
+* `CARDANO_NODE_NETWORK_ID`: set this value to correspond to the network you're currently using (`1` for `preprod`, `2` for `preview`, `mainnet` for `mainnet`).
 
 >Run `direnv allow` in your terminal session before proceeding if you make any changes to `.env`.
 
-If you have any alias inside your `~/.bashrc` file that you use to start your node, you'll also need to update this to conform with the requirements. An example `.bashrc` alias to run the node on the `preview` testnet:
+By default the integrated terminal in Jambhala's editor uses `bash`, which means to use your pre-installed `cardano-node`/`cardano-cli` you must also export the `CARDANO_NODE_SOCKET_PATH` environment variable in your `~/.bashrc` file with the location where your `node.socket` file is located.
+
+An example export:
 
 ```sh
 # ~/.bashrc sample
 
-alias preview-node='cardano-node run --topology /home/ian/cardano/testnet/preview/config/topology.json --database-path /home/ian/cardano/testnet/preview/db --socket-path /home/ian/cardano/testnet/preview/node.socket --port 1337 --config /home/ian/cardano/testnet/preview/config/config.json'
+export CARDANO_NODE_SOCKET_PATH=/home/ian/cardano/node.socket
 ```
 
-You may also need to update your `CARDANO_NODE_SOCKET_PATH` variable if you have one defined in your `.bashrc` file:
+
+Additionally, if you use any custom alias to start your node, you may also want to add this to your `.bashrc` file so you can use it within the integrated terminal in Jambhala's editor. An example `.bashrc` alias to run the node on the `preview` testnet:
 
 ```sh
 # ~/.bashrc sample
 
-export CARDANO_NODE_SOCKET_PATH='/home/ian/cardano/testnet/preview/node.socket'
-
+alias preview-node='cardano-node run --topology /home/ian/cardano/preview/config/topology.json --database-path /home/ian/cardano/preview/db --socket-path $CARDANO_NODE_SOCKET_PATH --port 1337 --config /home/ian/cardano/preview/config/config.json'
 ```
 
-This variable is set for you dynamically when you're inside of the Jambhala environment, but it must also be set in your `.bashrc` file to use `cardano-node` and `cardano-cli` outside of the environment.
-
->Run `source ~/.bashrc` in your terminal session before proceeding if you make any changes to `.bashrc`.
+>Open a fresh terminal session to source your changes before proceeding.

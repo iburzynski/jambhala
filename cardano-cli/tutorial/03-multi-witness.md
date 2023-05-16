@@ -32,7 +32,6 @@ for user in "${@:2}"; do
   cardano-cli transaction witness \
   --tx-body-file "$TX_PATH/$1.raw" \
   --signing-key-file "$KEYS_PATH/$user.skey" \
-  $NET \
   --out-file $out
 
   ...

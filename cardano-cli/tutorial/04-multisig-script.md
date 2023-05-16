@@ -72,7 +72,6 @@ Jambhala provides a script called `script-addr`, which contains the following `c
 
 cardano-cli address build \
 --payment-script-file $scripts_path/$script_name.$file_ext \
-$NET \
 --out-file $addr \
 ```
 
@@ -123,7 +122,6 @@ Our transaction will be built as follows:
 
 ```sh
 cardano-cli transaction build \
-$NET \
 --witness-override 3 \
 --tx-in $U \
 --tx-in-script-file "$NATIVE_SCRIPTS_PATH/multisig.script" \

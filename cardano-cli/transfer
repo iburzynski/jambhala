@@ -6,7 +6,6 @@ if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ] || [ -z "$4" ]; then
 fi
 
 cardano-cli transaction build \
-$NET \
 --tx-in $4 \
 --tx-out "$(addr $2)+$(ada $3)" \
 --change-address $(addr $1) \

@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
 
 cardano-cli query utxo \
---address $(addr $1) \
-$NET
+--address $(addr $1)

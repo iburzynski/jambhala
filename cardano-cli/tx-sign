@@ -20,7 +20,6 @@ done
 cardano-cli transaction sign \
 --tx-body-file "$tx.raw" \
 $skeyfiles \
-$NET \
 --out-file "$tx.signed"
 
 if [ $? -eq 0 ]; then

@@ -49,5 +49,4 @@ cardano-cli transaction calculate-min-fee \
 --tx-in-count $in_count \
 --tx-out-count $out_count \
 --witness-count $witness_count \
-$NET \
 --protocol-params-file $PARAMS_PATH | cut -d' ' -f1

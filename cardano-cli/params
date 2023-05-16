@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 cardano-cli query protocol-parameters \
-$NET \
 --out-file $PARAMS_PATH
 
 if [ $? -eq 0 ]; then

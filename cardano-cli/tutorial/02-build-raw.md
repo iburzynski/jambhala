@@ -33,7 +33,6 @@ Jambhala provides a helper script called `params` to query and save the protocol
 # cardano-cli/params
 
 cardano-cli query protocol-parameters \
-$NET \
 --out-file $PARAMS_PATH
 ```
 
@@ -118,7 +117,6 @@ cardano-cli transaction calculate-min-fee \
 --tx-in-count $in_count \
 --tx-out-count $out_count \
 --witness-count $witness_count \
-$NET \
 --protocol-params-file $PARAMS_PATH | cut -d' ' -f1
 ```
 

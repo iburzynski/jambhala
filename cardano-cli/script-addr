@@ -45,7 +45,6 @@ fi
 
 cardano-cli address build \
 --payment-script-file $scripts_path/$script_name.$file_ext \
-$NET \
 --out-file $addr
 
 if [ $? -eq 0 ]; then

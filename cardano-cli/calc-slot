@@ -5,7 +5,7 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-tip_output=$(cardano-cli query tip $NET)
+tip_output=$(cardano-cli query tip)
 
 current_slot=$(echo "$tip_output" | grep -oP '(?<="slot": )[0-9]+')
 

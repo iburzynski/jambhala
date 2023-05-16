@@ -83,7 +83,7 @@ Enter anything you like in the **`Project name`** field (i.e. "jambhala").
 In the **`Network`** dropdown, select the Cardano testnet your project is using (**`Cardano preview`** or **`Cardano preprod`**). By default Jambhala is configured to use **`Cardano preview`**. You can run the following command at any time to confirm which testnet your project is using:
 
 ```sh
-echo $TESTNET_NAME
+echo $TESTNET
 ```
 
 Once your project is created, you'll be taken to the project's page. Find the **`PROJECT ID`** field and click the copy icon to copy your ID.

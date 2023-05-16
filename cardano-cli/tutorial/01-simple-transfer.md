@@ -41,22 +41,14 @@ cardano-cli address key-gen \
 
 cardano-cli address build \
 --payment-verification-key-file $vkey \
---out-file $addr \
-$NET
+--out-file $addr
 ```
 
 The script first assigns variables for the three output files it will produce (`vkey`, `skey` and `addr`) using the `KEYS_PATH` and `ADDR_PATH` filepaths configured in our `.envrc` file and the name supplied as argument to the script (`$1`).
 
 It then runs the `key-gen` subcommand, providing out-filepaths for the `--verification-key-file` and `--signing-key-file` parameters.
 
-After generating the key files, the script runs the `build` subcommand, providing the location of the `.vkey` file to the `--payment-verification-key-file` parameter, as well as the desired `--out-file` location and the `NET` variable, which specifies a **network option**.
-
-### **Network Options**
-Many `cardano-cli` commands require us to specify the network we're using (**testnet** or **mainnet**), and if using the testnet, to specify the specific testnet (**preprod** or **preview**).
-* The `--testnet-magic` option tells `cardano-cli` we're using the testnet and specifies which testnet we're using.
-* When using `cardano-cli` with the mainnet, the `--mainnet` option is used instead of `--testnet-magic` and the network magic value.
-* Jambhala creates an environment variable `NET` in the `.envrc` file, with its value set dynamically to one of these two network options based on the value of the `NETWORK` variable.
-* By default `NETWORK` is configured to use the testnet, and the testnet is configured to `preview`; the `NET` variable thus has a value of `--testnet-magic 2`, where `2` is network magic value corresponding to the `preview` testnet.
+After generating the key files, the script runs the `build` subcommand, providing the location of the `.vkey` file to the `--payment-verification-key-file` parameter, as well as the desired `--out-file` location.
 
 ### **Run the `key-gen` script**
 Run the `key-gen` script twice to create keypairs and addresses for `alice` and `bob`:
@@ -107,11 +99,10 @@ Let's check the UTXOs at Alice's address to confirm receipt of the Test ADA. The
 # cardano-cli/utxos
 
 cardano-cli query utxo \
---address $(addr $1) \
-$NET
+--address $(addr $1)
 ```
 
-The script runs the `query utxo` command, interpolating the address of the user name we supply the script as argument (using the `addr` script), and provides the network option again using `NET`.
+The script runs the `query utxo` command, interpolating the address of the user name we supply the script as argument (using the `addr` script).
 
 Run the script with `alice` as argument:
 
@@ -150,7 +141,6 @@ cardano-cli transaction build \
 --tx-in $U \
 --tx-out $(addr bob)+250000000 \
 --change-address $(addr alice) \
-$NET \
 --out-file $TX_PATH/transfer.raw
 ```
 
@@ -158,7 +148,6 @@ Note the various parameters that must be provided:
 * **Input(s)**: the `--tx-in` parameter specifies funds that will be spent by the transaction, which are outputs (UTXOs) from earlier transactions. A transaction can have multiple inputs, in which case we'd include multiple `--tx-in` lines with an associated UTXO. Here we are spending a single input, and its UTXO is the one from Alice's wallet we selected and stored in the variable `U`.
 * **Output(s)**: the `--tx-out` parameter specifies where funds (UTXOs) will be sent. An output consists of a payment address and an amount. A transaction can have multiple outputs, in which case we'd include multiple `--tx-out` lines with associated addresses and amounts. Here we are sending a single output to Bob, whose address we include by interpolating the output of the `addr` script with `bob` as argument. We then specify the amount of the transfer (`+250000000`, or 250 ADA).
 * **Change Address**: the `--change-address` parameter specifies which address the balance of funds will be sent to after the outputs and fees are deducted from the inputs. Since the input UTXOs must be spent in their entirety, any excess funds must be sent as an additional transaction output to some address (in this case Alice, who the input belongs to).
-* **Network Option**: supplied via the `NET` environment variable.
 * **Out File**: the `--out-file` parameter specifies the file path where the transaction data will be stored. The data is stored in `json` format, but its file extension doesn't matter (by convention `.raw` is used). The filename we choose (here `transfer`) can be passed as an argument to helper scripts that Jambhala provides for convenience.
 
 When we run this command, we'll see terminal output that includes the automatically calculated fee:
@@ -196,7 +185,6 @@ done
 cardano-cli transaction sign \
 --tx-body-file "$tx.raw" \
 $skeyfiles \
-$NET \
 --out-file "$tx.signed"
 ```
 
