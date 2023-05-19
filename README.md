@@ -115,7 +115,13 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
 
     # Step 2c: Avoid unwanted garbage collection with nix-direnv
     keep-outputs = true
+
+    # Step 2d: Add zw3rk binary cache (add to existing substituters/trusted-public-keys if already present)
+    substituters = https://cache.zw3rk.com
+    trusted-public-keys = loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk=
     ```
+
+  **Step 2d** is a temporary measure due to some critical binaries like GHC being missing from IOG's official cache. Without these additions to `nix.conf` Nix will attempt to build these dependencies from source, causing the installation to take an extraordinarily long time and potentially fail!
 
     **🚨 IMPORTANT!** You must restart the `nix-daemon` to apply the changes
 
@@ -125,17 +131,11 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
       sudo systemctl restart nix-daemon
       ```
 
-    **MacOS:** first find the name of the `nix-daemon` service
+    **MacOS:**
 
       ```sh
-      sudo launchctl list | grep nix
-      ```
-
-      Then stop and restart the service
-
-      ```sh
-      sudo launchctl stop <NAME>
-      sudo launchctl start <NAME>
+      sudo launchctl stop org.nixos.nix-daemon
+      sudo launchctl start org.nixos.nix-daemon
       ```
 
 
