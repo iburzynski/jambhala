@@ -121,9 +121,9 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
     trusted-public-keys = loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk=
     ```
 
-  **Step 2d** is a temporary measure due to some critical binaries like GHC being missing from IOG's official cache. Without these additions to `nix.conf` Nix will attempt to build these dependencies from source, causing the installation to take an extraordinarily long time and potentially fail!
+    >**Step 2d** is a temporary measure due to some critical binaries like GHC being missing from IOG's official cache. Without these additions to `nix.conf` Nix will attempt to build these dependencies from source, causing the installation to take an extraordinarily long time and potentially fail!
 
-    **🚨 IMPORTANT!** You must restart the `nix-daemon` to apply the changes
+  * **🚨 IMPORTANT!** You must restart the `nix-daemon` to apply the changes
 
     **Linux:**
 
