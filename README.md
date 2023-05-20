@@ -385,13 +385,13 @@ You can run the emulator test defined for a contract with the following command:
 where `CONTRACT` is the name of the contract to test.
 
 ### **Compiling Contracts to `.plutus` Files**
-you can run the following command from the workspace terminal to write a contract to a `.plutus` file:
+You can run the following command from the workspace terminal to write a contract to a `.plutus` file:
 
   ```sh
   jamb -w CONTRACT [FILENAME]
   ```
 
-  where `CONTRACT` is the name of the contract to compile, and `[FILENAME]` is an optional file name (the contract name is used as the filename by default if no argument is given). When the command finishes, you'll get a `CONTRACT.plutus` file at `assets/scripts/plutus` that contains a JSON envelope of the UPLC code.
+where `CONTRACT` is the name of the contract to compile, and `[FILENAME]` is an optional file name (the contract name is used as the filename by default if no argument is given). Contracts are saved in the `assets` directory of the `cardano-cli-guru` submodule, where they can be used to easily submit transactions via `cardano-cli`, assisted by the various utility scripts provided by `cardano-cli-guru`. When the command finishes, you'll get a `CONTRACT.plutus` file at `cardano-cli-guru/assets/scripts/plutus` that contains a JSON envelope of the UPLC code:
 
   ```json
   {
@@ -401,7 +401,7 @@ you can run the following command from the workspace terminal to write a contrac
   }
   ```
 
-  This file can be used to submit transactions on-chain.
+This file can now be used in on-chain transactions. 
 
 ***
 

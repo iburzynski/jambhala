@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-cardano-cli query utxo \
---address $(addr $1)

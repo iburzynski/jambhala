@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-
-if [ -z "$1" ]; then
-    >&2 echo "expected user name as argument"
-    exit 1
-fi
-
-cardano-cli address key-hash \
---payment-verification-key-file "$KEYS_PATH/$1.vkey"

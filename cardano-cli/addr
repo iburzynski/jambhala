@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-if [ -z "$1" ]; then
-    >&2 echo "expected user name as argument"
-    exit 1
-fi
-
-echo -n $(cat "$ADDR_PATH/$1.addr")
