@@ -27,7 +27,11 @@
                 shell.tools = {
                   cabal = { };
                   hlint = "3.4.1";
-                  haskell-language-server = "1.8.0.0";
+                  haskell-language-server = rec {
+                    # HLS fix for stm-hamt bug
+                    src = final.haskell-nix.sources."hls-1.10";
+                    cabalProject = __readFile (src + "/cabal.project");
+                  };
                 };
                 # Non-Haskell applications required by Jambhala
                 shell.buildInputs = with pkgs; [

@@ -11,11 +11,11 @@ repository cardano-haskell-packages
     c00aae8461a256275598500ea0e187588c35a5d5d7454fb57eac18d9edb86a56
     d4a35cd3121aa00d18544bb0ac01c3e1691d618f462c46129271bccf39f7e8ee
 
-index-state: 2023-02-25T00:00:00Z
+index-state: 2023-04-20T00:00:00Z
 
 index-state:
-  , hackage.haskell.org 2023-02-25T00:00:00Z
-  , cardano-haskell-packages 2023-02-25T00:00:00Z
+  , hackage.haskell.org 2023-04-20T00:00:00Z
+  , cardano-haskell-packages 2023-05-10T00:00:00Z
 
 write-ghc-environment-files: never
 
@@ -66,6 +66,8 @@ package plutus-script-utils
   haddock-options: "--optghc=-fplugin-opt PlutusTx.Plugin:defer-errors"
 package plutus-contract
   haddock-options: "--optghc=-fplugin-opt PlutusTx.Plugin:defer-errors"
+package plutus-contract-model
+  haddock-options: "--optghc=-fplugin-opt PlutusTx.Plugin:defer-errors"
 
 package cardano-ledger-alonzo
   optimization: False
@@ -89,8 +91,8 @@ package cardano-wallet-core-integration
 source-repository-package
     type: git
     location: https://github.com/input-output-hk/plutus-apps.git
-    tag: dbdbcbe608797fcda0aacc35522a4e6744dfd62a
-    --sha256: 0krscsiklsd3gkjckljph9sigdhag29fqvyld9y7w6mqmb98vsaz
+    tag: 713955dea45739de6df3c388717123cfec648914
+    --sha256: 0pasbh5hy0ffsfabj14818z2lvmk9za9494nqbf7qfixgrn41875
     subdir:
       cardano-node-emulator
       cardano-streaming
@@ -104,7 +106,7 @@ source-repository-package
       plutus-chain-index-core
       plutus-contract
       plutus-contract-certification
-      plutus-e2e-tests
+      plutus-contract-model
       plutus-example
       plutus-ledger
       plutus-pab
