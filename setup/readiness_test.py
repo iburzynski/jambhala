@@ -3,6 +3,7 @@
 import getpass
 import json
 import os
+import platform
 import subprocess
 import sys
 from functools import partial
@@ -110,20 +111,41 @@ def check_direnv() -> bool:
             print_fail(
                 ind2(f"direnv installation failed with {err}"))
             ready = False
-    try:
-        bashrc_path = os.path.expanduser('~/.bashrc')
-        if not os.path.isfile(bashrc_path):
-            print_neutral(ind2(f"Creating .bashrc file at '{bashrc_path}'..."))
-            open(bashrc_path, 'a').close()
 
-        if installed or installing:
-            with open(bashrc_path, 'r+') as bashrc_file:
-                if 'eval "$(direnv hook bash)"' not in bashrc_file.read():
-                    print_neutral(ind2("Hooking direnv into bash shell..."))
-                    bashrc_file.write('\neval "$(direnv hook bash)"\n')
-    except:
-        print_fail(ind2("Unable to configure .bashrc file"))
-        ready = False
+    if installed or installing:
+        dotfiles = ['.bash_profile', '.bashrc', '.zprofile',
+                    '.zshrc'] if platform.system() == 'Darwin' else ['.bashrc']
+        bash_hook = 'eval "$(direnv hook bash)"'
+        zsh_hook = 'eval "$(direnv hook zsh)"'
+        hooks = {
+            '.bashrc': bash_hook,
+            '.bash_profile': bash_hook,
+            '.zshrc': zsh_hook,
+            '.zprofile': zsh_hook
+        }
+        for dotfile in dotfiles:
+            try:
+                file_path = os.path.expanduser(f"~/{dotfile}")
+                if not os.path.exists(file_path):
+                    print_neutral(ind2(f"> Creating '{file_path}' file..."))
+                    open(file_path, 'a').close()
+
+                print_neutral(
+                    ind(f"> Adding direnv hook to '{file_path}'"))
+
+                with open(file_path, 'r') as f:
+                    lines = f.readlines()
+
+                    hook = hooks[dotfile]
+                    dotfile_contents = [
+                        line for line in lines if
+                        not line.startswith('eval "$(direnv hook')] + [hook]
+
+                with open(file_path, 'w') as f:
+                    f.writelines(dotfile_contents)
+            except:
+                print_fail(ind2("Unable to configure .bashrc file"))
+                ready = False
 
     print_report("direnv", ready)
 
