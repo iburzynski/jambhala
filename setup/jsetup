@@ -87,7 +87,6 @@ else
 fi
 if $install_node; then
   install-node
-  source ~/.bashrc
 else
   echo "Run \`install-node\` at any time to install cardano-node/cardano-cli."
   echo "If you already installed the node/cli through other means, you can use your existing installation with Jambhala by configuring the environment variables in the \`.env\` file (see Jambhala README for help)."
