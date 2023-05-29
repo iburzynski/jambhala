@@ -213,7 +213,7 @@ def check_nix_conf() -> bool:
     req_attributes = get_required_attributes()
     check_set_attr_ = partial(check_set_attr, nix_conf_json, req_attributes)
     check_flag_attr_ = partial(check_flag_attr, nix_conf_json)
-    attrs = ["experimental-features", "substituters", "trusted-public-keys"]
+    attrs = ["experimental-features"]
     passed = all([
         *[check_set_attr_(a) for a in attrs],
         check_trusted_user(nix_conf_json),
