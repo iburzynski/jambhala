@@ -97,23 +97,20 @@ endpoints = awaitPromise (give' `select` grab') >> endpoints
 
 test :: JambEmulatorTrace
 test = do
-  hs <- traverse ((`activateContractWallet` endpoints) . knownWallet) [1 .. 6]
-  case hs of
-    [h1, h2, h3, h4, h5, h6] ->
-      sequence_
-        [ callEndpoint @"give" h1 $ GiveParam 10_000_000 42,
-          wait1,
-          callEndpoint @"give" h2 $ GiveParam 10_000_000 42,
-          wait1,
-          callEndpoint @"give" h3 $ GiveParam 10_000_000 21,
-          wait1,
-          callEndpoint @"grab" h4 $ GrabParam 33,
-          wait1,
-          callEndpoint @"grab" h5 $ GrabParam 21,
-          wait1,
-          callEndpoint @"grab" h6 $ GrabParam 42
-        ]
-    _ -> pure ()
+  hs <- activateWallets endpoints
+  sequence_
+    [ callEndpoint @"give" (hs ! 1) $ GiveParam 10_000_000 42,
+      wait1,
+      callEndpoint @"give" (hs ! 2) $ GiveParam 10_000_000 42,
+      wait1,
+      callEndpoint @"give" (hs ! 3) $ GiveParam 10_000_000 21,
+      wait1,
+      callEndpoint @"grab" (hs ! 4) $ GrabParam 33,
+      wait1,
+      callEndpoint @"grab" (hs ! 5) $ GrabParam 21,
+      wait1,
+      callEndpoint @"grab" (hs ! 6) $ GrabParam 42
+    ]
 
 exports :: ContractExports -- Prepare exports for jamb CLI:
 exports = exportValidatorWithTest validator [] test 6

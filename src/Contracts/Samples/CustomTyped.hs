@@ -88,15 +88,13 @@ endpoints = awaitPromise (give' `select` grab') >> endpoints
 -- 6. Define emulator trace test
 test :: JambEmulatorTrace
 test = do
-  h1 <- activateContractWallet (knownWallet 1) endpoints
-  h2 <- activateContractWallet (knownWallet 2) endpoints
-  h3 <- activateContractWallet (knownWallet 3) endpoints
+  hs <- activateWallets endpoints
   sequence_
-    [ callEndpoint @"give" h1 42_000_000,
+    [ callEndpoint @"give" (hs ! 1) 42_000_000,
       wait1,
-      callEndpoint @"grab" h2 21,
+      callEndpoint @"grab" (hs ! 2) 21,
       wait1,
-      callEndpoint @"grab" h3 42
+      callEndpoint @"grab" (hs ! 3) 42
     ]
 
 -- Exports
