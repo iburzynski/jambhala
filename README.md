@@ -1,4 +1,4 @@
-![image](docs/jambhala_logo.png)
+![image](jamb_logo.png)
 
 ***
 
