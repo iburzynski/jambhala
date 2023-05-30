@@ -1,5 +1,5 @@
+{-# LANGUAGE DataKinds #-}
 -- Simple Plutus Contracts: always succeeds ("gift")/always fails ("burn")
-
 --1 Extensions
 {- The following two extensions are required for all contracts. They're `default-extensions`
    in this project's `.cabal` file, so it isn't necessary to include them explicitly like this in
@@ -8,7 +8,6 @@
    Additional extensions required in more advanced contracts must be added explicitly.
 -}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE DataKinds #-}
 
 module Contracts.Samples.Simple where
 
@@ -29,18 +28,18 @@ import Jambhala.Utils
 -- 3. Validator Logic:
 gift :: BuiltinData -> BuiltinData -> BuiltinData -> ()
 gift _ _ _ = ()
-{-# INLINABLE gift #-}
+{-# INLINEABLE gift #-}
 
 burn :: BuiltinData -> BuiltinData -> BuiltinData -> ()
 burn _ _ _ = error ()
-{-# INLINABLE burn #-}
+{-# INLINEABLE burn #-}
 
 -- 4. Boilerplate:
 giftValidator :: Validator
-giftValidator = mkValidatorScript $$(compile [|| gift ||])
+giftValidator = mkValidatorScript $$(compile [||gift||])
 
 burnValidator :: Validator
-burnValidator = mkValidatorScript $$(compile [|| burn ||])
+burnValidator = mkValidatorScript $$(compile [||burn||])
 
 -- Exports:
 unitExport :: DataExport

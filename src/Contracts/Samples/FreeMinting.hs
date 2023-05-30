@@ -5,10 +5,10 @@ import Jambhala.Utils
 
 freeMinting :: () -> ScriptContext -> Bool
 freeMinting _ _ = True
-{-# INLINABLE freeMinting #-}
+{-# INLINEABLE freeMinting #-}
 
 policy :: MintingPolicy
-policy = mkMintingPolicyScript $$(compile [|| mkUntypedMintingPolicy freeMinting ||])
+policy = mkMintingPolicyScript $$(compile [||mkUntypedMintingPolicy freeMinting||])
 
 curSymbol :: CurrencySymbol
 curSymbol = scriptCurrencySymbol policy
