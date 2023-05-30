@@ -115,8 +115,8 @@ def check_direnv() -> bool:
     if installed or installing:
         dotfiles = ['.bash_profile', '.bashrc', '.zprofile',
                     '.zshrc'] if platform.system() == 'Darwin' else ['.bashrc']
-        bash_hook = 'eval "$(direnv hook bash)"'
-        zsh_hook = 'eval "$(direnv hook zsh)"'
+        bash_hook = 'eval "$(direnv hook bash)"\n'
+        zsh_hook = 'eval "$(direnv hook zsh)"\n'
         hooks = {
             '.bashrc': bash_hook,
             '.bash_profile': bash_hook,
