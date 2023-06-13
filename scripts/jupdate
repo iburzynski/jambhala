@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-git fetch --all
+git fetch --all --recurse-submodules
 git merge --allow-unrelated-histories
