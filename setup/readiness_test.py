@@ -102,7 +102,8 @@ def check_direnv() -> bool:
 
     if installing:
         result = subprocess.run(
-            ['nix-env', '-iA', 'nixpkgs.direnv'], stderr=subprocess.PIPE)
+            ['nix', 'profile', 'install', 'nixpkgs#direnv'],
+            stderr=subprocess.PIPE)
 
         if result.returncode == 0:
             print_neutral(ind2("direnv installed successfully."))
