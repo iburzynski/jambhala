@@ -126,7 +126,7 @@ There are two "modes" you can choose from to use Jambhala, depending on your use
 ### **Learning Mode**
 **Learning Mode** is recommended if you are currently learning Cardano/Plutus or just experimenting with Jambhala, as opposed to developing a full-fledged project.
 
-Jambhala is under active development, with new features and learning materials being added on a continuous basis. To take advantage of the latest additions, it's better to work inside a fork of the repository. Your fork will maintain a historical link with the source repository upstream, which makes it easier to fetch and merge upstream changes into your local Jambhala setup (see **[Updating Jambhala](#📥-updating-jambhala)** for instructions).
+Jambhala is under active development, with new features and learning materials being added on a continuous basis. To take advantage of the latest additions, it's better to work inside a fork of the repository. Your fork will maintain a historical link with the source repository upstream, which makes it easier to fetch and merge upstream changes into your local Jambhala setup (see **[Updating Jambhala](#updating-jambhala)** for instructions).
 
 **Cons:**
   * Github only allows one fork of a repository at a time
@@ -141,9 +141,9 @@ To use Jambhala in **Learning Mode**, just click the **`Fork`** button at the to
 
 **Cons:**
   * Generating from a Github template creates a new repository with no historical link to the upstream template.
-  * This makes it difficult to incorporate updates to Jambhala released after your repository is generated.
+  * This makes it more difficult to incorporate updates to Jambhala released after your repository is generated.
 
-It's still possible to update Jambhala in **Development Mode**, although it requires more manual labor to resolve merge conflicts (see **[Updating Jambhala](#📥-updating-jambhala)** for instructions).
+It's still possible to update Jambhala in **Development Mode**, although it requires more manual labor to resolve merge conflicts (see **[Updating Jambhala](#updating-jambhala)** for instructions).
 
 To use Jambhala in **Development Mode**, select the green **`Use this template`** button on this repository's Github page, and select **`Create a new repository`** to generate a new repository from the Jambhala template.
 
@@ -584,7 +584,13 @@ To view the correct Haddock documentation for the revision you are using, open h
 Since Jambhala is under active development and is closely tracking the progress of `plutus-apps`, its codebase changes frequently.
 
 ## **Learning Mode**
-If you created your repository by forking Jambhala (**Learning Mode**), you can easily update Jambhala using `git fetch`/`git merge` (or `git pull`).
+If you created your repository by forking Jambhala (**Learning Mode**), you can update Jambhala using the `jupdate` command:
+
+```sh
+jupdate
+```
+
+This will fetch and merge changes from the upstream Jambhala repository, bringing your fork in sync while preserving any local changes you've made.
 
 If you've made changes to any core Jambhala files, you may encounter a merge conflict that you'll need to resolve. You may find a VS Code extension like **[Git Merger](https://marketplace.visualstudio.com/items?itemName=shaharkazaz.git-merger)** to be helpful with this.
 
@@ -687,6 +693,27 @@ source-repository-package
 # **Troubleshooting**
 
 #### **This section is under construction...**
+Additional issues and solutions will be documented here as they're encountered during public testing.
+
+**Nix stops working after updating Mac OS**  
+Nix installation on Macs appends a code snippet to `/etc/zshrc` and `/etc/bashrc`, which is required for Nix to work properly with `zsh` and `bash` shells. Unfortunately one or both of these additions may be erased after updating your Mac.
+
+This will break:
+ * all Nix commands
+ * any Jambhala commands that use Nix under the hood
+ * if you installed `cardano-node`/`cardano-cli` using Nix (i.e. via **Cardano EZ-Installer**), the `cardano-node`/`cardano-cli` commands and associated aliases to start the node
+
+To resolve the issue, edit `/etc/zshrc` and `/etc/bashrc`, adding the following snippet to the bottom of each file if it's missing:
+
+```sh
+# Nix
+if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
+  . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+fi
+# End Nix
+```
+
+>**NOTE:** you must restart the shell for the changes to take effect.
 
 **`'hs-source-dirs: app' specifies a directory which does not exist.`**
 ```

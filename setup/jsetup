@@ -25,6 +25,10 @@ EOF
 
 echo "Welcome to Jambhala Setup Wizard..."
 
+if ! git remote | grep -q "^upstream$"; then
+  git remote add upstream https://github.com/iburzynski/jambhala
+fi
+
 PKGNAME_DEFAULT="$(basename "$(pwd)")"
 if [ "$PKGNAME_DEFAULT" != "jambhala" ]; then
   read -r -p "Project Name [$PKGNAME_DEFAULT]: " PKGNAME
@@ -58,7 +62,6 @@ if [ "$PKGNAME_DEFAULT" != "jambhala" ]; then
   echo "Committing changes..."
   (
     set -x
-    git remote add template "https://github.com/iburzynski/jambhala"
     git add -A
     git commit -m "Set up project"
   ) 2>&1 | indent
