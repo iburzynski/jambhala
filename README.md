@@ -101,6 +101,14 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
     # Step 2c: Avoid unwanted garbage collection with nix-direnv
     keep-outputs = true
     ```
+  
+  * Mac users with Apple silicon hardware (M1/M2 chip) also need to add the following, as `plutus-apps` currently doesn't build successfully on `aarch64` architecture:
+
+    ```
+    # Step 2d: Adjust system and platforms for aarch64 compatibility:
+    system = x86_64-darwin
+    extra-platforms = x86_64-darwin aarch64-darwin
+    ```
 
   * **🚨 IMPORTANT!** You must restart the `nix-daemon` to apply the changes
 
