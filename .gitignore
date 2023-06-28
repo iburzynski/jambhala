@@ -24,3 +24,5 @@ result
 .direnv/
 .env
 assets/params.json
+
+*.DS_STORE
