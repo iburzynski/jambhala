@@ -711,7 +711,7 @@ This will break:
  * any Jambhala commands that use Nix under the hood
  * if you installed `cardano-node`/`cardano-cli` using Nix (i.e. via **Cardano EZ-Installer**), the `cardano-node`/`cardano-cli` commands and associated aliases to start the node
 
-To resolve the issue, edit `/etc/zshrc` and `/etc/bashrc`, adding the following snippet to the bottom of each file if it's missing:
+To resolve the issue, edit `~/.zprofile`, `~/.zshrc`, `~/.bash_profile`, and `~/.bashrc`, adding the following snippet to the top of each file:
 
 ```sh
 # Nix
@@ -721,7 +721,7 @@ fi
 # End Nix
 ```
 
->**NOTE:** you must restart the shell for the changes to take effect.
+>**NOTE:** make sure this snippet is above the `direnv` hook in these files. You must then restart the shell for the changes to take effect.
 
 **`'hs-source-dirs: app' specifies a directory which does not exist.`**
 ```
