@@ -2,7 +2,6 @@
   "haskell.manageHLS": "PATH",
   "haskell.upgradeGHCup": false,
   "terminal.integrated.defaultProfile.linux": "bash",
-  "terminal.integrated.defaultProfile.osx": "bash",
   "workbench.colorTheme": "Dracula",
   "workbench.iconTheme": "vs-seti",
   "vscode-neovim.neovimExecutablePaths.linux": "nvim",
