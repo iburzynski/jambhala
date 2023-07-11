@@ -1,54 +1,100 @@
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE DeriveGeneric  #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Jambhala.CLI.Types where
 
-import Prelude hiding ( Eq(..), Ord(..) )
-import Jambhala.Haskell
-import Jambhala.Plutus
-
-import Control.Monad.Freer ( Eff )
+import Codec.Serialise (Serialise (..))
+import Control.Monad.Freer (Eff)
 import Control.Monad.Freer.Reader (Reader)
-import Data.IntMap.Strict ( IntMap )
-import Codec.Serialise (Serialise(..))
+import Data.IntMap.Strict (IntMap)
+import Data.Map (Map)
+import Data.Row (Row)
+import GHC.Real (Integral, Real)
+import Jambhala.Plutus
+import Numeric.Natural (Natural)
 
 type ContractName = String
-type Contracts    = Map ContractName ContractExports
-type FileName     = String
 
-data JambScript = JambValidator     !Validator
-                | JambMintingPolicy !MintingPolicy
-  deriving Generic
+type JambContracts = Map ContractName ContractExports
+
+type FileName = String
+
+data JambScript
+  = JambValidator !Validator
+  | JambMintingPolicy !MintingPolicy
+  deriving (Generic)
 
 instance Serialise JambScript where
-  encode (JambValidator v)     = encode v
+  encode (JambValidator v) = encode v
   encode (JambMintingPolicy p) = encode p
 
-data ContractExports = ContractExports { script      :: !JambScript
-                                       , dataExports :: ![DataExport]
-                                       , test        :: !(Maybe EmulatorExport)
-                                       }
+data ContractExports = ContractExports
+  { script :: !JambScript,
+    dataExports :: ![DataExport],
+    test :: !(Maybe EmulatorTest)
+  }
 
-data Command = List
-             | Addr   !ContractName !Network
-             | Hash   !ContractName
-             | Test   !ContractName
-             | Write  !ContractName !(Maybe FileName)
-             | Update !(Maybe String)
+type JambContract = (String, ContractExports)
 
-type JambEmulatorEffects =  Reader WalletQuantity ': EmulatorEffects
+data Command
+  = List
+  | Addr !ContractName !Network
+  | Hash !ContractName
+  | Test !ContractName
+  | Write !ContractName !(Maybe FileName)
+  | Update !(Maybe String)
 
-type JambEmulatorTrace = Eff JambEmulatorEffects ()
+type JambEmulatorEffects schema = Reader (ContractHandles schema) ': EmulatorEffects
 
-data EmulatorExport = EmulatorExport { jTrace     :: !JambEmulatorTrace
-                                     , numWallets :: !WalletQuantity}
+data EmulatorTest = ETest {numWallets :: !WalletQuantity, jTrace :: !(Eff EmulatorEffects ())}
 
-type ContractHandles w s e = IntMap (ContractHandle w s e)
+data EmulatorParams c where
+  EmulatorParams ::
+    { giveAction :: !(GiveAction c),
+      grabAction :: !(GrabAction c),
+      walletQuantity :: !WalletQuantity
+    } ->
+    EmulatorParams c
 
-newtype WalletQuantity = WalletQuantity { walletQuantity :: Integer }
-  deriving ( Eq, Ord, Num )
+mkEmulatorParams ::
+  Emulatable c =>
+  GiveAction c ->
+  GrabAction c ->
+  WalletQuantity ->
+  EmulatorParams c
+mkEmulatorParams = EmulatorParams
+
+class ValidatorTypes c => Emulatable c where
+  data GiveParam c :: *
+  data GrabParam c :: *
+
+  -- type GrabParam c = ()
+  type Schema c :: Row *
+  type
+    Schema c =
+      Endpoint "give" (GiveParam c)
+        .\/ Endpoint "grab" (GrabParam c)
+  type GiveAction c :: *
+  type GiveAction c = GiveParam c -> Contract () (Schema c) Text ()
+  type GrabAction c :: *
+  type GrabAction c = GrabParam c -> Contract () (Schema c) Text ()
+  give :: GiveParam c -> Contract () (Schema c) Text ()
+  grab :: GrabParam c -> Contract () (Schema c) Text ()
+
+type ContractActions s = Contract () s Text ()
+
+type ContractPromise s = Promise () s Text ()
+
+type ContractHandles s = IntMap (ContractHandle () s Text)
+
+newtype WalletQuantity = WalletQuantity {walletQ :: Natural}
+  deriving newtype (Eq, Ord, Enum, Num, Real, Integral)
 
 data DataExport where
   DataExport :: (ToData a) => String -> a -> DataExport

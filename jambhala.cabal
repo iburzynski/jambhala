@@ -1,6 +1,6 @@
 cabal-version:      3.0
 name:               jambhala
-version:            0.1.0.0
+version:            0.2.0.0
 
 -- A short (one-line) description of the package.
 -- synopsis:
@@ -23,6 +23,8 @@ common common
   default-language: Haskell2010
   build-depends:
       base ^>=4.14.3.0
+  mixins:
+      base hiding (Prelude)
   ghc-options:
     -Wall -fobject-code -fno-ignore-interface-pragmas
     -fno-omit-interface-pragmas -fno-strictness -fno-spec-constr
@@ -35,9 +37,9 @@ library
   exposed-modules:
     Contracts
     Jambhala.CLI
-    Jambhala.Haskell
     Jambhala.Plutus
     Jambhala.Utils
+    Prelude
 
 -- Add new contracts here, i.e.:
 --  Contracts.MyContract
@@ -89,14 +91,19 @@ library
     , row-types
     , time
     , turtle
-  mixins:
-      base hiding (Prelude)
-    , plutus-tx (PlutusTx.Prelude as Prelude)
-    , plutus-tx
+  -- mixins:
+  --     base hiding (Prelude)
+    -- , plutus-tx (PlutusTx.Prelude as Prelude)
+    -- , plutus-tx
   default-extensions:
     -- Allows promotion of types to "kinds", enabling more expressive type-level programming (required for all Plutus contracts):
       DataKinds
 
+    , DeriveAnyClass
+    , DeriveGeneric
+
+    , InstanceSigs
+    
     -- A syntactic convenience for writing single-argument lambdas containing case expressions (used by Jambhala's utilities):
     , LambdaCase
 
@@ -111,6 +118,10 @@ library
 
     -- Required for all Plutus contracts to translate between Plutus and Haskell:
     , TemplateHaskell
+
+    , TypeApplications
+
+    , TypeFamilies
 
 executable jamb
   import: common

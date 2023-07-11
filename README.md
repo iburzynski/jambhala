@@ -39,10 +39,12 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
   - A preconfigured VS Codium editor is included, allowing you to start coding immediately (you can still use your editor of choice if preferred).
 
 💎 #2: **Minimize contract boilerplate**
-  - `PlutusTx.Prelude` is enabled as prelude project-wide by default via mixin
-  - Certain common Haskell language extensions are enabled by default
-  - Common Plutus and Haskell types and functions are re-exported from their respective modules by `Jambhala.Plutus` and `Jambhala.Haskell`, so you don't need to keep track of messy import boilerplate. You can always import Plutus or Haskell modules explicitly if we prefer.
-  - `Jambhala.Utils` provides common utility functions which are consumed by the `jamb` CLI, to avoid contract clutter.
+  - Jambhala uses a custom `Prelude` module which includes both the `PlutusTx.Prelude` and common Haskell items .
+    - No need to use `NoImplicitPrelude` pragma, manually import `PlutusTx.Prelude` and Haskell's prelude
+    - No need to use `hiding` clauses or qualified imports to avoid nameclashes: `PlutusTx` versions of functions that clash with their Haskell counterparts are prefixed with `p` (for prefix functions) and `#` (for infix operators)
+  - The amount of required language extensions for Plutus development are significantly reduced, and commonly required extensions are enabled by default.
+  - Common Plutustypes and functions are re-exported from their respective modules by `Jambhala.Plutus`, so you don't need to keep track of messy import boilerplate. You can always import Plutus modules explicitly if you prefer.
+  - `Jambhala.Utils` provides common utility functions to avoid contract clutter.
 
 💎 #3: **Perform common `cardano-cli` and Plutus tasks with simple commands**
   - Jambhala includes **[Cardano CLI Guru](https://github.com/iburzynski/cardano-cli-guru)**, which provides utility scripts for common `cardano-cli` tasks that can be run as terminal commands.
@@ -397,18 +399,12 @@ This file can now be used in on-chain transactions.
 Jambhala makes certain opinionated decisions in order to vastly reduce the boilerplate required to write Plutus contracts.
 
 #### **Prelude**
-  - Jambhala is configured to use `PlutusTx.Prelude` as its default prelude via a `mixin` in the `.cabal` file.
-  - This eliminates the need to include both the `{#- LANGUAGE NoImplicitPrelude #-}` extension and `import PlutusTx.Prelude` in your contract files.
+  - Jambhala uses a custom `Prelude` module which includes both the `PlutusTx.Prelude` and common Haskell items.
+    - No need to use `NoImplicitPrelude` pragma, manually import `PlutusTx.Prelude` and Haskell's prelude
+    - No need to use `hiding` clauses or qualified imports to avoid nameclashes: `PlutusTx` versions of functions that clash with their Haskell counterparts are prefixed with `p` (for prefix functions) and `#` (for infix operators)
 
-#### **Plutus & Haskell imports**
+#### **Plutus imports**
   - Many common Plutus types and functions are available via a single import from `Jambhala.Plutus`.
-  - If you need to use regular Haskell functions that would normally be imported via the standard Prelude or from other modules in `base`, import them from `Jambhala.Haskell` or from the specific `base` modules they reside in
-  - For example, if you need to use the ***IO*** type in signatures and the `putStrLn` and `print` functions, import them from `Jambhala.Haskell` like so:
-
-      ```haskell
-      import Jambhala.Haskell ( IO, print, putStrLn )
-      ```
-
   - See the sample contracts in `src/Contracts/Samples` for more examples of handling imports with Jambhala.
 
 #### **Language extensions**
@@ -462,7 +458,6 @@ library
   exposed-modules:
     Contracts
     Jambhala.CLI
-    Jambhala.Haskell
     Jambhala.Plutus
     Jambhala.Utils
 
@@ -479,20 +474,8 @@ You're now ready to write your contract, which should contain a ***Validator*** 
 ### **Writing Emulator Tests**
 Jambhala provides an enhanced variant of the Plutus emulator with some additional conveniences.
 
-To define an emulator trace that is compatible with the `jamb` CLI, use the type `JambEmulatorTrace`.
+To define an emulator test that is compatible with the `jamb` CLI, use the type `EmulatorTest`.
 
->`JambEmulatorTrace` is similar to the `EmulatorTrace ()` type used with the standard emulator, but subsumes the unit (`()`) type and includes an additional effect for more convenient management of mock wallets.
-
-All code used in the standard `EmulatorTrace` context is compatible with `JambEmulatorTrace`, but some additional emulator utilities are provided by `Jambhala.Utils` for convenience:
-
-- `activateWallets`: takes endpoints and activates all mock wallets in the test, returning their `ContractHandle` values in an `IntMap` with keys corresponding to the wallet numbers. Activated wallet handles can be referenced in the test via the (`!`) operator.
-
-  ```haskell
-  hs <- activateWallets endpoints
-  callEndpoint @"give" (hs ! 1) 33_000_000
-  ```
-
-- `wait1`: waits one slot in an emulator test. This is equivalent to `waitNSlots 1` but discards the resulting `Slot` value, making it more convenient to use.
 
 ### **Using the `jamb` CLI**
 The `jamb` CLI can perform various operations on your contracts, including calculating its validator hash, testing it using a blockchain emulator, and compiling it into a `.plutus` file. To do this we need to prepare a ***ContractExports*** value in each of our contracts.
@@ -502,7 +485,7 @@ The `jamb` CLI can perform various operations on your contracts, including calcu
 2. A list of ***DataExport*** values
   - This includes any additional data required by your contract (i.e. datums and redeemers) that you wish to serialize
   - Can be empty
-3. **Optional:** a ***JambEmulatorTrace*** test and desired number of mock wallets
+3. **Optional:** an ***EmulatorTest*** test
 
 **Data Exports**  
 Any value with a ***ToData*** instance can be converted to a serializable ***DataExport*** value by applying the `DataExport` constructor to a filename `String` and the value. The following example will be serialized into a file `unit.json` containing `{"constructor":0,"fields":[]}`:

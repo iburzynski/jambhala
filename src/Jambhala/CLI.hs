@@ -5,29 +5,25 @@ module Jambhala.CLI (runJamb, scriptAddressBech32) where
 import Cardano.Api (prettyPrintJSON, writeFileJSON)
 import Cardano.Api.Shelley (scriptDataToJsonDetailedSchema)
 import Codec.Serialise (Serialise, serialise)
+import Control.Monad.Reader (MonadIO (..), MonadReader, ReaderT (..), asks)
 import Data.Aeson (Value)
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Short as BSS
-import Data.Foldable (traverse_)
 import qualified Data.Map.Strict as M
 import qualified Data.Text as Text
 import Jambhala.CLI.Emulator
 import Jambhala.CLI.Parsers
 import Jambhala.CLI.Types
 import Jambhala.CLI.Update (updatePlutusApps)
-import Jambhala.Haskell
 import Jambhala.Plutus
 import Options.Applicative
-import Plutus.V2.Ledger.Api (toData)
 import System.Environment (lookupEnv)
-import Text.Printf (printf)
-import Prelude hiding (Applicative (..), Functor (..), Monoid (..), Semigroup (..), elem, mconcat, traverse_, (<$>))
 
-runJamb :: MonadIO m => Contracts -> m ()
+runJamb :: MonadIO m => JambContracts -> m ()
 runJamb = runReaderT (commandParser >>= liftIO . execParser >>= runCommand)
 
-runCommand :: (MonadReader Contracts m, MonadIO m) => Command -> m ()
+runCommand :: (MonadReader JambContracts m, MonadIO m) => Command -> m ()
 runCommand = \case
   List -> asks contractsPretty >>= liftIO . putStrLn . ("Available Contracts:\n\n" ++)
   Addr c n -> go c (liftIO . putStrLn . scriptAddressBech32 n . script)

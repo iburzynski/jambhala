@@ -3,9 +3,12 @@
 module Jambhala.CLI.Update (updatePlutusApps) where
 
 import qualified Control.Foldl as Fold
+import Control.Monad (filterM, unless)
+import Control.Monad.Reader (MonadIO (..), MonadReader (..), ReaderT (..))
 import qualified Data.ByteString as BS
+import Data.List (break, isPrefixOf)
 import qualified Data.Text as T
-import Data.Text.Encoding (decodeUtf8)
+import qualified Data.Text.Encoding as T
 import qualified Data.Text.IO as TIO
 import Data.Time (getCurrentTime)
 import Data.Time.Format.ISO8601 (iso8601Show)
@@ -15,24 +18,9 @@ import Jambhala.CLI.Update.Parsers
     cabalProjectParser,
     prefetchGitParser,
   )
-import Jambhala.Haskell
 import Text.Megaparsec (errorBundlePretty, runParser)
 import Turtle (ExitCode (..))
 import qualified Turtle as Sh
-import Prelude hiding
-  ( Applicative (..),
-    Eq (..),
-    Functor (..),
-    Monoid (..),
-    Semigroup (..),
-    Traversable (..),
-    decodeUtf8,
-    elem,
-    error,
-    mconcat,
-    unless,
-    (<$>),
-  )
 
 type Revision = Text
 
@@ -43,7 +31,7 @@ updatePlutusApps mRev = do
   rev' <- runReaderT (resetPlutusApps (T.pack <$> mRev)) fp
   unless (rev == rev') $ do
     liftIO $ putStrLn "Updating plutus-apps...\n"
-    cProjConts <- decodeUtf8 <$> liftIO (BS.readFile $ fp ++ "/cabal.project")
+    cProjConts <- T.decodeUtf8 <$> liftIO (BS.readFile $ fp ++ "/cabal.project")
     let CabalProjectData deps allOtherContent = runCProjParser rev' cProjConts
     fDeps <- liftIO $ makeFlakeDependencies deps
     (timestamp, _) <- break (== '.') . iso8601Show <$> liftIO getCurrentTime

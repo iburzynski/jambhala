@@ -1,86 +1,120 @@
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
 module Jambhala.Utils
- ( ContractExports
- , Contracts
- , DataExport(..)
- , JambEmulatorTrace
- , activateWallets
- , exportMintingPolicy
- , exportMintingPolicyWithTest
- , exportValidator
- , exportValidatorWithTest
- , getContractAddress
- , getMainnetAddress
- , getTestnetAddress
- , wait1
- , wrap
- ) where
+  ( ContractExports,
+    ContractPromise,
+    JambContract,
+    JambContracts,
+    Emulatable (..),
+    DataExport (..),
+    EmulatorParams,
+    EmulatorTest,
+    (!),
+    activateWallets,
+    exportMintingPolicy,
+    exportMintingPolicyWithTest,
+    exportValidator,
+    exportValidatorWithTest,
+    fromWallet,
+    getContractAddress,
+    getDatumInDatumFromQuery,
+    getDecoratedTxOutDatum,
+    initEmulator,
+    logString,
+    mkEmulatorParams,
+    mkEndpoints,
+    pkhForWallet,
+    toWallet,
+    wait,
+    waitUntil,
+    wrap,
+  )
+where
 
-import Prelude hiding ( Enum(..), AdditiveSemigroup(..), Monoid(..), Ord(..), Traversable(..), (<$>), error )
-
-import Jambhala.CLI ( scriptAddressBech32 )
-import Jambhala.CLI.Emulator ( activateWallets, wait1 )
+import Cardano.Node.Emulator (Params (..))
+import Control.Lens ((^?))
+import Jambhala.CLI.Emulator
+  ( activateWallets,
+    fromWallet,
+    initEmulator,
+    mkEndpoints,
+    pkhForWallet,
+    toWallet,
+    wait,
+    waitUntil,
+    (!),
+  )
 import Jambhala.CLI.Types
-import Jambhala.Haskell hiding ( ask )
-import Jambhala.Plutus hiding (Mainnet, Testnet, lovelaceValueOf )
-
-import Cardano.Ledger.BaseTypes ( Network(..) )
-import Cardano.Node.Emulator ( Params(..) )
-import Plutus.Contract.Request ( getParams )
+import Jambhala.Plutus
+import Ledger.Tx (DatumFromQuery)
+import Plutus.Contract.Request (getParams)
+import Plutus.V2.Ledger.Api (DatumHash)
 
 -- | Temporary replacement for the removed `mkUntypedValidator` function
-wrap :: (UnsafeFromData d, UnsafeFromData r)
-     => (d -> r -> ScriptContext -> Bool)
-     -> (BuiltinData -> BuiltinData -> BuiltinData -> ())
+wrap ::
+  (UnsafeFromData d, UnsafeFromData r) =>
+  (d -> r -> ScriptContext -> Bool) ->
+  (BuiltinData -> BuiltinData -> BuiltinData -> ())
 wrap f d r sc = check $ f (ufbid d) (ufbid r) (ufbid sc)
   where
     ufbid :: UnsafeFromData a => BuiltinData -> a
     ufbid = unsafeFromBuiltinData
-{-# INLINABLE wrap #-}
+{-# INLINEABLE wrap #-}
 
 getContractAddress :: AsContractError e => Validator -> Contract w s e (AddressInEra BabbageEra)
 getContractAddress v = do
   nId <- pNetworkId <$> getParams
   return $ mkValidatorCardanoAddress nId $ Versioned v PlutusV2
 
-export :: Maybe EmulatorExport -> (s -> JambScript) -> s -> [DataExport] -> ContractExports
-export Nothing constructor s des = ContractExports (constructor s) des Nothing
-export test@(Just (EmulatorExport _ numWallets)) constructor s dataExports
-  | numWallets > 0 = ContractExports{..}
-  where script = constructor s
-export _ _ _ _ = error "Wallet quantity must be greater than zero"
+export :: Maybe EmulatorTest -> (s -> JambScript) -> String -> s -> [DataExport] -> JambContract
+export Nothing constructor name s des = (name, ContractExports (constructor s) des Nothing)
+export test constructor name s dataExports = (name, ContractExports {..})
+  where
+    script = constructor s
 
-exportNoTest :: (s -> JambScript) -> s -> [DataExport] -> ContractExports
+exportNoTest :: (s -> JambScript) -> String -> s -> [DataExport] -> JambContract
 exportNoTest = export Nothing
 
-exportWithTest :: (s -> JambScript) -> s -> [DataExport] -> JambEmulatorTrace -> WalletQuantity
-               -> ContractExports
-exportWithTest constructor s dataExports jTrace numWallets =
-  export (Just EmulatorExport{..}) constructor s dataExports
+exportWithTest ::
+  (s -> JambScript) ->
+  String ->
+  s ->
+  [DataExport] ->
+  EmulatorTest ->
+  JambContract
+exportWithTest constructor name s dataExports test =
+  export (Just test) constructor name s dataExports
 
 -- | Exports a validator for use with jamb CLI
 --
 -- To export with an emulator test, use `exportValidatorWithTest`
-exportValidator :: Validator -> [DataExport] -> ContractExports
+exportValidator :: String -> Validator -> [DataExport] -> JambContract
 exportValidator = exportNoTest JambValidator
 
 -- | Exports a minting policy for use with jamb CLI
 --
 -- To export with an emulator test, use `exportMintingPolicyWithTest`
-exportMintingPolicy :: MintingPolicy -> [DataExport] -> ContractExports
+exportMintingPolicy :: String -> MintingPolicy -> [DataExport] -> JambContract
 exportMintingPolicy = exportNoTest JambMintingPolicy
 
 -- | Exports a validator and emulator test for use with jamb CLI
-exportValidatorWithTest :: Validator -> [DataExport] -> JambEmulatorTrace -> WalletQuantity -> ContractExports
+exportValidatorWithTest :: String -> Validator -> [DataExport] -> EmulatorTest -> JambContract
 exportValidatorWithTest = exportWithTest JambValidator
 
 -- | Exports a minting policy and emulator test for use with jamb CLI
-exportMintingPolicyWithTest :: MintingPolicy -> [DataExport] -> JambEmulatorTrace -> WalletQuantity -> ContractExports
+exportMintingPolicyWithTest :: String -> MintingPolicy -> [DataExport] -> EmulatorTest -> JambContract
 exportMintingPolicyWithTest = exportWithTest JambMintingPolicy
 
-getTestnetAddress :: JambScript -> String
-getTestnetAddress = scriptAddressBech32 Testnet
+-- | Call `logInfo` with input type fixed to String
+logString :: String -> Contract w s e ()
+logString = logInfo @String
 
-getMainnetAddress :: JambScript -> String
-getMainnetAddress = scriptAddressBech32 Mainnet
+-- | A non-lens version of the `decoratedTxOutDatum` getter
+getDecoratedTxOutDatum :: DecoratedTxOut -> Maybe (DatumHash, DatumFromQuery)
+getDecoratedTxOutDatum dto = dto ^? decoratedTxOutDatum
+
+-- | A non-lens version of the `datumInDatumFromQuery` getter
+getDatumInDatumFromQuery :: DatumFromQuery -> Maybe Datum
+getDatumInDatumFromQuery dfq = dfq ^? datumInDatumFromQuery

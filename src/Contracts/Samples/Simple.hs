@@ -1,12 +1,12 @@
-{-# LANGUAGE DataKinds #-}
 -- Simple Plutus Contracts: always succeeds ("gift")/always fails ("burn")
 --1 Extensions
 {- The following two extensions are required for all contracts. They're `default-extensions`
    in this project's `.cabal` file, so it isn't necessary to include them explicitly like this in
    your contracts.
 
-   Additional extensions required in more advanced contracts must be added explicitly.
+   Additional extensions required in more advanced contracts will be introduced as they become necessary.
 -}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Contracts.Samples.Simple where
@@ -20,7 +20,7 @@ module Contracts.Samples.Simple where
 
    Hover over any Plutus type or function to see which module it is imported from. -}
 import Jambhala.Plutus
-{- The `Jambhala.Utils` module contains boilerplate utility functions for performing various common
+{- The `Jambhala.Utils` module contains boilerplate utility functions for performing common
    operations on contracts.
 -}
 import Jambhala.Utils
@@ -31,7 +31,7 @@ gift _ _ _ = ()
 {-# INLINEABLE gift #-}
 
 burn :: BuiltinData -> BuiltinData -> BuiltinData -> ()
-burn _ _ _ = error ()
+burn _ _ _ = perror ()
 {-# INLINEABLE burn #-}
 
 -- 4. Boilerplate:
@@ -45,8 +45,8 @@ burnValidator = mkValidatorScript $$(compile [||burn||])
 unitExport :: DataExport
 unitExport = DataExport "unit" ()
 
-giftExports :: ContractExports -- Prepare exports for jamb CLI
-giftExports = exportValidator giftValidator [unitExport]
+giftExports :: JambContract -- Prepare exports for jamb CLI
+giftExports = exportValidator "gift" giftValidator [unitExport]
 
-burnExports :: ContractExports
-burnExports = exportValidator burnValidator []
+burnExports :: JambContract
+burnExports = exportValidator "burn" burnValidator []

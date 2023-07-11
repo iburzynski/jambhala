@@ -13,5 +13,5 @@ policy = mkMintingPolicyScript $$(compile [||mkUntypedMintingPolicy freeMinting|
 curSymbol :: CurrencySymbol
 curSymbol = scriptCurrencySymbol policy
 
-exports :: ContractExports
-exports = exportMintingPolicy policy []
+exports :: JambContract
+exports = exportMintingPolicy "free-minting" policy []
