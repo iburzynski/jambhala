@@ -87,7 +87,7 @@ instance Emulatable Vesting where
 
 test :: EmulatorTest
 test =
-  initEmulator @Vesting
+  initEmulator
     4
     [ Give
         { gpDatum =
@@ -114,4 +114,4 @@ test =
     ]
 
 exports :: JambContract -- Prepare exports for jamb CLI:
-exports = exportValidatorWithTest "vesting" validator [] test
+exports = exportContract ("vesting" `withScript` validator) {emulatorTest = test}

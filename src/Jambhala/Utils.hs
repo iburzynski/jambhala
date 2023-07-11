@@ -1,34 +1,30 @@
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
 module Jambhala.Utils
   ( ContractExports,
     ContractPromise,
+    ContractTemplate (..),
     JambContract,
     JambContracts,
     Emulatable (..),
+    Exportable (..),
     DataExport (..),
-    EmulatorParams,
     EmulatorTest,
     (!),
     activateWallets,
-    exportMintingPolicy,
-    exportMintingPolicyWithTest,
-    exportValidator,
-    exportValidatorWithTest,
     fromWallet,
     getContractAddress,
     getDatumInDatumFromQuery,
     getDecoratedTxOutDatum,
     initEmulator,
     logString,
-    mkEmulatorParams,
     mkEndpoints,
     pkhForWallet,
     toWallet,
     wait,
     waitUntil,
+    withScript,
     wrap,
   )
 where
@@ -36,7 +32,8 @@ where
 import Cardano.Node.Emulator (Params (..))
 import Control.Lens ((^?))
 import Jambhala.CLI.Emulator
-  ( activateWallets,
+  ( EmulatorTest,
+    activateWallets,
     fromWallet,
     initEmulator,
     mkEndpoints,
@@ -46,6 +43,8 @@ import Jambhala.CLI.Emulator
     waitUntil,
     (!),
   )
+import Jambhala.CLI.Emulator.Types (ContractPromise, Emulatable (..))
+import Jambhala.CLI.Export (ContractExports, ContractTemplate (..), DataExport (..), Exportable (..), JambContract, withScript)
 import Jambhala.CLI.Types
 import Jambhala.Plutus
 import Ledger.Tx (DatumFromQuery)
@@ -68,49 +67,6 @@ getContractAddress v = do
   nId <- pNetworkId <$> getParams
   return $ mkValidatorCardanoAddress nId $ Versioned v PlutusV2
 
-export :: Maybe EmulatorTest -> (s -> JambScript) -> String -> s -> [DataExport] -> JambContract
-export Nothing constructor name s des = (name, ContractExports (constructor s) des Nothing)
-export test constructor name s dataExports = (name, ContractExports {..})
-  where
-    script = constructor s
-
-exportNoTest :: (s -> JambScript) -> String -> s -> [DataExport] -> JambContract
-exportNoTest = export Nothing
-
-exportWithTest ::
-  (s -> JambScript) ->
-  String ->
-  s ->
-  [DataExport] ->
-  EmulatorTest ->
-  JambContract
-exportWithTest constructor name s dataExports test =
-  export (Just test) constructor name s dataExports
-
--- | Exports a validator for use with jamb CLI
---
--- To export with an emulator test, use `exportValidatorWithTest`
-exportValidator :: String -> Validator -> [DataExport] -> JambContract
-exportValidator = exportNoTest JambValidator
-
--- | Exports a minting policy for use with jamb CLI
---
--- To export with an emulator test, use `exportMintingPolicyWithTest`
-exportMintingPolicy :: String -> MintingPolicy -> [DataExport] -> JambContract
-exportMintingPolicy = exportNoTest JambMintingPolicy
-
--- | Exports a validator and emulator test for use with jamb CLI
-exportValidatorWithTest :: String -> Validator -> [DataExport] -> EmulatorTest -> JambContract
-exportValidatorWithTest = exportWithTest JambValidator
-
--- | Exports a minting policy and emulator test for use with jamb CLI
-exportMintingPolicyWithTest :: String -> MintingPolicy -> [DataExport] -> EmulatorTest -> JambContract
-exportMintingPolicyWithTest = exportWithTest JambMintingPolicy
-
--- | Call `logInfo` with input type fixed to String
-logString :: String -> Contract w s e ()
-logString = logInfo @String
-
 -- | A non-lens version of the `decoratedTxOutDatum` getter
 getDecoratedTxOutDatum :: DecoratedTxOut -> Maybe (DatumHash, DatumFromQuery)
 getDecoratedTxOutDatum dto = dto ^? decoratedTxOutDatum
@@ -118,3 +74,7 @@ getDecoratedTxOutDatum dto = dto ^? decoratedTxOutDatum
 -- | A non-lens version of the `datumInDatumFromQuery` getter
 getDatumInDatumFromQuery :: DatumFromQuery -> Maybe Datum
 getDatumInDatumFromQuery dfq = dfq ^? datumInDatumFromQuery
+
+-- | `logInfo` with the input type as String
+logString :: String -> Contract w s e ()
+logString = logInfo @String

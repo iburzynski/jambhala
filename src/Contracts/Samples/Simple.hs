@@ -19,10 +19,12 @@ module Contracts.Samples.Simple where
    you prefer.
 
    Hover over any Plutus type or function to see which module it is imported from. -}
-import Jambhala.Plutus
+
 {- The `Jambhala.Utils` module contains boilerplate utility functions for performing common
    operations on contracts.
 -}
+
+import Jambhala.Plutus
 import Jambhala.Utils
 
 -- 3. Validator Logic:
@@ -46,7 +48,7 @@ unitExport :: DataExport
 unitExport = DataExport "unit" ()
 
 giftExports :: JambContract -- Prepare exports for jamb CLI
-giftExports = exportValidator "gift" giftValidator [unitExport]
+giftExports = exportContract ("gift" `withScript` giftValidator) {dataExports = [unitExport]}
 
 burnExports :: JambContract
-burnExports = exportValidator "burn" burnValidator []
+burnExports = exportContract ("burn" `withScript` burnValidator)

@@ -62,6 +62,31 @@ DirenvStatus = TypedDict('DirenvStatus', {
                          'installed': bool, 'install?': bool})
 
 
+def add_nix_daemon_snippet():
+    if platform.system() != 'Darwin':
+        daemon_snippet = '''# Nix
+if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
+  . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+fi
+# End Nix'''
+        dotfiles = ['.bash_profile', '.bashrc', '.zprofile',
+                    '.zshrc']
+        dotfile_paths = [os.path.expanduser(
+            f"~/{dotfile}") for dotfile in dotfiles]
+        for dotfile_path in dotfile_paths:
+            if not os.path.exists(dotfile_path):
+                print_neutral(ind2(f"> Creating '{dotfile_path}' file..."))
+                open(dotfile_path, 'a').close()
+            with open(dotfile_path, 'r') as file:
+                contents = file.read()
+                if daemon_snippet not in contents:
+                    # Prepend the snippet to the file
+                    with open(dotfile_path, 'w') as file:
+                        file.write(daemon_snippet + '\n\n' + contents)
+                    print_neutral(
+                        ind(f"nix-daemon snippet added to {dotfile_path}"))
+
+
 def prompt_install_direnv() -> DirenvStatus:
     response = input(ind2(mk_neutral_text("Install direnv with Nix? (Y/n): ")))
     return {
@@ -145,7 +170,7 @@ def check_direnv() -> bool:
                 with open(file_path, 'w') as f:
                     f.writelines(dotfile_contents)
             except:
-                print_fail(ind2("Unable to configure .bashrc file"))
+                print_fail(ind2(f"Unable to configure {dotfile} file"))
                 ready = False
 
     print_report("direnv", ready)
@@ -227,6 +252,7 @@ def check_nix_conf() -> bool:
 
 def test_readiness() -> None:
     print(ind("JAMBHALA READINESS TEST:\n"))
+    add_nix_daemon_snippet()
     direnv_passed = check_direnv()
     nix_conf_passed = check_nix_conf()
     passed = direnv_passed and nix_conf_passed

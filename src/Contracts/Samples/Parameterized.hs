@@ -33,25 +33,21 @@ validator p = mkValidatorScript $ $$(compile [||wrapped||]) `applyCode` liftCode
   where
     wrapped = mkUntypedValidator . parameterized
 
-data PVesting
+data ParamVesting deriving (ValidatorTypes) -- if Datum and Redeemer are both () we can derive this
 
-instance ValidatorTypes PVesting where
-  type DatumType PVesting = ()
-  type RedeemerType PVesting = ()
-
-instance Emulatable PVesting where
-  data GiveParam PVesting = Give
+instance Emulatable ParamVesting where
+  data GiveParam ParamVesting = Give
     { lovelace :: Integer,
       forBeneficiary :: PaymentPubKeyHash,
       afterDeadline :: !POSIXTime
     }
     deriving (Generic, ToJSON, FromJSON)
-  data GrabParam PVesting = Grab {withDeadline :: POSIXTime}
+  data GrabParam ParamVesting = Grab {withDeadline :: POSIXTime}
     deriving (Generic, ToJSON, FromJSON)
 
-  give :: GiveAction PVesting
+  give :: GiveAction ParamVesting
   give Give {..} = do
-    submittedTxId <- getCardanoTxId <$> submitTxConstraintsWith @PVesting lookups constraints
+    submittedTxId <- getCardanoTxId <$> submitTxConstraintsWith @ParamVesting lookups constraints
     _ <- awaitTxConfirmed submittedTxId
     logInfo @String $
       printf
@@ -66,7 +62,7 @@ instance Emulatable PVesting where
       lookups = plutusV2OtherScript v
       constraints = mustPayToOtherScriptWithDatumInTx vHash unitDatum $ lovelaceValueOf lovelace
 
-  grab :: GrabAction PVesting
+  grab :: GrabAction ParamVesting
   grab (Grab dline) = do
     pkh <- ownFirstPaymentPubKeyHash
     now <- uncurry interval <$> currentNodeClientTimeRange
@@ -85,14 +81,14 @@ instance Emulatable PVesting where
                     mustValidateInTimeRange (fromPlutusInterval now) :
                     mustBeSignedBy pkh :
                     map (`mustSpendScriptOutput` unitRedeemer) (Map.keys validUtxos)
-            submittedTx <- getCardanoTxId <$> submitTxConstraintsWith @PVesting lookups constraints
+            submittedTx <- getCardanoTxId <$> submitTxConstraintsWith @ParamVesting lookups constraints
             _ <- awaitTxConfirmed submittedTx
             logInfo @String "Collected eligible gifts"
       else logInfo @String "Deadline not reached"
 
 test :: EmulatorTest
 test =
-  initEmulator @PVesting
+  initEmulator
     4
     [ Give
         { lovelace = 30_000_000,
@@ -114,8 +110,8 @@ test =
   where
     dline = slotToBeginPOSIXTime def 20
 
-exports :: JambContract -- Prepare exports for jamb CLI:
-exports = exportValidatorWithTest "parameterized" (validator p) [] test
+exports :: JambContract
+exports = exportContract ("param-vesting" `withScript` validator p) {emulatorTest = test}
   where
     -- validator must be applied to some parameter to generate a hash or write script to file
     p =

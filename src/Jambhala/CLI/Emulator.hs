@@ -1,4 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -9,6 +10,7 @@ module Jambhala.CLI.Emulator
     fromWallet,
     initEmulator,
     mkEndpoints,
+    notImplemented,
     pkhForWallet,
     runJambEmulator,
     toWallet,
@@ -25,15 +27,15 @@ import Data.IntMap.Strict (Key, (!))
 import qualified Data.IntMap.Strict as IntMap
 import Data.Row (Row)
 import GHC.Real (fromIntegral)
-import Jambhala.CLI.Types
+import Jambhala.CLI.Emulator.Types
 import Jambhala.Plutus
 import Ledger (Slot)
 import Plutus.Contract (HasEndpoint)
 import Plutus.Contract.Trace (defaultDistFor)
-import Plutus.Trace (EmulatorConfig (..))
+import Plutus.Trace (EmulatorConfig (..), EmulatorRuntimeError (..))
 import Plutus.Trace.Effects.RunContract (StartContract)
 import Plutus.Trace.Effects.Waiting (Waiting)
-import Plutus.Trace.Emulator (ContractConstraints)
+import Plutus.Trace.Emulator (ContractConstraints, throwError)
 import Wallet.Emulator.Types (knownWallets)
 
 runJambEmulator :: EmulatorTest -> IO ()
@@ -41,6 +43,13 @@ runJambEmulator ETest {..} =
   runEmulatorTraceIOWithConfig def (mkEmulatorConfig numWallets) jTrace
   where
     mkEmulatorConfig (WalletQuantity n) = EmulatorConfig (Left $ defaultDistFor $ take (fromIntegral n) knownWallets) def
+
+notImplemented :: EmulatorTest
+notImplemented = ETest {numWallets = 1, jTrace = logNotImplemented}
+  where
+    logNotImplemented :: Eff EmulatorEffects ()
+    logNotImplemented = do
+      throwError $ GenericError "No emulator test implemented for contract"
 
 initEmulator ::
   forall c.
@@ -54,7 +63,7 @@ initEmulator ::
     (GrabAction c ~ (GrabParam c -> Contract () (Schema c) Text ()))
   ) =>
   WalletQuantity ->
-  [Eff (JambEmulatorEffects (Schema c)) ()] ->
+  [EmulatorAction (Schema c)] ->
   EmulatorTest
 initEmulator numWallets effs = ETest {..}
   where
@@ -118,31 +127,31 @@ mkEndpoints giveAction grabAction = endpoints
     grab' = endpoint @"grab" @(GrabParam c) @_ @(Schema c) $ grabAction
 
 fromWallet ::
-  forall (s :: Row *) p.
-  ( ToJSON p,
-    ContractConstraints s,
-    HasEndpoint "give" p s
+  forall (schema :: Row *) giveParam.
+  ( ToJSON giveParam,
+    ContractConstraints schema,
+    HasEndpoint "give" giveParam schema
   ) =>
-  p ->
-  Key ->
-  Eff (JambEmulatorEffects s) ()
+  giveParam ->
+  WalletID ->
+  EmulatorAction schema
 fromWallet p w = do
   h <- asks (! w)
-  callEndpoint @"give" @p @() @s @Text h p
+  callEndpoint @"give" @giveParam @() @schema @Text h p
   wait
 
 toWallet ::
-  forall (s :: Row *) p.
-  ( ToJSON p,
-    ContractConstraints s,
-    HasEndpoint "grab" p s
+  forall (schema :: Row *) grabParam.
+  ( ToJSON grabParam,
+    ContractConstraints schema,
+    HasEndpoint "grab" grabParam schema
   ) =>
-  p ->
-  Key ->
-  Eff (JambEmulatorEffects s) ()
+  grabParam ->
+  WalletID ->
+  EmulatorAction schema
 toWallet p w = do
   h <- asks (! w)
-  callEndpoint @"grab" @p @() @s @Text h p
+  callEndpoint @"grab" @grabParam @() @schema @Text h p
   wait
 
 -- | Wait 1 slot in an EmulatorTest

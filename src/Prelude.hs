@@ -33,6 +33,7 @@ module Prelude
     Text,
     ToJSON,
     Traversable (..),
+    Typeable,
     (#<>),
     (#<$),
     (#<$>),
@@ -107,6 +108,7 @@ import Data.Semigroup (Semigroup (..))
 import Data.String (String)
 import Data.Text (Text)
 import Data.Traversable (Traversable (..))
+import Data.Typeable (Typeable)
 import Data.Void
 import GHC.Enum (Enum (..))
 import GHC.Err
@@ -171,7 +173,7 @@ import qualified PlutusTx.Ratio as P.Ratio
 import System.IO (FilePath, IO, print, putStrLn)
 import Text.Printf (printf)
 
-{-# NOINLINE perror #-}
+{-# INLINEABLE perror #-}
 perror :: () -> a
 perror = P.error
 

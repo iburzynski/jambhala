@@ -4,7 +4,7 @@
 module Contracts.Samples.SimpleTyped where
 
 import Jambhala.Plutus
-import Jambhala.Utils (DataExport (..), JambContract, exportValidator)
+import Jambhala.Utils
 
 simpleUntyped :: BuiltinData -> BuiltinData -> BuiltinData -> ()
 simpleUntyped _ redeemer _
@@ -16,7 +16,7 @@ untypedValidator :: Validator
 untypedValidator = mkValidatorScript $$(compile [||simpleUntyped||])
 
 untypedExports :: JambContract
-untypedExports = exportValidator "simple-untyped" untypedValidator []
+untypedExports = exportContract ("simple-untyped" `withScript` untypedValidator)
 
 --------------------------------------------------------------------------------
 
@@ -36,4 +36,8 @@ typedRedeemerFail :: DataExport
 typedRedeemerFail = DataExport @Integer "tr21" 42
 
 typedExports :: JambContract
-typedExports = exportValidator "simple-typed" typedValidator [typedRedeemerSuccess, typedRedeemerFail]
+typedExports =
+  exportContract
+    ("simple-typed" `withScript` typedValidator)
+      { dataExports = [typedRedeemerSuccess, typedRedeemerFail]
+      }

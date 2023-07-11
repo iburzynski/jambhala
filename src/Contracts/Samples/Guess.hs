@@ -62,7 +62,6 @@ instance Emulatable Guessing where
         awaitTxConfirmed submittedTxId
         logString "Collected gifts"
     where
-      -- ref: https://github.com/input-output-hk/plutus-apps/blob/main/plutus-ledger/src/Ledger/Tx.hs
       hasMatchingDatum :: DecoratedTxOut -> Maybe DecoratedTxOut
       hasMatchingDatum dto = do
         (_, dfq) <- getDecoratedTxOutDatum dto
@@ -73,7 +72,7 @@ instance Emulatable Guessing where
 
 test :: EmulatorTest
 test =
-  initEmulator @Guessing
+  initEmulator
     6
     [ Give {lovelace = 10_000_000, withAnswer = 42} `fromWallet` 1,
       Give {lovelace = 10_000_000, withAnswer = 42} `fromWallet` 2,
@@ -84,4 +83,4 @@ test =
     ]
 
 exports :: JambContract -- Prepare exports for jamb CLI:
-exports = exportValidatorWithTest "guess" validator [] test
+exports = exportContract ("guessing" `withScript` validator) {emulatorTest = test}

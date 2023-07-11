@@ -14,4 +14,4 @@ curSymbol :: CurrencySymbol
 curSymbol = scriptCurrencySymbol policy
 
 exports :: JambContract
-exports = exportMintingPolicy "free-minting" policy []
+exports = exportContract ("free-minting" `withScript` policy)

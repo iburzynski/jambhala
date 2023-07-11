@@ -2,22 +2,21 @@
 
 module Jambhala.CLI (runJamb, scriptAddressBech32) where
 
-import Cardano.Api (prettyPrintJSON, writeFileJSON)
+import Cardano.Api (Script (..), prettyPrintJSON, writeFileJSON)
 import Cardano.Api.Shelley (scriptDataToJsonDetailedSchema)
-import Codec.Serialise (Serialise, serialise)
 import Control.Monad.Reader (MonadIO (..), MonadReader, ReaderT (..), asks)
 import Data.Aeson (Value)
 import qualified Data.ByteString.Char8 as BS8
-import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Short as BSS
 import qualified Data.Map.Strict as M
 import qualified Data.Text as Text
 import Jambhala.CLI.Emulator
+import Jambhala.CLI.Export (ContractExports (..), DataExport (..), JambScript (..), getSerialised)
 import Jambhala.CLI.Parsers
-import Jambhala.CLI.Types
+import Jambhala.CLI.Types (Command (..), FileName, JambContracts)
 import Jambhala.CLI.Update (updatePlutusApps)
 import Jambhala.Plutus
 import Options.Applicative
+import Plutus.Script.Utils.V2.Scripts (mintingPolicyHash)
 import System.Environment (lookupEnv)
 
 runJamb :: MonadIO m => JambContracts -> m ()
@@ -29,19 +28,13 @@ runCommand = \case
   Addr c n -> go c (liftIO . putStrLn . scriptAddressBech32 n . script)
   Hash c -> go c (hash . script)
   Test c ->
-    go
-      c
-      ( maybe
-          (liftIO . putStrLn $ "No test defined for " ++ c)
-          (liftIO . runJambEmulator)
-          . test
-      )
+    go c (liftIO . runJambEmulator . test)
   Write c mfn -> go c (writeScriptWithData $ fromMaybe c mfn)
   Update mRev -> updatePlutusApps mRev
   where
     hash = \case
       JambValidator v -> liftIO . print $ validatorHash v
-      JambMintingPolicy p -> liftIO . print $ scriptCurrencySymbol p
+      JambMintingPolicy p -> liftIO . print $ mintingPolicyHash p
     go contract eff =
       asks (M.lookup contract)
         >>= maybe (liftIO . putStrLn $ "Error: contract \"" ++ contract ++ "\" not found") eff
@@ -56,9 +49,6 @@ scriptAddressBech32 network script =
         StakeRefNull
   where
     scriptHash s = hashScript $ PlutusScript PlutusScriptV2 $ getSerialised s
-
-getSerialised :: Serialise a => a -> PlutusScript PlutusScriptV2
-getSerialised = PlutusScriptSerialised . BSS.toShort . BSL.toStrict . serialise
 
 writeScriptWithData :: MonadIO m => FileName -> ContractExports -> m ()
 writeScriptWithData fn (ContractExports s ds _) = do
