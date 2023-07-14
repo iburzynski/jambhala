@@ -1,6 +1,4 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
--- Required to map validator and endpoint types
+-- Required to map validator types and endpoint params
 {-# LANGUAGE TypeFamilies #-}
 
 module Contracts.Samples.CustomTyped where
@@ -23,18 +21,19 @@ customTyped _ (Redeem i) _ = traceIfFalse "Sorry, wrong guess!" (i #== 42)
 {-# INLINEABLE customTyped #-}
 
 validator :: Validator
-validator = mkValidatorScript $$(compile [||wrapped||])
+validator = mkValidatorScript $$(compile [||untyped||])
   where
-    wrapped = mkUntypedValidator customTyped
+    -- conversion to untyped must occur in a different scope when using custom data types
+    -- otherwise Template Haskell will try to compile the code before `unstableMakeIsData` completes
+    untyped = mkUntypedValidator customTyped
 
 -- PART II: OFF-CHAIN EMULATION
 
--- 1. Define a data type for the contract (no constructors needed)
-data CustomTyped
+-- 1. Define a data type for the contract with a reference value
+data CustomTyped = THIS
 
--- 2. Map the validator types using associated type families
+-- 2. Map non-unit validator types using associated type families
 instance ValidatorTypes CustomTyped where
-  type DatumType CustomTyped = ()
   type RedeemerType CustomTyped = Redeem
 
 -- 3. Make the contract emulatable with Emulatable instance
@@ -46,31 +45,26 @@ instance Emulatable CustomTyped where
     deriving (Generic, FromJSON, ToJSON)
 
   -- 4. Define give endpoint action: send UTXOs to the script address
-  give :: GiveAction CustomTyped
+  give :: GiveParam CustomTyped -> ContractM CustomTyped ()
   give (Give q) = do
-    logInfo @String $ printf "Start of the give action"
-    submittedTxId <- getCardanoTxId <$> submitTxConstraintsWith @CustomTyped lookups constraints
-    awaitTxConfirmed submittedTxId
-    logInfo @String $ printf "Made transaction of %d ADA" q
-    where
-      vHash = validatorHash validator
-      datum = Datum $ toBuiltinData ()
-      lookups = plutusV2OtherScript validator
-      constraints = mustPayToOtherScriptWithDatumInTx vHash datum $ lovelaceValueOf q
+    submitAndConfirm
+      Tx
+        { lookups = scriptLookupsFor THIS validator,
+          constraints = mustPayToScriptWithDatum validator () q
+        }
+    logStr $ printf "Made transaction of %d ADA" q
 
   -- 5. Define grab endpoint action: consume UTXOs at the script address
-  grab :: GrabAction CustomTyped
+  grab :: GrabParam CustomTyped -> ContractM CustomTyped ()
   grab (Grab 42) = do
-    addr <- getContractAddress validator
-    utxos <- utxosAt addr
-    let lookups = unspentOutputs utxos <> plutusV2OtherScript validator
+    utxos <- getUtxosAt validator
+    let lookups = scriptLookupsFor THIS validator `andUtxos` utxos
         orefs = Map.keys utxos
-        redeemer = Redeemer . toBuiltinData $ Redeem 42
-        constraints = mconcat $ map (`mustSpendScriptOutput` redeemer) orefs
-    submittedTxId <- getCardanoTxId <$> submitTxConstraintsWith @CustomTyped lookups constraints
-    awaitTxConfirmed submittedTxId
-    logString "collected gifts"
-  grab _ = logString "Wrong guess"
+        redeemer = mkRedeemer $ Redeem 42
+        constraints = mconcatMap (`mustSpendScriptOutput` redeemer) orefs
+    submitAndConfirm Tx {..}
+    logStr "collected gifts"
+  grab _ = logStr "Wrong guess"
 
 -- 6. Define emulator test
 test :: EmulatorTest
@@ -83,17 +77,16 @@ test =
       Grab {withGuess = 42} `toWallet` 3 -- right guess
     ]
 
--- Exports
-redeemerSuccess :: DataExport
-redeemerSuccess = DataExport "ctr42" $ Redeem 42
-
-redeemerFail :: DataExport
-redeemerFail = DataExport "ctr21" $ Redeem 21
-
-exports :: JambContract -- Prepare exports for jamb CLI:
+-- 7. Export contract for use with Jamb CLI
+exports :: JambContract
 exports =
   exportContract
     ("custom-typed" `withScript` validator)
-      { dataExports = [redeemerSuccess, redeemerFail],
+      { dataExports =
+          [ -- redeemer that succeeds
+            DataExport "ctr42" $ Redeem 42,
+            -- redeemer that fails
+            DataExport "ctr21" $ Redeem 21
+          ],
         emulatorTest = test
       }

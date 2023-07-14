@@ -1,10 +1,75 @@
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE RankNTypes #-}
+
 module Jambhala.CLI.Types where
 
+import Codec.Serialise (Serialise (..))
+import Control.Monad.Freer (Eff)
 import Data.Map.Strict (Map)
-import Jambhala.CLI.Export (ContractExports)
-import Jambhala.Plutus (Network)
+import GHC.Natural (Natural)
+import GHC.Real (Integral, Real)
+import Jambhala.Plutus
+import Ledger.Tx.Constraints (TxConstraints, plutusV2MintingPolicy)
+import Plutus.Script.Utils.V2.Address (mkMintingPolicyCardanoAddress)
+import Plutus.Script.Utils.V2.Scripts (mintingPolicyHash)
+import Plutus.V2.Ledger.Api (MintingPolicyHash)
 
 type ContractName = String
+
+data DataExport where
+  DataExport :: (ToData a) => String -> a -> DataExport
+
+instance ToData DataExport where
+  toBuiltinData (DataExport _ x) = toBuiltinData x
+
+newtype JambScript' s = JambScript {unJambScript :: s}
+  deriving (Generic)
+
+data JambScript
+  = JambValidator !Validator
+  | JambMintingPolicy !MintingPolicy
+  deriving (Generic)
+
+instance Serialise JambScript where
+  encode (JambValidator v) = encode v
+  encode (JambMintingPolicy p) = encode p
+
+newtype WalletQuantity = WalletQuantity {walletQ :: Natural}
+  deriving newtype (Eq, Ord, Enum, Num, Real, Integral)
+
+data EmulatorTest = ETest {numWallets :: !WalletQuantity, jTrace :: !(Eff EmulatorEffects ())}
+
+data ContractExports = ContractExports
+  { script :: !JambScript,
+    dExports :: ![DataExport],
+    test :: !EmulatorTest
+  }
+
+type family JambHash s where
+  JambHash (JambScript' Validator) = ValidatorHash
+  JambHash (JambScript' MintingPolicy) = MintingPolicyHash
+
+class IsScript s where
+  scriptLookupFunc :: forall c. s -> ScriptLookups c
+  hashFunc :: s -> JambHash s
+  toJambScript :: s -> JambScript
+  addressFunc :: NetworkId -> s -> AddressInEra BabbageEra
+
+instance IsScript (JambScript' Validator) where
+  scriptLookupFunc = plutusV2OtherScript . unJambScript
+  hashFunc = validatorHash . unJambScript
+  toJambScript = JambValidator . unJambScript
+  addressFunc n (JambScript v) = mkValidatorCardanoAddress n $ Versioned v PlutusV2
+
+instance IsScript (JambScript' MintingPolicy) where
+  scriptLookupFunc = plutusV2MintingPolicy . unJambScript
+  hashFunc = mintingPolicyHash . unJambScript
+  toJambScript = JambMintingPolicy . unJambScript
+  addressFunc n (JambScript p) = mkMintingPolicyCardanoAddress n p
 
 type JambContracts = Map ContractName ContractExports
 
@@ -17,3 +82,8 @@ data Command
   | Test !ContractName
   | Write !ContractName !(Maybe FileName)
   | Update !(Maybe String)
+
+data Transaction c = Tx
+  { lookups :: !(ScriptLookups c),
+    constraints :: !(TxConstraints (RedeemerType c) (DatumType c))
+  }

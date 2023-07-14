@@ -37,6 +37,7 @@ module Jambhala.Plutus
     Redeemer (..),
     ScriptDataJsonSchema (..),
     ScriptContext (..),
+    ScriptLookups (..),
     SerialiseAsRawBytes (..),
     StakeReference (..),
     ToData (..),
@@ -143,7 +144,8 @@ import Ledger
     unitRedeemer,
   )
 import Ledger.Tx.Constraints
-  ( mustBeSignedBy,
+  ( ScriptLookups (..),
+    mustBeSignedBy,
     mustPayToOtherScriptWithDatumInTx,
     mustSpendScriptOutput,
     mustValidateInTimeRange,

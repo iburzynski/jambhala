@@ -50,6 +50,7 @@ module Prelude
     (#-),
     (#*),
     guard,
+    mconcatMap,
     pabs,
     pasum,
     pcompare,
@@ -96,6 +97,7 @@ module Prelude
   )
 where
 
+import Data.List.Extra (mconcatMap)
 import Control.Applicative
 import Control.Monad (guard)
 import Data.Aeson (FromJSON, ToJSON)

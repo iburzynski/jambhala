@@ -1,6 +1,6 @@
 module Contracts.Samples.Guess where
 
-import qualified Data.Map.Strict as Map
+import qualified Data.Map as Map
 import Jambhala.Plutus
 import Jambhala.Utils
 
@@ -18,11 +18,11 @@ guess (Answer a) (Guess g) _ = traceIfFalse "Sorry, wrong guess!" (g #== a)
 {-# INLINEABLE guess #-}
 
 validator :: Validator
-validator = mkValidatorScript $$(compile [||wrapped||])
+validator = mkValidatorScript $$(compile [||untyped||])
   where
-    wrapped = mkUntypedValidator guess
+    untyped = mkUntypedValidator guess
 
-data Guessing
+data Guessing = THIS
 
 instance ValidatorTypes Guessing where
   type DatumType Guessing = Answer
@@ -37,37 +37,34 @@ instance Emulatable Guessing where
   data GrabParam Guessing = Grab {withGuess :: Integer}
     deriving (Generic, ToJSON, FromJSON)
 
-  give :: GiveAction Guessing
+  give :: GiveParam Guessing -> ContractM Guessing ()
   give (Give q a) = do
-    submittedTxId <- getCardanoTxId <$> submitTxConstraintsWith @Guessing lookups constraints
-    _ <- awaitTxConfirmed submittedTxId
-    logString $ printf "Gave %d lovelace" q
-    where
-      vHash = validatorHash validator
-      datum = Datum . toBuiltinData $ Answer a
-      lookups = plutusV2OtherScript validator
-      constraints = mustPayToOtherScriptWithDatumInTx vHash datum $ lovelaceValueOf q
+    submitAndConfirm
+      Tx
+        { lookups = scriptLookupsFor THIS validator,
+          constraints = mustPayToScriptWithDatum validator (Answer a) q
+        }
+    logStr $ printf "Gave %d lovelace" q
 
-  grab :: GrabAction Guessing
+  grab :: GrabParam Guessing -> ContractM Guessing ()
   grab (Grab g) = do
-    addr <- getContractAddress validator
-    validUtxos <- Map.mapMaybe hasMatchingDatum <$> utxosAt addr
+    utxos <- getUtxosAt validator
+    let validUtxos = Map.mapMaybe hasMatchingDatum utxos
     if Map.null validUtxos
-      then logString "No matching UTXOs"
+      then logStr "No matching UTXOs"
       else do
-        let lookups = unspentOutputs validUtxos <> plutusV2OtherScript validator
-            redeemer = Redeemer . toBuiltinData $ Guess g
-            constraints = mconcat . map (`mustSpendScriptOutput` redeemer) $ Map.keys validUtxos
-        submittedTxId <- getCardanoTxId <$> submitTxConstraintsWith @Guessing lookups constraints
-        awaitTxConfirmed submittedTxId
-        logString "Collected gifts"
+        let lookups = scriptLookupsFor THIS validator `andUtxos` validUtxos
+            redeemer = mkRedeemer $ Guess g
+            constraints = mconcatMap (`mustSpendScriptOutput` redeemer) $ Map.keys validUtxos
+        submitAndConfirm Tx {..}
+        logStr "Collected gifts"
     where
       hasMatchingDatum :: DecoratedTxOut -> Maybe DecoratedTxOut
       hasMatchingDatum dto = do
         (_, dfq) <- getDecoratedTxOutDatum dto
         Datum d <- getDatumInDatumFromQuery dfq
         Answer a <- fromBuiltinData d
-        guard (g == a) -- terminates with Nothing if guess doesn't match answer
+        guard (g == a) -- terminate with Nothing if guess doesn't match answer
         Just dto -- else return the matching utxo
 
 test :: EmulatorTest

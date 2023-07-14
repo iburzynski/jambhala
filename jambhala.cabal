@@ -71,6 +71,7 @@ library
     , cardano-ledger-core
     , cardano-node-emulator
     , data-default
+    , extra
     , freer-extras
     , lens
     , plutus-contract

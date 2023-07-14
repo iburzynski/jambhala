@@ -10,9 +10,9 @@ import qualified Data.ByteString.Char8 as BS8
 import qualified Data.Map.Strict as M
 import qualified Data.Text as Text
 import Jambhala.CLI.Emulator
-import Jambhala.CLI.Export (ContractExports (..), DataExport (..), JambScript (..), getSerialised)
+import Jambhala.CLI.Export (getSerialised)
 import Jambhala.CLI.Parsers
-import Jambhala.CLI.Types (Command (..), FileName, JambContracts)
+import Jambhala.CLI.Types
 import Jambhala.CLI.Update (updatePlutusApps)
 import Jambhala.Plutus
 import Options.Applicative

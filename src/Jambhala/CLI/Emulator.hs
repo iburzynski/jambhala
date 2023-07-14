@@ -28,6 +28,7 @@ import qualified Data.IntMap.Strict as IntMap
 import Data.Row (Row)
 import GHC.Real (fromIntegral)
 import Jambhala.CLI.Emulator.Types
+import Jambhala.CLI.Types
 import Jambhala.Plutus
 import Ledger (Slot)
 import Plutus.Contract (HasEndpoint)
@@ -59,8 +60,9 @@ initEmulator ::
     ContractConstraints (Schema c),
     HasEndpoint "give" (GiveParam c) (Schema c),
     HasEndpoint "grab" (GrabParam c) (Schema c),
-    (GiveAction c ~ (GiveParam c -> Contract () (Schema c) Text ())),
-    (GrabAction c ~ (GrabParam c -> Contract () (Schema c) Text ()))
+    ContractM c ~ Contract () (Schema c) Text,
+    GiveAction c ~ (GiveParam c -> ContractM c ()),
+    GrabAction c ~ (GrabParam c -> ContractM c ())
   ) =>
   WalletQuantity ->
   [EmulatorAction (Schema c)] ->

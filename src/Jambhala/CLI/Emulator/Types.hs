@@ -1,5 +1,7 @@
 {-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -9,9 +11,8 @@ import Control.Monad.Freer (Eff)
 import Control.Monad.Freer.Reader (Reader)
 import Data.IntMap.Strict (IntMap, Key)
 import Data.Row (Row)
-import GHC.Real (Integral, Real)
+import Jambhala.CLI.Types (IsScript (..), JambScript' (..))
 import Jambhala.Plutus
-import Numeric.Natural (Natural)
 
 type JambEmulatorEffects schema = Reader (ContractHandles schema) ': EmulatorEffects
 
@@ -19,28 +20,27 @@ type WalletID = Key
 
 type EmulatorAction s = Eff (JambEmulatorEffects s) ()
 
-data EmulatorTest = ETest {numWallets :: !WalletQuantity, jTrace :: !(Eff EmulatorEffects ())}
-
-class ValidatorTypes c => Emulatable c where
-  data GiveParam c :: *
-  data GrabParam c :: *
-  type Schema c :: Row *
+class ValidatorTypes contract => Emulatable contract where
+  data GiveParam contract :: *
+  data GrabParam contract :: *
+  type Schema contract :: Row *
   type
-    Schema c =
-      Endpoint "give" (GiveParam c)
-        .\/ Endpoint "grab" (GrabParam c)
-  type GiveAction c :: *
-  type GiveAction c = GiveParam c -> Contract () (Schema c) Text ()
-  type GrabAction c :: *
-  type GrabAction c = GrabParam c -> Contract () (Schema c) Text ()
-  give :: GiveParam c -> Contract () (Schema c) Text ()
-  grab :: GrabParam c -> Contract () (Schema c) Text ()
+    Schema contract =
+      Endpoint "give" (GiveParam contract)
+        .\/ Endpoint "grab" (GrabParam contract)
+  type GiveAction contract :: *
+  type GiveAction contract = GiveParam contract -> ContractM contract ()
+  type GrabAction contract :: *
+  type GrabAction contract = GrabParam contract -> ContractM contract ()
+  type ContractM contract :: * -> *
+  type ContractM contract = Contract () (Schema contract) Text
+  give :: GiveParam contract -> ContractM contract ()
+  grab :: GrabParam contract -> ContractM contract ()
+  scriptLookupsFor :: IsScript (JambScript' script) => contract -> script -> ScriptLookups contract
+  scriptLookupsFor _ = scriptLookupFunc @_ @contract . JambScript
 
 type ContractActions s = Contract () s Text ()
 
 type ContractPromise s = Promise () s Text ()
 
 type ContractHandles s = IntMap (ContractHandle () s Text)
-
-newtype WalletQuantity = WalletQuantity {walletQ :: Natural}
-  deriving newtype (Eq, Ord, Enum, Num, Real, Integral)

@@ -25,9 +25,7 @@ simpleTyped _ redeemer _ = traceIfFalse "Sorry, wrong guess!" (redeemer #== 42)
 {-# INLINEABLE simpleTyped #-}
 
 typedValidator :: Validator
-typedValidator = mkValidatorScript $$(compile [||wrapped||])
-  where
-    wrapped = mkUntypedValidator simpleTyped
+typedValidator = mkValidatorScript $$(compile [||mkUntypedValidator simpleTyped||])
 
 typedRedeemerSuccess :: DataExport
 typedRedeemerSuccess = DataExport @Integer "tr42" 42
