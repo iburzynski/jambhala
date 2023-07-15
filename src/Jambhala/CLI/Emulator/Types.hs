@@ -10,7 +10,6 @@ module Jambhala.CLI.Emulator.Types where
 import Control.Monad.Freer (Eff)
 import Control.Monad.Freer.Reader (Reader)
 import Data.IntMap.Strict (IntMap, Key)
-import Data.Row (Row)
 import Jambhala.CLI.Types (IsScript (..), JambScript' (..))
 import Jambhala.Plutus
 
@@ -20,20 +19,23 @@ type WalletID = Key
 
 type EmulatorAction s = Eff (JambEmulatorEffects s) ()
 
+type family Schema contract where
+  Schema contract =
+    Endpoint "give" (GiveParam contract)
+      .\/ Endpoint "grab" (GrabParam contract)
+
+type family ContractM contract where
+  ContractM contract = Contract () (Schema contract) Text
+
+type family GiveAction contract where
+  GiveAction contract = GiveParam contract -> ContractM contract ()
+
+type family GrabAction contract where
+  GrabAction contract = GrabParam contract -> ContractM contract ()
+
 class ValidatorTypes contract => Emulatable contract where
   data GiveParam contract :: *
   data GrabParam contract :: *
-  type Schema contract :: Row *
-  type
-    Schema contract =
-      Endpoint "give" (GiveParam contract)
-        .\/ Endpoint "grab" (GrabParam contract)
-  type GiveAction contract :: *
-  type GiveAction contract = GiveParam contract -> ContractM contract ()
-  type GrabAction contract :: *
-  type GrabAction contract = GrabParam contract -> ContractM contract ()
-  type ContractM contract :: * -> *
-  type ContractM contract = Contract () (Schema contract) Text
   give :: GiveParam contract -> ContractM contract ()
   grab :: GrabParam contract -> ContractM contract ()
   scriptLookupsFor :: IsScript (JambScript' script) => contract -> script -> ScriptLookups contract

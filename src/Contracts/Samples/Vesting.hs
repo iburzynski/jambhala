@@ -1,14 +1,13 @@
 module Contracts.Samples.Vesting where
 
-import Data.Default (def)
 import qualified Data.Map as Map
 import Jambhala.Plutus
 import Jambhala.Utils
 
 -- Datum
 data VestingDatum = VestingDatum
-  { getBeneficiary :: PaymentPubKeyHash,
-    getMaturity :: POSIXTime
+  { toBeneficiary :: PaymentPubKeyHash,
+    afterMaturity :: POSIXTime
   }
   deriving (Generic, ToJSON, FromJSON)
 
@@ -43,7 +42,7 @@ instance Emulatable Vesting where
   data GrabParam Vesting = Grab
     deriving (Generic, ToJSON, FromJSON)
 
-  give :: GiveAction Vesting
+  give :: GiveParam Vesting -> ContractM Vesting ()
   give Give {..} = do
     submitAndConfirm
       Tx
@@ -54,25 +53,28 @@ instance Emulatable Vesting where
       printf
         "Made a gift of %d lovelace to %s with deadline %s"
         lovelace
-        (show $ getBeneficiary datum)
-        (show $ getMaturity datum)
+        (show $ toBeneficiary datum)
+        (show $ afterMaturity datum)
 
-  grab :: GrabAction Vesting
+  grab :: GrabParam Vesting -> ContractM Vesting ()
   grab _ = do
     pkh <- ownFirstPaymentPubKeyHash
     now <- getCurrentInterval
     utxos <- getUtxosAt validator
     let validUtxos = Map.mapMaybe (isEligible pkh now) utxos
-    if Map.null validUtxos
+    if validUtxos == mempty
       then logStr "No eligible gifts available"
       else do
-        let lookups = scriptLookupsFor THIS validator `andUtxos` validUtxos
-            constraints =
-              mconcat $
-                mustValidateInTimeRange (fromPlutusInterval now) :
-                mustBeSignedBy pkh :
-                map (`mustSpendScriptOutput` unitRedeemer) (Map.keys validUtxos)
-        submitAndConfirm Tx {..}
+        submitAndConfirm
+          Tx
+            { lookups = scriptLookupsFor THIS validator `andUtxos` validUtxos,
+              constraints =
+                mconcat
+                  [ mustValidateInTimeRange (fromPlutusInterval now),
+                    mustBeSignedBy pkh,
+                    validUtxos `mustAllBeSpentWith` ()
+                  ]
+            }
         logStr "Collected eligible gifts"
     where
       isEligible :: PaymentPubKeyHash -> Interval POSIXTime -> DecoratedTxOut -> Maybe DecoratedTxOut
@@ -90,8 +92,8 @@ test =
     [ Give
         { datum =
             VestingDatum
-              { getBeneficiary = pkhForWallet 2,
-                getMaturity = slotToBeginPOSIXTime def 20
+              { toBeneficiary = pkhForWallet 2,
+                afterMaturity = m
               },
           lovelace = 30_000_000
         }
@@ -99,8 +101,8 @@ test =
       Give
         { datum =
             VestingDatum
-              { getBeneficiary = pkhForWallet 4,
-                getMaturity = slotToBeginPOSIXTime def 20
+              { toBeneficiary = pkhForWallet 4,
+                afterMaturity = m
               },
           lovelace = 30_000_000
         }
@@ -110,6 +112,9 @@ test =
       Grab `toWallet` 3, -- wrong beneficiary
       Grab `toWallet` 4 -- collect gift
     ]
+  where
+    m :: POSIXTime
+    m = defaultSlotBeginTime 20
 
 exports :: JambContract -- Prepare exports for jamb CLI:
 exports = exportContract ("vesting" `withScript` validator) {emulatorTest = test}

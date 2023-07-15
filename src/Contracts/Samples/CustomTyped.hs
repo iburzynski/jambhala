@@ -3,21 +3,21 @@
 
 module Contracts.Samples.CustomTyped where
 
-import qualified Data.Map.Strict as Map
 import Jambhala.Plutus
 import Jambhala.Utils
 
-newtype Redeem = Redeem {guess :: Integer}
+-- 1. Define a custom data type for the redeemer
+newtype CustomRedeemer = Guess Integer
 
 -- `unstableMakeIsData` uses TemplateHaskell to generate ToData/FromData instances for a custom type
 -- These classes have toBuiltInData/fromBuiltInData methods to convert between Haskell/Plutus data.
-unstableMakeIsData ''Redeem
+unstableMakeIsData ''CustomRedeemer
 
 -- makeIsDataIndexed ''Redeemer [('Redeemer, 0)]
 -- (requires importing `makeIsDataIndexed` from Plutus.Tx)
 
-customTyped :: () -> Redeem -> ScriptContext -> Bool
-customTyped _ (Redeem i) _ = traceIfFalse "Sorry, wrong guess!" (i #== 42)
+customTyped :: () -> CustomRedeemer -> ScriptContext -> Bool
+customTyped _ (Guess g) _ = traceIfFalse "Sorry, wrong guess!" (g #== 42)
 {-# INLINEABLE customTyped #-}
 
 validator :: Validator
@@ -34,7 +34,7 @@ data CustomTyped = THIS
 
 -- 2. Map non-unit validator types using associated type families
 instance ValidatorTypes CustomTyped where
-  type RedeemerType CustomTyped = Redeem
+  type RedeemerType CustomTyped = CustomRedeemer
 
 -- 3. Make the contract emulatable with Emulatable instance
 instance Emulatable CustomTyped where
@@ -46,25 +46,25 @@ instance Emulatable CustomTyped where
 
   -- 4. Define give endpoint action: send UTXOs to the script address
   give :: GiveParam CustomTyped -> ContractM CustomTyped ()
-  give (Give q) = do
+  give (Give lovelace) = do
     submitAndConfirm
       Tx
         { lookups = scriptLookupsFor THIS validator,
-          constraints = mustPayToScriptWithDatum validator () q
+          constraints = mustPayToScriptWithDatum validator () lovelace
         }
-    logStr $ printf "Made transaction of %d ADA" q
+    logStr $ printf "Made transaction of %d lovelace." lovelace
 
   -- 5. Define grab endpoint action: consume UTXOs at the script address
   grab :: GrabParam CustomTyped -> ContractM CustomTyped ()
   grab (Grab 42) = do
     utxos <- getUtxosAt validator
-    let lookups = scriptLookupsFor THIS validator `andUtxos` utxos
-        orefs = Map.keys utxos
-        redeemer = mkRedeemer $ Redeem 42
-        constraints = mconcatMap (`mustSpendScriptOutput` redeemer) orefs
-    submitAndConfirm Tx {..}
-    logStr "collected gifts"
-  grab _ = logStr "Wrong guess"
+    submitAndConfirm
+      Tx
+        { lookups = scriptLookupsFor THIS validator `andUtxos` utxos,
+          constraints = utxos `mustAllBeSpentWith` Guess 42
+        }
+    logStr "Collected gifts!"
+  grab _ = logStr "Wrong guess!"
 
 -- 6. Define emulator test
 test :: EmulatorTest
@@ -84,9 +84,9 @@ exports =
     ("custom-typed" `withScript` validator)
       { dataExports =
           [ -- redeemer that succeeds
-            DataExport "ctr42" $ Redeem 42,
+            Guess 42 `toJSONfile` "ctr42",
             -- redeemer that fails
-            DataExport "ctr21" $ Redeem 21
+            Guess 21 `toJSONfile` "ctr21"
           ],
         emulatorTest = test
       }

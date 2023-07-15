@@ -49,6 +49,8 @@ module Prelude
     (#+),
     (#-),
     (#*),
+    (/),
+    fromIntegral,
     guard,
     mconcatMap,
     pabs,
@@ -97,13 +99,13 @@ module Prelude
   )
 where
 
-import Data.List.Extra (mconcatMap)
 import Control.Applicative
 import Control.Monad (guard)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Eq (Eq (..))
 import Data.Foldable hiding (all, and, any, find, or)
 import Data.Functor
+import Data.List.Extra (mconcatMap)
 import Data.Monoid (Monoid (..))
 import Data.Ord (Ord (..))
 import Data.Semigroup (Semigroup (..))
@@ -116,6 +118,7 @@ import GHC.Enum (Enum (..))
 import GHC.Err
 import GHC.Generics (Generic)
 import GHC.Num (Num (..))
+import GHC.Real (fromIntegral, (/))
 import GHC.Show (Show (..))
 import PlutusTx.Prelude hiding
   ( Applicative (..),

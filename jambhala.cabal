@@ -58,7 +58,7 @@ library
     Contracts.Samples.CustomTyped
     Contracts.Samples.Guess
     Contracts.Samples.Vesting
-    Contracts.Samples.Parameterized
+    Contracts.Samples.ParamVesting
     Contracts.Samples.FreeMinting
   hs-source-dirs:
       src

@@ -39,6 +39,7 @@ module Jambhala.Plutus
     ScriptContext (..),
     ScriptLookups (..),
     SerialiseAsRawBytes (..),
+    Slot,
     StakeReference (..),
     ToData (..),
     TxInfo (..),
@@ -127,22 +128,7 @@ import Cardano.Api.Shelley
 import Cardano.Ledger.BaseTypes (Network)
 import Cardano.Ledger.Credential (Credential (..), StakeReference (..))
 import Cardano.Node.Emulator (slotToBeginPOSIXTime)
-import Ledger
-  ( DecoratedTxOut (..),
-    Language (..),
-    PaymentPubKeyHash (..),
-    TxOutRef,
-    Versioned (..),
-    contains,
-    datumInDatumFromQuery,
-    decoratedTxOutDatum,
-    from,
-    getCardanoTxId,
-    interval,
-    mkValidatorCardanoAddress,
-    unitDatum,
-    unitRedeemer,
-  )
+import Ledger (DecoratedTxOut (..), Language (..), PaymentPubKeyHash (..), Slot, TxOutRef, Versioned (..), contains, datumInDatumFromQuery, decoratedTxOutDatum, from, getCardanoTxId, interval, mkValidatorCardanoAddress, unitDatum, unitRedeemer)
 import Ledger.Tx.Constraints
   ( ScriptLookups (..),
     mustBeSignedBy,

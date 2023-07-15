@@ -21,7 +21,7 @@ import Plutus.V2.Ledger.Api (MintingPolicyHash)
 type ContractName = String
 
 data DataExport where
-  DataExport :: (ToData a) => String -> a -> DataExport
+  DataExport :: (ToData d) => String -> d -> DataExport
 
 instance ToData DataExport where
   toBuiltinData (DataExport _ x) = toBuiltinData x

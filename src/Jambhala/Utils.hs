@@ -5,6 +5,7 @@
 
 module Jambhala.Utils
   ( ContractExports,
+    ContractM,
     ContractPromise,
     ContractTemplate (..),
     JambContract,
@@ -14,8 +15,11 @@ module Jambhala.Utils
     EmulatorTest,
     Transaction (..),
     (!),
+    _CHANGE_ME_,
     activateWallets,
     andUtxos,
+    defaultSlotBeginTime,
+    defaultSlotEndTime,
     exportContract,
     fromWallet,
     getContractAddress,
@@ -30,22 +34,30 @@ module Jambhala.Utils
     mkDatum,
     mkEndpoints,
     mkRedeemer,
+    mustBeSpentWith,
+    mustAllBeSpentWith,
     mustPayToScriptWithDatum,
     pkhForWallet,
+    timestampToPOSIX,
+    toJSONfile,
     toWallet,
+    unsafeTimestampToPOSIX,
     wait,
     waitUntil,
     withScript,
-    wrap,
-    wrapValidator,
   )
 where
 
 import Cardano.Api (TxId)
-import Cardano.Node.Emulator (Params (..))
+import Cardano.Node.Emulator (Params (..), slotToEndPOSIXTime)
 import Control.Lens ((^?))
+import Data.Default (def)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
+import Data.Maybe (fromJust)
+import Data.Time (defaultTimeLocale, parseTimeM)
+import Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
+import GHC.Real (RealFrac (..))
 import Jambhala.CLI.Emulator
   ( activateWallets,
     fromWallet,
@@ -57,7 +69,7 @@ import Jambhala.CLI.Emulator
     waitUntil,
     (!),
   )
-import Jambhala.CLI.Emulator.Types (ContractPromise, Emulatable (..))
+import Jambhala.CLI.Emulator.Types (ContractM, ContractPromise, Emulatable (..), Schema)
 import Jambhala.CLI.Export (ContractTemplate (..), JambContract, exportContract, withScript)
 import Jambhala.CLI.Types
 import Jambhala.Plutus
@@ -66,7 +78,11 @@ import Ledger.Tx.Constraints (TxConstraints)
 import Plutus.Contract.Request (getParams)
 import Plutus.V2.Ledger.Api (DatumHash)
 
--- | Temporary replacement for the removed `mkUntypedValidator` function
+-- | A value in a sample contract that must be replaced.
+_CHANGE_ME_ :: a
+_CHANGE_ME_ = error "Oops! You forgot to replace a _CHANGE_ME_ value!"
+
+-- | Temporary replacement for the removed `mkUntypedValidator` function.
 wrap ::
   (UnsafeFromData d, UnsafeFromData r) =>
   (d -> r -> ScriptContext -> Bool) ->
@@ -77,29 +93,15 @@ wrap f d r sc = check $ f (ufbid d) (ufbid r) (ufbid sc)
     ufbid = unsafeFromBuiltinData
 {-# INLINEABLE wrap #-}
 
-{-# INLINEABLE wrapValidator #-}
-wrapValidator ::
-  ( UnsafeFromData d,
-    UnsafeFromData r
-  ) =>
-  (d -> r -> ScriptContext -> Bool) ->
-  (BuiltinData -> BuiltinData -> BuiltinData -> ())
-wrapValidator f a b ctx =
-  check $
-    f
-      (unsafeFromBuiltinData a)
-      (unsafeFromBuiltinData b)
-      (unsafeFromBuiltinData ctx)
-
-getContractAddress :: (IsScript (JambScript' script), AsContractError e) => script -> Contract w s e (AddressInEra BabbageEra)
+getContractAddress :: IsScript (JambScript' script) => script -> ContractM contract (AddressInEra BabbageEra)
 getContractAddress script = do
   nId <- pNetworkId <$> getParams
   pure . addressFunc nId $ JambScript script
 
-getUtxosAt :: (IsScript (JambScript' script), AsContractError e) => script -> Contract w s e (Map TxOutRef DecoratedTxOut)
+getUtxosAt :: IsScript (JambScript' script) => script -> ContractM contract (Map TxOutRef DecoratedTxOut)
 getUtxosAt script = getContractAddress script >>= utxosAt
 
-getCurrentInterval :: AsContractError e => Contract w s e (Interval POSIXTime)
+getCurrentInterval :: ContractM contract (Interval POSIXTime)
 getCurrentInterval = uncurry interval <$> currentNodeClientTimeRange
 
 -- | A non-lens version of the `decoratedTxOutDatum` getter
@@ -111,7 +113,7 @@ getDatumInDatumFromQuery :: DatumFromQuery -> Maybe Datum
 getDatumInDatumFromQuery dfq = dfq ^? datumInDatumFromQuery
 
 -- | `logInfo` with the input type as String
-logStr :: String -> Contract w s e ()
+logStr :: String -> ContractM contract ()
 logStr = logInfo @String
 
 mkDatum :: ToData a => a -> Datum
@@ -120,14 +122,11 @@ mkDatum = Datum . toBuiltinData
 mkRedeemer :: ToData a => a -> Redeemer
 mkRedeemer = Redeemer . toBuiltinData
 
-andUtxos :: ScriptLookups c -> Map TxOutRef DecoratedTxOut -> ScriptLookups c
+andUtxos :: ScriptLookups contract -> Map TxOutRef DecoratedTxOut -> ScriptLookups contract
 andUtxos scriptLookups utxos = scriptLookups <> unspentOutputs utxos
 
-lookupUtxos :: Map TxOutRef DecoratedTxOut -> ScriptLookups a
+lookupUtxos :: Map TxOutRef DecoratedTxOut -> ScriptLookups contract
 lookupUtxos = unspentOutputs
-
--- lookupScript :: Validator -> ScriptLookups a
--- lookupScript = plutusV2OtherScript
 
 mustPayToScriptWithDatum :: ToData datum => Validator -> datum -> Integer -> TxConstraints rType dType
 mustPayToScriptWithDatum validator datum lovelace =
@@ -136,26 +135,38 @@ mustPayToScriptWithDatum validator datum lovelace =
     (mkDatum datum)
     (lovelaceValueOf lovelace)
 
-mustSpendUtxoFromScript :: ToData redeemer => TxOutRef -> redeemer -> TxConstraints rType dType
-mustSpendUtxoFromScript utxo redeemer = mustSpendScriptOutput utxo $ mkRedeemer redeemer
+mustBeSpentWith :: ToData redeemer => TxOutRef -> redeemer -> TxConstraints rType dType
+utxo `mustBeSpentWith` redeemer = mustSpendScriptOutput utxo $ mkRedeemer redeemer
 
-mustSpendUtxosFromScript :: ToData redeemer => Map TxOutRef DecoratedTxOut -> redeemer -> TxConstraints rType dType
-mustSpendUtxosFromScript utxos redeemer = mconcatMap (`mustSpendUtxoFromScript` redeemer) txrefs
-  where
-    txrefs = Map.keys utxos
+mustAllBeSpentWith :: ToData redeemer => Map TxOutRef DecoratedTxOut -> redeemer -> TxConstraints rType dType
+utxos `mustAllBeSpentWith` redeemer = mconcatMap (`mustBeSpentWith` redeemer) $ Map.keys utxos
 
 submitAndConfirm ::
   forall contract.
-  ( ToData (RedeemerType contract),
-    FromData (DatumType contract),
+  ( FromData (DatumType contract),
     ToData (DatumType contract),
-    ContractM contract () ~ Contract () (Schema contract) Text ()
+    ToData (RedeemerType contract)
   ) =>
   Transaction contract ->
-  ContractM contract () -- (Schema contract) Text ()
+  ContractM contract ()
 submitAndConfirm Tx {..} = submit >>= awaitTxConfirmed
   where
-    submit :: Contract () (Schema contract) Text TxId
+    submit :: ContractM contract TxId
     submit =
       getCardanoTxId
         <$> submitTxConstraintsWith @contract @() @(Schema contract) @Text lookups constraints
+
+toJSONfile :: (ToData d) => d -> FileName -> DataExport
+d `toJSONfile` filename = DataExport filename d
+
+defaultSlotBeginTime :: Slot -> POSIXTime
+defaultSlotBeginTime = slotToBeginPOSIXTime def
+
+defaultSlotEndTime :: Slot -> POSIXTime
+defaultSlotEndTime = slotToEndPOSIXTime def
+
+timestampToPOSIX :: String -> Maybe POSIXTime
+timestampToPOSIX = fmap (floor . utcTimeToPOSIXSeconds) . parseTimeM True defaultTimeLocale "%Y-%m-%d %H:%M:%S"
+
+unsafeTimestampToPOSIX :: String -> POSIXTime
+unsafeTimestampToPOSIX = fromJust . timestampToPOSIX
