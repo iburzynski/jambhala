@@ -5,3 +5,4 @@ fi
 
 git fetch upstream --recurse-submodules
 git merge upstream/main --allow-unrelated-histories
+git submodule update --recursive

@@ -37,6 +37,7 @@
                 shell.buildInputs = with pkgs; [
                   bashInteractive
                   gnugrep
+                  httpie
                   neovim
                   nixpkgs-fmt
                   nix-prefetch-git
