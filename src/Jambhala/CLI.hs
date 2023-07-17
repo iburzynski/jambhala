@@ -39,7 +39,7 @@ runCommand = \case
       asks (M.lookup contract)
         >>= maybe (liftIO . putStrLn $ "Error: contract \"" ++ contract ++ "\" not found") eff
 
-scriptAddressBech32 :: Network -> JambScript -> String
+scriptAddressBech32 :: Network -> ScriptExport -> String
 scriptAddressBech32 network script =
   Text.unpack $
     serialiseToBech32 $
@@ -55,7 +55,7 @@ writeScriptWithData fn (ContractExports s ds _) = do
   _ <- liftIO $ writeScriptToFile fn s
   liftIO $ traverse_ writeDataToFile ds
 
-writeScriptToFile :: MonadIO m => FileName -> JambScript -> m ()
+writeScriptToFile :: MonadIO m => FileName -> ScriptExport -> m ()
 writeScriptToFile fileName script = do
   mfp <- liftIO $ lookupEnv "PLUTUS_SCRIPTS_PATH"
   let fp =

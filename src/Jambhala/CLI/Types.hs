@@ -26,15 +26,15 @@ data DataExport where
 instance ToData DataExport where
   toBuiltinData (DataExport _ x) = toBuiltinData x
 
-newtype JambScript' s = JambScript {unJambScript :: s}
+newtype JambScript s = JambScript {unJambScript :: s}
   deriving (Generic)
 
-data JambScript
+data ScriptExport
   = JambValidator !Validator
   | JambMintingPolicy !MintingPolicy
   deriving (Generic)
 
-instance Serialise JambScript where
+instance Serialise ScriptExport where
   encode (JambValidator v) = encode v
   encode (JambMintingPolicy p) = encode p
 
@@ -44,31 +44,31 @@ newtype WalletQuantity = WalletQuantity {walletQ :: Natural}
 data EmulatorTest = ETest {numWallets :: !WalletQuantity, jTrace :: !(Eff EmulatorEffects ())}
 
 data ContractExports = ContractExports
-  { script :: !JambScript,
+  { script :: !ScriptExport,
     dExports :: ![DataExport],
     test :: !EmulatorTest
   }
 
 type family JambHash s where
-  JambHash (JambScript' Validator) = ValidatorHash
-  JambHash (JambScript' MintingPolicy) = MintingPolicyHash
+  JambHash (JambScript Validator) = ValidatorHash
+  JambHash (JambScript MintingPolicy) = MintingPolicyHash
 
 class IsScript s where
   scriptLookupFunc :: forall c. s -> ScriptLookups c
   hashFunc :: s -> JambHash s
-  toJambScript :: s -> JambScript
+  toScriptExport :: s -> ScriptExport
   addressFunc :: NetworkId -> s -> AddressInEra BabbageEra
 
-instance IsScript (JambScript' Validator) where
+instance IsScript (JambScript Validator) where
   scriptLookupFunc = plutusV2OtherScript . unJambScript
   hashFunc = validatorHash . unJambScript
-  toJambScript = JambValidator . unJambScript
+  toScriptExport = JambValidator . unJambScript
   addressFunc n (JambScript v) = mkValidatorCardanoAddress n $ Versioned v PlutusV2
 
-instance IsScript (JambScript' MintingPolicy) where
+instance IsScript (JambScript MintingPolicy) where
   scriptLookupFunc = plutusV2MintingPolicy . unJambScript
   hashFunc = mintingPolicyHash . unJambScript
-  toJambScript = JambMintingPolicy . unJambScript
+  toScriptExport = JambMintingPolicy . unJambScript
   addressFunc n (JambScript p) = mkMintingPolicyCardanoAddress n p
 
 type JambContracts = Map ContractName ContractExports

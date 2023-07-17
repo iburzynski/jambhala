@@ -10,7 +10,7 @@ module Jambhala.CLI.Emulator.Types where
 import Control.Monad.Freer (Eff)
 import Control.Monad.Freer.Reader (Reader)
 import Data.IntMap.Strict (IntMap, Key)
-import Jambhala.CLI.Types (IsScript (..), JambScript' (..))
+import Jambhala.CLI.Types (IsScript (..), JambScript (..))
 import Jambhala.Plutus
 
 type JambEmulatorEffects schema = Reader (ContractHandles schema) ': EmulatorEffects
@@ -38,7 +38,7 @@ class ValidatorTypes contract => Emulatable contract where
   data GrabParam contract :: *
   give :: GiveParam contract -> ContractM contract ()
   grab :: GrabParam contract -> ContractM contract ()
-  scriptLookupsFor :: IsScript (JambScript' script) => contract -> script -> ScriptLookups contract
+  scriptLookupsFor :: IsScript (JambScript script) => contract -> script -> ScriptLookups contract
   scriptLookupsFor _ = scriptLookupFunc @_ @contract . JambScript
 
 type ContractActions s = Contract () s Text ()

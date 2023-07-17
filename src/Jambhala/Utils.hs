@@ -93,12 +93,12 @@ wrap f d r sc = check $ f (ufbid d) (ufbid r) (ufbid sc)
     ufbid = unsafeFromBuiltinData
 {-# INLINEABLE wrap #-}
 
-getContractAddress :: IsScript (JambScript' script) => script -> ContractM contract (AddressInEra BabbageEra)
+getContractAddress :: IsScript (JambScript script) => script -> ContractM contract (AddressInEra BabbageEra)
 getContractAddress script = do
   nId <- pNetworkId <$> getParams
   pure . addressFunc nId $ JambScript script
 
-getUtxosAt :: IsScript (JambScript' script) => script -> ContractM contract (Map TxOutRef DecoratedTxOut)
+getUtxosAt :: IsScript (JambScript script) => script -> ContractM contract (Map TxOutRef DecoratedTxOut)
 getUtxosAt script = getContractAddress script >>= utxosAt
 
 getCurrentInterval :: ContractM contract (Interval POSIXTime)
