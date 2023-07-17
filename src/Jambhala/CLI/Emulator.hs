@@ -1,7 +1,5 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 module Jambhala.CLI.Emulator
   ( EmulatorTest,

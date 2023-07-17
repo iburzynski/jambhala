@@ -102,14 +102,17 @@ library
     -- Allows promotion of types to "kinds", enabling more expressive type-level programming (required for all Plutus contracts):
       DataKinds
 
+    -- Allows automatic derivation of certain typeclasses (like FromJSON/ToJSON):
     , DeriveAnyClass
     , DeriveGeneric
 
+    -- Allows writing type signatures for methods in typeclass instances:
     , InstanceSigs
     
     -- A syntactic convenience for writing single-argument lambdas containing case expressions (used by Jambhala's utilities):
     , LambdaCase
 
+    -- Allows more than one type parameter in class and instance declarations (required to lift parameters in parameterized validators):
     , MultiParamTypeClasses
 
     -- Allows more readable representations of large integers (i.e. 1_000_000), useful for lovelace quantities
@@ -121,11 +124,16 @@ library
     -- A syntactic convenience for working with record values (used by Jambhala's utilities):
     , RecordWildCards
 
+    -- Allows referencing type variables in multiple scopes (required to lift parameters in parameterized validators):
+    , ScopedTypeVariables
+
     -- Required for all Plutus contracts to translate between Plutus and Haskell:
     , TemplateHaskell
 
+    -- Provides a convenient way to disambiguate type variables inline
     , TypeApplications
 
+    -- Allows type-level functions (used in Jambhala's Emulatable typeclass)
     , TypeFamilies
 
 executable jamb
