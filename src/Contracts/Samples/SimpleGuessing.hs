@@ -1,6 +1,6 @@
-module Contracts.Samples.Guess where
+module Contracts.Samples.SimpleGuessing where
 
-import qualified Data.Map as Map
+import Data.Map qualified as Map
 import Jambhala.Plutus
 import Jambhala.Utils
 
@@ -80,4 +80,8 @@ test =
     ]
 
 exports :: JambContract -- Prepare exports for jamb CLI:
-exports = exportContract ("guessing" `withScript` validator) {emulatorTest = test}
+exports =
+  exportContract
+    ("simple-guessing" `withScript` validator)
+      { emulatorTest = test
+      }

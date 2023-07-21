@@ -1,6 +1,11 @@
+-- Used for post-fix style qualified imports:
+{-# LANGUAGE ImportQualifiedPost #-}
+-- Used for convenient unpacking of record fields:
+{-# LANGUAGE RecordWildCards #-}
+
 module Contracts.Samples.Vesting where
 
-import qualified Data.Map as Map
+import Data.Map qualified as Map
 import Jambhala.Plutus
 import Jambhala.Utils
 
@@ -11,7 +16,7 @@ data VestingDatum = VestingDatum
   }
   deriving (Generic, ToJSON, FromJSON)
 
-unstableMakeIsData ''VestingDatum
+makeIsDataIndexed ''VestingDatum [('VestingDatum, 0)]
 
 vesting :: VestingDatum -> () -> ScriptContext -> Bool
 vesting (VestingDatum ben maturity) _ sc =
@@ -117,4 +122,21 @@ test =
     m = defaultSlotBeginTime 20
 
 exports :: JambContract -- Prepare exports for jamb CLI:
-exports = exportContract ("vesting" `withScript` validator) {emulatorTest = test}
+exports =
+  exportContract
+    ("vesting" `withScript` validator)
+      { dataExports =
+          [ VestingDatum
+              { -- 1. Use the `key-hash` script from cardano-cli-guru to get the pubkey hash for a beneficiary address.
+                -- 2. Replace the placeholder hex string below with the beneficiary address pubkey hash.
+                toBeneficiary = PaymentPubKeyHash "3a5039efcafd4c82c9169b35afb27a17673f6ed785ea087139a65a5d",
+                -- 3. With cardano-node running, use the `calc-time` script from cardano-cli-guru to get a POSIX time value
+                --    (add the `--plus MINUTES` option, replacing MINUTES with a number of minutes to add).
+                -- 4. Replace the placeholder value below with your POSIX time value.
+                -- 5. Note the NEW SLOT value for later use in transaction construction.
+                afterMaturity = 1689950332
+              }
+              `toJSONfile` "vdatum"
+          ],
+        emulatorTest = test
+      }

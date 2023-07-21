@@ -56,7 +56,7 @@ library
     Contracts.Samples.Simple
     Contracts.Samples.SimpleTyped
     Contracts.Samples.CustomTyped
-    Contracts.Samples.Guess
+    Contracts.Samples.SimpleGuessing
     Contracts.Samples.Vesting
     Contracts.Samples.ParamVesting
     Contracts.Samples.FreeMinting
@@ -106,6 +106,9 @@ library
     , DeriveAnyClass
     , DeriveGeneric
 
+    -- Allows post-fix style qualified import declarations
+    , ImportQualifiedPost
+
     -- Allows writing type signatures for methods in typeclass instances:
     , InstanceSigs
     
@@ -133,7 +136,7 @@ library
     -- Provides a convenient way to disambiguate type variables inline
     , TypeApplications
 
-    -- Allows type-level functions (used in Jambhala's Emulatable typeclass)
+    -- Allows type-level functions (used in ValidatorTypes class and Jambhala's Emulatable class)
     , TypeFamilies
 
 executable jamb

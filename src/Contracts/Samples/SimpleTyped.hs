@@ -1,3 +1,5 @@
+-- Required to write `traceError` BuiltinString messages as string literals:
+{-# LANGUAGE OverloadedStrings #-}
 -- Required to disambiguate Integral literals:
 {-# LANGUAGE TypeApplications #-}
 
@@ -25,7 +27,9 @@ simpleTyped _ redeemer _ = traceIfFalse "Sorry, wrong guess!" (redeemer #== 42)
 {-# INLINEABLE simpleTyped #-}
 
 typedValidator :: Validator
-typedValidator = mkValidatorScript $$(compile [||mkUntypedValidator simpleTyped||])
+typedValidator = mkValidatorScript $$(compile [||untyped||])
+  where
+    untyped = mkUntypedValidator simpleTyped
 
 typedRedeemerSuccess :: DataExport
 typedRedeemerSuccess = DataExport @Integer "tr42" 42

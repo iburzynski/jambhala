@@ -1,4 +1,5 @@
 {
+  "json.schemaDownload.enable": true,
   "haskell.manageHLS": "PATH",
   "haskell.upgradeGHCup": false,
   "terminal.integrated.defaultProfile.linux": "bash",

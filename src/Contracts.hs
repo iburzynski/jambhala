@@ -4,25 +4,25 @@ module Contracts (contracts, samples) where
 
 -- Sample contracts
 
-import qualified Contracts.Samples.CustomTyped as CustomTyped
-import qualified Contracts.Samples.FreeMinting as FreeMinting
-import qualified Contracts.Samples.Guess as Guess
-import qualified Contracts.Samples.ParamVesting as ParamVesting
-import qualified Contracts.Samples.Simple as Simple
-import qualified Contracts.Samples.SimpleTyped as SimpleTyped
-import qualified Contracts.Samples.Vesting as Vesting
-import Jambhala.Utils
+import Contracts.Samples.CustomTyped qualified as CustomTyped
+import Contracts.Samples.FreeMinting qualified as FreeMinting
+import Contracts.Samples.ParamVesting qualified as ParamVesting
+import Contracts.Samples.Simple qualified as Simple
+import Contracts.Samples.SimpleGuessing qualified as SimpleGuessing
+import Contracts.Samples.SimpleTyped qualified as SimpleTyped
+import Contracts.Samples.Vesting qualified as Vesting
+import Jambhala.CLI.Types (JambContracts)
 
 -- Import your contracts here, i.e.:
--- import qualified Contracts.MyContract as MyContract
+-- import  Contracts.MyContract qualified as MyContract
 
 {- HLINT ignore "Use empty" -}
+-- Add your contracts to the `contracts` list below, i.e.:
+--  [
+--    MyContract.exports
+--  ]
 contracts :: JambContracts
-contracts =
-  []
-
--- Add contracts here, i.e.:
---  MyContract.exports
+contracts = []
 
 samples :: JambContracts
 samples =
@@ -31,7 +31,7 @@ samples =
     SimpleTyped.typedExports,
     SimpleTyped.untypedExports,
     CustomTyped.exports,
-    Guess.exports,
+    SimpleGuessing.exports,
     Vesting.exports,
     ParamVesting.exports,
     FreeMinting.exports

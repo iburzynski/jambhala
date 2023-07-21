@@ -121,12 +121,12 @@ exports = exportContract ("param-vesting" `withScript` validator') {emulatorTest
     validator' =
       validator
         VParam
-          { -- 1. Use the `key-hash` script from cardano-cli-guru to get the pubkey hash for a beneficiary
-            -- 2. Replace _CHANGE_ME_ with the pubkey hash as a string literal
-            --    (ex. toBeneficiary = PaymentPubKeyHash "3a5039efcafd4c82c9169b35afb27a17673f6ed785ea087139a65a5d",)
-            toBeneficiary = PaymentPubKeyHash "3a5039efcafd4c82c9169b35afb27a17673f6ed785ea087139a65a5d", -- _CHANGE_ME_,
-            -- 1. Use the `posix-time` script from cardano-cli-guru to get a POSIX time value
-            --    (add the `--plus MINUTES` option, replacing MINUTES with a number of minutes to add)
-            -- 2. Replace _CHANGE_ME_ with the POSIX time as an integer literal
-            afterMaturity = 1689366758 -- _CHANGE_ME_
+          { -- 1. Use the `key-hash` script from cardano-cli-guru to get the pubkey hash for a beneficiary address.
+            -- 2. Replace the placeholder hex string below with the beneficiary address pubkey hash.
+            toBeneficiary = PaymentPubKeyHash "3a5039efcafd4c82c9169b35afb27a17673f6ed785ea087139a65a5d",
+            -- 3. With cardano-node running, use the `calc-time` script from cardano-cli-guru to get a POSIX time value
+            --    (add the `--plus MINUTES` option, replacing MINUTES with a number of minutes to add).
+            -- 4. Replace the placeholder value below with your POSIX time value.
+            -- 5. Note the NEW SLOT value for later use in transaction construction.
+            afterMaturity = 1689950332
           }

@@ -1,3 +1,7 @@
+-- Required to derive FromJSON/ToJSON instances for our off-chain types
+{-# LANGUAGE DeriveAnyClass #-}
+-- Required to derive Generic instances for our off-chain types (required for the former)
+{-# LANGUAGE DeriveGeneric #-}
 -- Required to map validator types and endpoint params
 {-# LANGUAGE TypeFamilies #-}
 
@@ -6,15 +10,16 @@ module Contracts.Samples.CustomTyped where
 import Jambhala.Plutus
 import Jambhala.Utils
 
--- 1. Define a custom data type for the redeemer
+-- Define a custom data type for the redeemer
 newtype CustomRedeemer = Guess Integer
 
 -- `unstableMakeIsData` uses TemplateHaskell to generate ToData/FromData instances for a custom type
 -- These classes have toBuiltInData/fromBuiltInData methods to convert between Haskell/Plutus data.
 unstableMakeIsData ''CustomRedeemer
 
--- makeIsDataIndexed ''Redeemer [('Redeemer, 0)]
--- (requires importing `makeIsDataIndexed` from Plutus.Tx)
+-- `makeIsDataIndexed` generates ToData/FromData instances with constructors defined in a specific order.
+-- This should be used instead of `unstableMakeIsData` if your custom type is a sum type (i.e. has multiple constructors)
+-- makeIsDataIndexed ''CustomRedeemer [('Guess, 0)]
 
 customTyped :: () -> CustomRedeemer -> ScriptContext -> Bool
 customTyped _ (Guess g) _ = traceIfFalse "Sorry, wrong guess!" (g #== 42)
@@ -39,9 +44,9 @@ instance ValidatorTypes CustomTyped where
 -- 3. Make the contract emulatable with Emulatable instance
 instance Emulatable CustomTyped where
   -- Define associated data types for Give and Grab parameters
-  data GiveParam CustomTyped = Give {lovelace :: Integer}
+  newtype GiveParam CustomTyped = Give {lovelace :: Integer}
     deriving (Generic, FromJSON, ToJSON) -- parameter values must be convertible to/from JSON
-  data GrabParam CustomTyped = Grab {withGuess :: Integer}
+  newtype GrabParam CustomTyped = Grab {withGuess :: Integer}
     deriving (Generic, FromJSON, ToJSON)
 
   -- 4. Define give endpoint action: send UTXOs to the script address
@@ -84,9 +89,9 @@ exports =
     ("custom-typed" `withScript` validator)
       { dataExports =
           [ -- redeemer that succeeds
-            Guess 42 `toJSONfile` "ctr42",
+            Guess 42 `toJSONfile` "42",
             -- redeemer that fails
-            Guess 21 `toJSONfile` "ctr21"
+            Guess 21 `toJSONfile` "21"
           ],
         emulatorTest = test
       }
