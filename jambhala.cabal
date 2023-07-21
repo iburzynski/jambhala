@@ -1,6 +1,6 @@
 cabal-version:      3.0
 name:               jambhala
-version:            0.1.0.0
+version:            0.2.0.0
 
 -- A short (one-line) description of the package.
 -- synopsis:
@@ -23,6 +23,8 @@ common common
   default-language: Haskell2010
   build-depends:
       base ^>=4.14.3.0
+  mixins:
+      base hiding (Prelude)
   ghc-options:
     -Wall -fobject-code -fno-ignore-interface-pragmas
     -fno-omit-interface-pragmas -fno-strictness -fno-spec-constr
@@ -35,26 +37,28 @@ library
   exposed-modules:
     Contracts
     Jambhala.CLI
-    Jambhala.Haskell
     Jambhala.Plutus
     Jambhala.Utils
+    Prelude
 
 -- Add new contracts here, i.e.:
 --  Contracts.MyContract
 
   other-modules:
     Jambhala.CLI.Emulator
+    Jambhala.CLI.Emulator.Types
     Jambhala.CLI.Parsers
     Jambhala.CLI.Types
     Jambhala.CLI.Update
     Jambhala.CLI.Update.Parsers
+    Jambhala.CLI.Export
 -- Sample contracts:
     Contracts.Samples.Simple
     Contracts.Samples.SimpleTyped
     Contracts.Samples.CustomTyped
-    Contracts.Samples.Guess
+    Contracts.Samples.SimpleGuessing
     Contracts.Samples.Vesting
-    Contracts.Samples.Parameterized
+    Contracts.Samples.ParamVesting
     Contracts.Samples.FreeMinting
   hs-source-dirs:
       src
@@ -67,6 +71,7 @@ library
     , cardano-ledger-core
     , cardano-node-emulator
     , data-default
+    , extra
     , freer-extras
     , lens
     , plutus-contract
@@ -89,16 +94,29 @@ library
     , row-types
     , time
     , turtle
-  mixins:
-      base hiding (Prelude)
-    , plutus-tx (PlutusTx.Prelude as Prelude)
-    , plutus-tx
+  -- mixins:
+  --     base hiding (Prelude)
+    -- , plutus-tx (PlutusTx.Prelude as Prelude)
+    -- , plutus-tx
   default-extensions:
     -- Allows promotion of types to "kinds", enabling more expressive type-level programming (required for all Plutus contracts):
       DataKinds
 
+    -- Allows automatic derivation of certain typeclasses (like FromJSON/ToJSON):
+    , DeriveAnyClass
+    , DeriveGeneric
+
+    -- Allows post-fix style qualified import declarations
+    , ImportQualifiedPost
+
+    -- Allows writing type signatures for methods in typeclass instances:
+    , InstanceSigs
+    
     -- A syntactic convenience for writing single-argument lambdas containing case expressions (used by Jambhala's utilities):
     , LambdaCase
+
+    -- Allows more than one type parameter in class and instance declarations (required to lift parameters in parameterized validators):
+    , MultiParamTypeClasses
 
     -- Allows more readable representations of large integers (i.e. 1_000_000), useful for lovelace quantities
     , NumericUnderscores
@@ -109,8 +127,17 @@ library
     -- A syntactic convenience for working with record values (used by Jambhala's utilities):
     , RecordWildCards
 
+    -- Allows referencing type variables in multiple scopes (required to lift parameters in parameterized validators):
+    , ScopedTypeVariables
+
     -- Required for all Plutus contracts to translate between Plutus and Haskell:
     , TemplateHaskell
+
+    -- Provides a convenient way to disambiguate type variables inline
+    , TypeApplications
+
+    -- Allows type-level functions (used in ValidatorTypes class and Jambhala's Emulatable class)
+    , TypeFamilies
 
 executable jamb
   import: common

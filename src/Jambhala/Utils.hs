@@ -1,86 +1,171 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RankNTypes #-}
 {-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
 module Jambhala.Utils
- ( ContractExports
- , Contracts
- , DataExport(..)
- , JambEmulatorTrace
- , activateWallets
- , exportMintingPolicy
- , exportMintingPolicyWithTest
- , exportValidator
- , exportValidatorWithTest
- , getContractAddress
- , getMainnetAddress
- , getTestnetAddress
- , wait1
- , wrap
- ) where
+  ( ContractExports,
+    ContractM,
+    ContractPromise,
+    ContractTemplate (..),
+    JambContract,
+    JambContracts,
+    Emulatable (..),
+    DataExport (..),
+    EmulatorTest,
+    Transaction (..),
+    (!),
+    _CHANGE_ME_,
+    activateWallets,
+    andUtxos,
+    defaultSlotBeginTime,
+    defaultSlotEndTime,
+    exportContract,
+    fromWallet,
+    getContractAddress,
+    getCurrentInterval,
+    getUtxosAt,
+    getDatumInDatumFromQuery,
+    getDecoratedTxOutDatum,
+    initEmulator,
+    logStr,
+    lookupUtxos,
+    submitAndConfirm,
+    mkDatum,
+    mkEndpoints,
+    mkRedeemer,
+    mustBeSpentWith,
+    mustAllBeSpentWith,
+    mustPayToScriptWithDatum,
+    pkhForWallet,
+    timestampToPOSIX,
+    toJSONfile,
+    toWallet,
+    unsafeTimestampToPOSIX,
+    wait,
+    waitUntil,
+    withScript,
+  )
+where
 
-import Prelude hiding ( Enum(..), AdditiveSemigroup(..), Monoid(..), Ord(..), Traversable(..), (<$>), error )
-
-import Jambhala.CLI ( scriptAddressBech32 )
-import Jambhala.CLI.Emulator ( activateWallets, wait1 )
+import Cardano.Api (TxId)
+import Cardano.Node.Emulator (Params (..), slotToEndPOSIXTime)
+import Control.Lens ((^?))
+import Data.Default (def)
+import Data.Map.Strict (Map)
+import Data.Map.Strict qualified as Map
+import Data.Maybe (fromJust)
+import Data.Time (defaultTimeLocale, parseTimeM)
+import Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
+import GHC.Real (RealFrac (..))
+import Jambhala.CLI.Emulator
+  ( activateWallets,
+    fromWallet,
+    initEmulator,
+    mkEndpoints,
+    pkhForWallet,
+    toWallet,
+    wait,
+    waitUntil,
+    (!),
+  )
+import Jambhala.CLI.Emulator.Types (ContractM, ContractPromise, Emulatable (..), Schema)
+import Jambhala.CLI.Export (ContractTemplate (..), JambContract, exportContract, withScript)
 import Jambhala.CLI.Types
-import Jambhala.Haskell hiding ( ask )
-import Jambhala.Plutus hiding (Mainnet, Testnet, lovelaceValueOf )
+import Jambhala.Plutus
+import Ledger.Tx (DatumFromQuery)
+import Ledger.Tx.Constraints (TxConstraints)
+import Plutus.Contract.Request (getParams)
+import Plutus.V2.Ledger.Api (DatumHash)
 
-import Cardano.Ledger.BaseTypes ( Network(..) )
-import Cardano.Node.Emulator ( Params(..) )
-import Plutus.Contract.Request ( getParams )
+-- | A value in a sample contract that must be replaced.
+_CHANGE_ME_ :: a
+_CHANGE_ME_ = error "Oops! You forgot to replace a _CHANGE_ME_ value!"
 
--- | Temporary replacement for the removed `mkUntypedValidator` function
-wrap :: (UnsafeFromData d, UnsafeFromData r)
-     => (d -> r -> ScriptContext -> Bool)
-     -> (BuiltinData -> BuiltinData -> BuiltinData -> ())
+-- | Temporary replacement for the removed `mkUntypedValidator` function.
+wrap ::
+  (UnsafeFromData d, UnsafeFromData r) =>
+  (d -> r -> ScriptContext -> Bool) ->
+  (BuiltinData -> BuiltinData -> BuiltinData -> ())
 wrap f d r sc = check $ f (ufbid d) (ufbid r) (ufbid sc)
   where
     ufbid :: UnsafeFromData a => BuiltinData -> a
     ufbid = unsafeFromBuiltinData
-{-# INLINABLE wrap #-}
+{-# INLINEABLE wrap #-}
 
-getContractAddress :: AsContractError e => Validator -> Contract w s e (AddressInEra BabbageEra)
-getContractAddress v = do
+getContractAddress :: IsScript (JambScript script) => script -> ContractM contract (AddressInEra BabbageEra)
+getContractAddress script = do
   nId <- pNetworkId <$> getParams
-  return $ mkValidatorCardanoAddress nId $ Versioned v PlutusV2
+  pure . addressFunc nId $ JambScript script
 
-export :: Maybe EmulatorExport -> (s -> JambScript) -> s -> [DataExport] -> ContractExports
-export Nothing constructor s des = ContractExports (constructor s) des Nothing
-export test@(Just (EmulatorExport _ numWallets)) constructor s dataExports
-  | numWallets > 0 = ContractExports{..}
-  where script = constructor s
-export _ _ _ _ = error "Wallet quantity must be greater than zero"
+getUtxosAt :: IsScript (JambScript script) => script -> ContractM contract (Map TxOutRef DecoratedTxOut)
+getUtxosAt script = getContractAddress script >>= utxosAt
 
-exportNoTest :: (s -> JambScript) -> s -> [DataExport] -> ContractExports
-exportNoTest = export Nothing
+getCurrentInterval :: ContractM contract (Interval POSIXTime)
+getCurrentInterval = uncurry interval <$> currentNodeClientTimeRange
 
-exportWithTest :: (s -> JambScript) -> s -> [DataExport] -> JambEmulatorTrace -> WalletQuantity
-               -> ContractExports
-exportWithTest constructor s dataExports jTrace numWallets =
-  export (Just EmulatorExport{..}) constructor s dataExports
+-- | A non-lens version of the `decoratedTxOutDatum` getter
+getDecoratedTxOutDatum :: DecoratedTxOut -> Maybe (DatumHash, DatumFromQuery)
+getDecoratedTxOutDatum dto = dto ^? decoratedTxOutDatum
 
--- | Exports a validator for use with jamb CLI
---
--- To export with an emulator test, use `exportValidatorWithTest`
-exportValidator :: Validator -> [DataExport] -> ContractExports
-exportValidator = exportNoTest JambValidator
+-- | A non-lens version of the `datumInDatumFromQuery` getter
+getDatumInDatumFromQuery :: DatumFromQuery -> Maybe Datum
+getDatumInDatumFromQuery dfq = dfq ^? datumInDatumFromQuery
 
--- | Exports a minting policy for use with jamb CLI
---
--- To export with an emulator test, use `exportMintingPolicyWithTest`
-exportMintingPolicy :: MintingPolicy -> [DataExport] -> ContractExports
-exportMintingPolicy = exportNoTest JambMintingPolicy
+-- | `logInfo` with the input type as String
+logStr :: String -> ContractM contract ()
+logStr = logInfo @String
 
--- | Exports a validator and emulator test for use with jamb CLI
-exportValidatorWithTest :: Validator -> [DataExport] -> JambEmulatorTrace -> WalletQuantity -> ContractExports
-exportValidatorWithTest = exportWithTest JambValidator
+mkDatum :: ToData a => a -> Datum
+mkDatum = Datum . toBuiltinData
 
--- | Exports a minting policy and emulator test for use with jamb CLI
-exportMintingPolicyWithTest :: MintingPolicy -> [DataExport] -> JambEmulatorTrace -> WalletQuantity -> ContractExports
-exportMintingPolicyWithTest = exportWithTest JambMintingPolicy
+mkRedeemer :: ToData a => a -> Redeemer
+mkRedeemer = Redeemer . toBuiltinData
 
-getTestnetAddress :: JambScript -> String
-getTestnetAddress = scriptAddressBech32 Testnet
+andUtxos :: ScriptLookups contract -> Map TxOutRef DecoratedTxOut -> ScriptLookups contract
+andUtxos scriptLookups utxos = scriptLookups <> unspentOutputs utxos
 
-getMainnetAddress :: JambScript -> String
-getMainnetAddress = scriptAddressBech32 Mainnet
+lookupUtxos :: Map TxOutRef DecoratedTxOut -> ScriptLookups contract
+lookupUtxos = unspentOutputs
+
+mustPayToScriptWithDatum :: ToData datum => Validator -> datum -> Integer -> TxConstraints rType dType
+mustPayToScriptWithDatum validator datum lovelace =
+  mustPayToOtherScriptWithDatumInTx
+    (validatorHash validator)
+    (mkDatum datum)
+    (lovelaceValueOf lovelace)
+
+mustBeSpentWith :: ToData redeemer => TxOutRef -> redeemer -> TxConstraints rType dType
+utxo `mustBeSpentWith` redeemer = mustSpendScriptOutput utxo $ mkRedeemer redeemer
+
+mustAllBeSpentWith :: ToData redeemer => Map TxOutRef DecoratedTxOut -> redeemer -> TxConstraints rType dType
+utxos `mustAllBeSpentWith` redeemer = mconcatMap (`mustBeSpentWith` redeemer) $ Map.keys utxos
+
+submitAndConfirm ::
+  forall contract.
+  ( FromData (DatumType contract),
+    ToData (DatumType contract),
+    ToData (RedeemerType contract)
+  ) =>
+  Transaction contract ->
+  ContractM contract ()
+submitAndConfirm Tx {..} = submit >>= awaitTxConfirmed
+  where
+    submit :: ContractM contract TxId
+    submit =
+      getCardanoTxId
+        <$> submitTxConstraintsWith @contract @() @(Schema contract) @Text lookups constraints
+
+toJSONfile :: (ToData d) => d -> FileName -> DataExport
+d `toJSONfile` filename = DataExport filename d
+
+defaultSlotBeginTime :: Slot -> POSIXTime
+defaultSlotBeginTime = slotToBeginPOSIXTime def
+
+defaultSlotEndTime :: Slot -> POSIXTime
+defaultSlotEndTime = slotToEndPOSIXTime def
+
+timestampToPOSIX :: String -> Maybe POSIXTime
+timestampToPOSIX = fmap (floor . utcTimeToPOSIXSeconds) . parseTimeM True defaultTimeLocale "%Y-%m-%d %H:%M:%S"
+
+unsafeTimestampToPOSIX :: String -> POSIXTime
+unsafeTimestampToPOSIX = fromJust . timestampToPOSIX
