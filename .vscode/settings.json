@@ -1,6 +1,7 @@
 {
-  "json.schemaDownload.enable": true,
+  // "json.schemaDownload.enable": true,
   "haskell.manageHLS": "PATH",
+  "haskell.serverExecutablePath": "${workspaceFolder}/.vscode/haskell-language-server.link",
   "haskell.upgradeGHCup": false,
   "terminal.integrated.defaultProfile.linux": "bash",
   "workbench.colorTheme": "Dracula",
