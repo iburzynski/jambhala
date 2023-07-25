@@ -1,0 +1,1 @@
+module Contracts.Simple where
