@@ -50,13 +50,14 @@ instance Emulatable Guessing where
   grab (Grab g) = do
     utxos <- getUtxosAt validator
     let validUtxos = Map.mapMaybe hasMatchingDatum utxos
-    if Map.null validUtxos
+    if validUtxos == mempty
       then logStr "No matching UTXOs"
       else do
-        let lookups = scriptLookupsFor THIS validator `andUtxos` validUtxos
-            redeemer = mkRedeemer $ Guess g
-            constraints = mconcatMap (`mustSpendScriptOutput` redeemer) $ Map.keys validUtxos
-        submitAndConfirm Tx {..}
+        submitAndConfirm
+          Tx
+            { lookups = scriptLookupsFor THIS validator `andUtxos` validUtxos,
+              constraints = validUtxos `mustAllBeSpentWith` Guess g
+            }
         logStr "Collected gifts"
     where
       hasMatchingDatum :: DecoratedTxOut -> Maybe DecoratedTxOut
