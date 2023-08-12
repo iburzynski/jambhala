@@ -1,6 +1,6 @@
 cabal-version:      3.0
 name:               jambhala
-version:            0.2.0.0
+version:            0.3.0.0
 
 -- A short (one-line) description of the package.
 -- synopsis:
@@ -28,7 +28,7 @@ common common
   ghc-options:
     -Wall -fobject-code -fno-ignore-interface-pragmas
     -fno-omit-interface-pragmas -fno-strictness -fno-spec-constr
-    -fno-specialise
+    -fno-specialise -Wno-orphans -Wno-unused-local-binds
   if flag(defer-plugin-errors)
     ghc-options: -fplugin-opt PlutusTx.Plugin:defer-errors
 
@@ -106,7 +106,10 @@ library
     , DeriveAnyClass
     , DeriveGeneric
 
-    -- Allows post-fix style qualified import declarations
+    -- Allows defining typeclass instances for type synonyms:
+    , FlexibleInstances
+
+    -- Allows post-fix style qualified import declarations:
     , ImportQualifiedPost
 
     -- Allows writing type signatures for methods in typeclass instances:
@@ -118,7 +121,7 @@ library
     -- Allows more than one type parameter in class and instance declarations (required to lift parameters in parameterized validators):
     , MultiParamTypeClasses
 
-    -- Allows more readable representations of large integers (i.e. 1_000_000), useful for lovelace quantities
+    -- Allows more readable representations of large integers (i.e. 1_000_000), useful for lovelace quantities:
     , NumericUnderscores
 
     -- Allows construction of Text and other string-like values as string literals:
@@ -133,10 +136,10 @@ library
     -- Required for all Plutus contracts to translate between Plutus and Haskell:
     , TemplateHaskell
 
-    -- Provides a convenient way to disambiguate type variables inline
+    -- Provides a convenient way to disambiguate type variables inline:
     , TypeApplications
 
-    -- Allows type-level functions (used in ValidatorTypes class and Jambhala's Emulatable class)
+    -- Allows type-level functions (used in Jambhala's ValidatorEndpoints & MintingEndpoint classes):
     , TypeFamilies
 
 executable jamb

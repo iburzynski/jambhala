@@ -5,10 +5,10 @@ module Jambhala.CLI (runJamb, scriptAddressBech32) where
 import Cardano.Api (Script (..), prettyPrintJSON, writeFileJSON)
 import Cardano.Api.Shelley (scriptDataToJsonDetailedSchema)
 import Control.Monad.Reader (MonadIO (..), MonadReader, ReaderT (..), asks)
-import Data.Aeson (Value)
-import qualified Data.ByteString.Char8 as BS8
-import qualified Data.Map.Strict as M
-import qualified Data.Text as Text
+import Data.Aeson qualified as Aeson
+import Data.ByteString.Char8 qualified as BS8
+import Data.Map.Strict qualified as M
+import Data.Text qualified as Text
 import Jambhala.CLI.Emulator
 import Jambhala.CLI.Export (getSerialised)
 import Jambhala.CLI.Parsers
@@ -16,7 +16,6 @@ import Jambhala.CLI.Types
 import Jambhala.CLI.Update (updatePlutusApps)
 import Jambhala.Plutus
 import Options.Applicative
-import Plutus.Script.Utils.V2.Scripts (mintingPolicyHash)
 import System.Environment (lookupEnv)
 
 runJamb :: MonadIO m => JambContracts -> m ()
@@ -85,5 +84,5 @@ writeDataToFile (DataExport fn d) = do
     Left err -> print $ displayError err
     Right () -> printf "wrote data to file '%s':\n\n%s\n\n" fp $ BS8.unpack $ prettyPrintJSON v
 
-dataToJSON :: ToData a => a -> Value
+dataToJSON :: ToData a => a -> Aeson.Value
 dataToJSON = scriptDataToJsonDetailedSchema . fromPlutusData . toData

@@ -5,7 +5,7 @@ module Jambhala.CLI.Parsers (commandParser, contractsPretty) where
 import Cardano.Ledger.BaseTypes (Network (..))
 import Control.Monad.Reader (MonadReader (..))
 import Data.List (unlines)
-import qualified Data.Map.Strict as M
+import Data.Map.Strict qualified as M
 import Jambhala.CLI.Types
 import Options.Applicative
 

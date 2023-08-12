@@ -1,8 +1,13 @@
 {-# LANGUAGE OverloadedLists #-}
 
+{- HLINT ignore "Use empty" -}
+
 module Contracts (contracts, samples) where
 
 -- Sample contracts
+
+-- Import your contracts here, i.e.:
+-- import  Contracts.MyContract qualified as MyContract
 
 import Contracts.Samples.CustomTyped qualified as CustomTyped
 import Contracts.Samples.FreeMinting qualified as FreeMinting
@@ -13,16 +18,13 @@ import Contracts.Samples.SimpleTyped qualified as SimpleTyped
 import Contracts.Samples.Vesting qualified as Vesting
 import Jambhala.CLI.Types (JambContracts)
 
--- Import your contracts here, i.e.:
--- import  Contracts.MyContract qualified as MyContract
-
-{- HLINT ignore "Use empty" -}
 -- Add your contracts to the `contracts` list below, i.e.:
 --  [
 --    MyContract.exports
 --  ]
 contracts :: JambContracts
-contracts = []
+contracts =
+  []
 
 samples :: JambContracts
 samples =

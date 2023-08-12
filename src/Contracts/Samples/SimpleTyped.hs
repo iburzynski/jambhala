@@ -1,7 +1,5 @@
 -- Required to write `traceError` BuiltinString messages as string literals:
 {-# LANGUAGE OverloadedStrings #-}
--- Required to disambiguate Integral literals:
-{-# LANGUAGE TypeApplications #-}
 
 module Contracts.Samples.SimpleTyped where
 
@@ -14,11 +12,13 @@ simpleUntyped _ redeemer _
   | otherwise = traceError "expected 42"
 {-# INLINEABLE simpleUntyped #-}
 
-untypedValidator :: Validator
-untypedValidator = mkValidatorScript $$(compile [||simpleUntyped||])
+type Untyped = ValidatorContract "simple-untyped"
 
-untypedExports :: JambContract
-untypedExports = exportContract ("simple-untyped" `withScript` untypedValidator)
+untypedValidator :: Untyped
+untypedValidator = mkValidatorContract $$(compile [||simpleUntyped||])
+
+untypedExports :: JambExports
+untypedExports = export (defExports untypedValidator)
 
 --------------------------------------------------------------------------------
 
@@ -26,20 +26,16 @@ simpleTyped :: () -> Integer -> ScriptContext -> Bool
 simpleTyped _ redeemer _ = traceIfFalse "Sorry, wrong guess!" (redeemer #== 42)
 {-# INLINEABLE simpleTyped #-}
 
-typedValidator :: Validator
-typedValidator = mkValidatorScript $$(compile [||untyped||])
+type Typed = ValidatorContract "simple-typed"
+
+typedValidator :: Typed
+typedValidator = mkValidatorContract $$(compile [||untyped||])
   where
     untyped = mkUntypedValidator simpleTyped
 
-typedRedeemerSuccess :: DataExport
-typedRedeemerSuccess = DataExport @Integer "tr42" 42
-
-typedRedeemerFail :: DataExport
-typedRedeemerFail = DataExport @Integer "tr21" 42
-
-typedExports :: JambContract
+typedExports :: JambExports
 typedExports =
-  exportContract
-    ("simple-typed" `withScript` typedValidator)
-      { dataExports = [typedRedeemerSuccess, typedRedeemerFail]
+  export
+    (defExports typedValidator)
+      { dataExports = [(42 :: Integer) `toJSONfile` "tr42", (21 :: Integer) `toJSONfile` "tr21"]
       }

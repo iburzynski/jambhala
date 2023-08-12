@@ -11,7 +11,7 @@ import Jambhala.Utils
 
 -- Datum
 data VestingDatum = VestingDatum
-  { toBeneficiary :: PaymentPubKeyHash,
+  { toBeneficiary :: PubKeyHash,
     afterMaturity :: POSIXTime
   }
   deriving (Generic, ToJSON, FromJSON)
@@ -19,51 +19,47 @@ data VestingDatum = VestingDatum
 makeIsDataIndexed ''VestingDatum [('VestingDatum, 0)]
 
 vesting :: VestingDatum -> () -> ScriptContext -> Bool
-vesting (VestingDatum ben maturity) _ sc =
-  traceIfFalse "Beneficiary's signature missing" signedByBeneficiary
+vesting (VestingDatum beneficiary maturity) _ (ScriptContext txInfo _) =
+  traceIfFalse "Wrong beneficiary" signedByBeneficiary
     && traceIfFalse "Maturity not reached" maturityReached
   where
-    txInfo = scriptContextTxInfo sc
-    signedByBeneficiary = txSignedBy txInfo $ unPaymentPubKeyHash ben
+    signedByBeneficiary = txSignedBy txInfo beneficiary
     maturityReached = contains (from maturity) $ txInfoValidRange txInfo
 {-# INLINEABLE vesting #-}
 
-validator :: Validator
-validator = mkValidatorScript $$(compile [||wrapped||])
+type Vesting = ValidatorContract "vesting"
+
+validator :: Vesting
+validator = mkValidatorContract $$(compile [||wrapped||])
   where
     wrapped = mkUntypedValidator vesting
 
-data Vesting = THIS
-
-instance ValidatorTypes Vesting where
-  type DatumType Vesting = VestingDatum
-
-instance Emulatable Vesting where
+instance ValidatorEndpoints Vesting where
   data GiveParam Vesting = Give
-    { datum :: VestingDatum,
-      lovelace :: Integer
+    { lovelace :: Integer,
+      withDatum :: VestingDatum
     }
     deriving (Generic, ToJSON, FromJSON)
   data GrabParam Vesting = Grab
     deriving (Generic, ToJSON, FromJSON)
 
   give :: GiveParam Vesting -> ContractM Vesting ()
-  give Give {..} = do
+  give (Give lovelace datum) = do
     submitAndConfirm
       Tx
-        { lookups = scriptLookupsFor THIS validator,
+        { lookups = scriptLookupsFor validator,
           constraints = mustPayToScriptWithDatum validator datum lovelace
         }
     logStr $
       printf
-        "Made a gift of %d lovelace to %s with deadline %s"
+        "Made a gift of %d lovelace to %s with maturity %s"
         lovelace
         (show $ toBeneficiary datum)
         (show $ afterMaturity datum)
 
   grab :: GrabParam Vesting -> ContractM Vesting ()
   grab _ = do
-    pkh <- ownFirstPaymentPubKeyHash
+    pkh <- getOwnPkh
     now <- getCurrentInterval
     utxos <- getUtxosAt validator
     let validUtxos = Map.mapMaybe (isEligible pkh now) utxos
@@ -72,17 +68,17 @@ instance Emulatable Vesting where
       else do
         submitAndConfirm
           Tx
-            { lookups = scriptLookupsFor THIS validator `andUtxos` validUtxos,
+            { lookups = scriptLookupsFor validator `andUtxos` validUtxos,
               constraints =
                 mconcat
                   [ mustValidateInTimeRange (fromPlutusInterval now),
-                    mustBeSignedBy pkh,
+                    mustSign pkh,
                     validUtxos `mustAllBeSpentWith` ()
                   ]
             }
         logStr "Collected eligible gifts"
     where
-      isEligible :: PaymentPubKeyHash -> Interval POSIXTime -> DecoratedTxOut -> Maybe DecoratedTxOut
+      isEligible :: PubKeyHash -> Interval POSIXTime -> DecoratedTxOut -> Maybe DecoratedTxOut
       isEligible pkh now dto = do
         (_, dfq) <- getDecoratedTxOutDatum dto
         Datum d <- getDatumInDatumFromQuery dfq
@@ -92,24 +88,24 @@ instance Emulatable Vesting where
 
 test :: EmulatorTest
 test =
-  initEmulator
+  initEmulator @Vesting
     4
     [ Give
-        { datum =
+        { lovelace = 30_000_000,
+          withDatum =
             VestingDatum
               { toBeneficiary = pkhForWallet 2,
                 afterMaturity = m
-              },
-          lovelace = 30_000_000
+              }
         }
         `fromWallet` 1,
       Give
-        { datum =
+        { lovelace = 30_000_000,
+          withDatum =
             VestingDatum
               { toBeneficiary = pkhForWallet 4,
                 afterMaturity = m
-              },
-          lovelace = 30_000_000
+              }
         }
         `fromWallet` 1,
       Grab `toWallet` 2, -- deadline not reached
@@ -121,15 +117,15 @@ test =
     m :: POSIXTime
     m = defaultSlotBeginTime 20
 
-exports :: JambContract -- Prepare exports for jamb CLI:
+exports :: JambExports -- Prepare exports for jamb CLI:
 exports =
-  exportContract
-    ("vesting" `withScript` validator)
+  export
+    (defExports validator)
       { dataExports =
           [ VestingDatum
               { -- 1. Use the `key-hash` script from cardano-cli-guru to get the pubkey hash for a beneficiary address.
                 -- 2. Replace the placeholder hex string below with the beneficiary address pubkey hash.
-                toBeneficiary = PaymentPubKeyHash "3a5039efcafd4c82c9169b35afb27a17673f6ed785ea087139a65a5d",
+                toBeneficiary = "3a5039efcafd4c82c9169b35afb27a17673f6ed785ea087139a65a5d",
                 -- 3. With cardano-node running, use the `calc-time` script from cardano-cli-guru to get a POSIX time value
                 --    (add the `--plus MINUTES` option, replacing MINUTES with a number of minutes to add).
                 -- 4. Replace the placeholder value below with your POSIX time value.

@@ -17,18 +17,14 @@ guess :: Answer -> Guess -> ScriptContext -> Bool
 guess (Answer a) (Guess g) _ = traceIfFalse "Sorry, wrong guess!" (g #== a)
 {-# INLINEABLE guess #-}
 
-validator :: Validator
-validator = mkValidatorScript $$(compile [||untyped||])
+type Guessing = ValidatorContract "guessing"
+
+contract :: Guessing
+contract = mkValidatorContract $$(compile [||untyped||])
   where
     untyped = mkUntypedValidator guess
 
-data Guessing = THIS
-
-instance ValidatorTypes Guessing where
-  type DatumType Guessing = Answer
-  type RedeemerType Guessing = Guess
-
-instance Emulatable Guessing where
+instance ValidatorEndpoints Guessing where
   data GiveParam Guessing = Give
     { lovelace :: !Integer,
       withAnswer :: !Integer
@@ -41,21 +37,21 @@ instance Emulatable Guessing where
   give (Give q a) = do
     submitAndConfirm
       Tx
-        { lookups = scriptLookupsFor THIS validator,
-          constraints = mustPayToScriptWithDatum validator (Answer a) q
+        { lookups = scriptLookupsFor contract,
+          constraints = mustPayToScriptWithDatum contract (Answer a) q
         }
     logStr $ printf "Gave %d lovelace" q
 
   grab :: GrabParam Guessing -> ContractM Guessing ()
   grab (Grab g) = do
-    utxos <- getUtxosAt validator
+    utxos <- getUtxosAt contract
     let validUtxos = Map.mapMaybe hasMatchingDatum utxos
     if validUtxos == mempty
       then logStr "No matching UTXOs"
       else do
         submitAndConfirm
           Tx
-            { lookups = scriptLookupsFor THIS validator `andUtxos` validUtxos,
+            { lookups = scriptLookupsFor contract `andUtxos` validUtxos,
               constraints = validUtxos `mustAllBeSpentWith` Guess g
             }
         logStr "Collected gifts"
@@ -70,7 +66,7 @@ instance Emulatable Guessing where
 
 test :: EmulatorTest
 test =
-  initEmulator
+  initEmulator @Guessing
     6
     [ Give {lovelace = 10_000_000, withAnswer = 42} `fromWallet` 1,
       Give {lovelace = 10_000_000, withAnswer = 42} `fromWallet` 2,
@@ -80,9 +76,9 @@ test =
       Grab {withGuess = 42} `toWallet` 6
     ]
 
-exports :: JambContract -- Prepare exports for jamb CLI:
+exports :: JambExports -- Prepare exports for jamb CLI:
 exports =
-  exportContract
-    ("simple-guessing" `withScript` validator)
+  export
+    (defExports contract)
       { emulatorTest = test
       }

@@ -1,5 +1,3 @@
-{-# LANGUAGE TypeFamilies #-}
-
 module Jambhala.CLI.Update.Parsers
   ( CabalProjectData (..),
     Dependency (..),
