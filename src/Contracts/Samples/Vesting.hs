@@ -1,8 +1,3 @@
--- Used for post-fix style qualified imports:
-{-# LANGUAGE ImportQualifiedPost #-}
--- Used for convenient unpacking of record fields:
-{-# LANGUAGE RecordWildCards #-}
-
 module Contracts.Samples.Vesting where
 
 import Data.Map qualified as Map

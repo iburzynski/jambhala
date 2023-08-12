@@ -1,3 +1,6 @@
+-- Used for post-fix style qualified imports:
+{-# LANGUAGE ImportQualifiedPost #-}
+
 module Contracts.Samples.SimpleGuessing where
 
 import Data.Map qualified as Map
