@@ -26,3 +26,4 @@ result
 assets/params.json
 
 *.DS_STORE
+*.link
