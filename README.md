@@ -452,7 +452,7 @@ The following language extensions are enabled project-wide by Jambhala using the
     -- Provides a convenient way to disambiguate type variables inline
     , TypeApplications
 
-    -- Allows type-level functions (used in ValidatorTypes class and Jambhala's Emulatable class)
+    -- Allows type-level functions (used in Jambhala's ValidatorEndpoints & MintingEndpoint classes):
     , TypeFamilies
 ```
 
@@ -534,20 +534,19 @@ contract = mkMintingContract $$(compile [||policy||])
 >See the contracts in `src/Contracts/Samples` for examples of predicate definition and compilation.
 
 ### **Writing Emulator Tests**
-Jambhala provides an enhanced variant of the `plutus-apps` blockchain emulator with a simpler and more intuitive API. This tool (and the associated utilities defined in `Jambhala.Utils`) allows us to write simple and readable off-chain code in Haskell and conduct simple tests of our contracts.
+Jambhala provides an enhanced variant of the `plutus-apps` blockchain emulator with a simpler and more intuitive API. This tool (and the associated utilities imported from `Jambhala.Utils`) allows us to write simple and readable off-chain code in Haskell and conduct simple tests of our contracts.
 
 The emulator environment's behavior doesn't always perfectly match the way contracts behave on-chain (for instance, fee amounts may vary and should not be used for predictive purposes). For rigorous testing of contracts intended for production, more robust tools like `plutus-simple-model` should be used. However, the emulator provides a way to confirm the expected behavior of on-chain scripts, as well as a good way to practice Haskell fundamentals.
 
 #### ***`ValidatorEndpoints`* & *`MintingEndpoint`* Classes**
 After defining a custom type synonym for our contract using either *`ValidatorContract`* or *`MintingContract`* and a type-level string identifier, we must instantiate one of two corresponding typeclasses to implement emulation endpoints. 
 
+#### ***`ValidatorEndpoints`***
 The *`ValidatorEndpoints`* class consists of the following:
   * Two associated data types: *`GiveParam`* and *`GrabParam`*. These represent the types of the inputs our off-chain endpoint actions will accept.
   * Two methods, `give` and `grab`, which define the off-chain endpoint actions through which we can lock and unlock UTxOs at our contract's script address in an emulated blockchain environment.
 
-*`GiveParam`*, *`GrabParam`*, and *`MintParam`* are *associated data types*, which are similar to the *associated type families* we defined above for our *`ValidatorTypes`* instance. However, while those type-level functions behave like type synonyms (mapping to already existing types), these ones behave like `data`/`newtype` declarations, which actually introduce new types into being.
-
-In practice, this means that instead of selecting an existing type, we create a new one by defining one or more constructors, each with 0 or more fields. For example:
+*`GiveParam`* and *`GrabParam`* are *associated data types*, which are used to declare custom data types associated with an instance of a particular typeclass:
 
 ```haskell
 instance ValidatorEndpoints MyContract where
@@ -559,10 +558,10 @@ Here we've declared two new data types associated with *`MyContract`*: *`GivePar
 
 >**Note:** We can call the constructors whatever we like, but the sample contracts use `Give` and `Grab`, which provide semantic clarity in the context of our emulator tests.
 
-In order for the emulator to work properly, we also need to be able to encode and decode parameter values to/from JSON format. This necessitates a bit of boilerclass `deriving` code for each of our parameter types:
+In order for the emulator to work properly, we also need to be able to encode and decode parameter values to/from JSON format. This necessitates a bit of boilerplate `deriving` code for each of our parameter types:
 
 ```haskell
-instance Emulatable MyContract where
+instance ValidatorEndpoints MyContract where
   newtype GiveParam MyContract = Give {lovelace :: Integer}
     deriving (Generic, FromJSON, ToJSON)
   data GrabParam MyContract = Grab
@@ -582,27 +581,52 @@ They accept values of our newly-created *`GiveParam`* and *`GrabParam`* types, a
 
 The `give` and `grab` endpoint actions can contain arbitrary Haskell code depending on the nature of the contract. Their role is to construct and submit transactions, ideally conducting some preliminary validation mirroring the logic of the contract's on-chain script. The purpose of this preliminary off-chain validation is to prevent unnecessary submission of invalid transactions. 
 
-Ultimately, `give` and `grab` need to submit a transaction to the script address and await confirmation, using the `submitAndConfirm` function. This function takes a *`Transaction`* value constructed via the `Tx` constructor and two fields: `lookups` (which define which information is visible to the transaction) and `constraints` (which define the conditions under which the transaction succeeds or fails).  
+Ultimately, `give` and `grab` need to submit a transaction to the script address and await confirmation, using the `submitAndConfirm` function. This function takes a *`Transaction`* value constructed via the `Tx` constructor and two fields: `lookups` (which define which information is visible to the transaction) and `constraints` (which define the conditions under which the transaction succeeds or fails):
 
+```haskell
+submitAndConfirm
+      Tx
+        { lookups = scriptLookupsFor contract,
+          constraints = mustPayToScriptWithDatum contract () lovelace
+        }
+```
+
+#### ***`MintingEndpoint`***
 The *`MintingEndpoint`* class is similar to *`ValidatorEndpoints`*, but is simpler due to the comparative simplicity of minting policies vs. validators. It consists of the following:
   * One associated data type: *`MintParam`*
   * One method, `mint`, which defines the off-chain endpoint action through which we can mint assets with the policy.
 
-Off-chain endpoint code is more complex than on-chain predicates and is beyond the scope of our tutorial at this time: refer to the sample contracts containing off-chain emulation for examples.
+```haskell
+instance MintingEndpoint MyMinting where
+  data MintParam MyMinting = Mint
+    { tokenName :: !TokenName,
+      tokenQuantity :: !Integer
+    }
+    deriving (Generic, FromJSON, ToJSON)
+  mint :: MintParam MyMinting -> ContractM MyMinting ()
+  mint (Mint tokenName tokenQuantity)  = do
+    submitAndConfirm
+      Tx
+        { lookups = scriptLookupsFor contract,
+          constraints = mustMint contract tokenName tokenQuantity
+        }
+```
+
+>**Note:** Off-chain endpoint code is more complex than on-chain predicate functions and is beyond the scope of our tutorial at this time: refer to the sample contracts containing off-chain emulation for more examples.
 
 #### **Define the test**
 Now that we've implemented our endpoint actions, we're ready to define our emulator test. We begin by declaring a variable for our test (i.e. `test :: EmulatorTest`).
 
-The test is constructed by calling the `initEmulator` function (imported from `Jambhala.Utils`) with two arguments: 
-  1. The number of different mock wallets the test requires (expressed as an integer literal)
+The test is constructed by calling the `initEmulator` function (imported from `Jambhala.Utils`). This function requires a type application (i.e. `@MyContract`) to disambiguate the type of the contract being emulated. It then receives two arguments: 
+  1. The number of mock wallets the test requires (expressed as an integer literal)
   2. A comma-separated list of *`EmulatorAction`* values. 
 
-*`EmulatorAction`* values primarily consist of calls to the `give` and `grab` endpoints we defined in the *`Emulatable`* instance for our contract. These can be conveniently expressed using the `fromWallet` and `toWallet` helper functions, which provide a pseudo-code like syntax when used with infix notation:
+*`EmulatorAction`* values primarily consist of (indirect) calls to the endpoints we defined in the *`ValidatorEndpoints`* or *`MintingEndpoint`* instance for our contract. These can be conveniently expressed using `fromWallet` and `toWallet` (for validator contracts) or `forWallet` (for minting contracts), which provide a pseudo-code like semantics when used with infix notation:
 
 ```haskell
 test :: EmulatorTest
 test =
-  initEmulator
+  initEmulator @MyContract
     2
     [ Give {lovelace = 3_000_000} `fromWallet` 1,
       Grab `toWallet` 2
@@ -614,27 +638,27 @@ This test is initialized with 2 mock wallets. Wallet 1 gives 3 ADA to the script
 *`EmulatorAction`* values can also be included in the list to simulate the passage of time. The `waitUntil` action takes a slot number and advances the emulated blockchain to that slot, which is useful for testing contracts involving deadlines (see `Vesting.hs` and `ParamVesting.hs`)
 
 ### **Using the `jamb` CLI**
-The `jamb` CLI can perform various operations on your contracts, including calculating its validator hash, testing it using a blockchain emulator, and compiling it into a `.plutus` file. To do this we need to prepare a *`JambContract`* value in each of our contracts. Start by declaring a value of this type (i.e. `exports ::` *`JambContract`*).
+The `jamb` CLI can perform various operations on your contracts, including calculating its script hash, testing it using a blockchain emulator, and compiling it into a `.plutus` file. To do this we need to prepare a *`JambExports`* value in each of our contracts. Start by declaring a value of this type (i.e. `exports ::` *`JambExports`*).
 
-Construct the exported contract using the `exportContract` utility function (imported from `Jambhala.Utils`):
+Construct the exported contract using the `defExports` and `export` utility functions (imported from `Jambhala.Utils`):
 
 ```haskell
-exports :: JambContract
-exports = exportContract ("my-contract" `withScript` validator)
+exports :: JambExports
+exports = export (defExports contract)
 ```
 
-The `withScript` function takes a contract name (how the contract will be referenced in the `jamb` CLI) and a *`Validator`* or *`MintingPolicy`* value. The result of this function is passed to `exportContract`, which constructs an export package compatible with the CLI.
+The `defExports` (default exports) function takes a contract value and produces an *`ExportTemplate`* value containing the contract's name and its script. The result of this function is then passed to `export`, which constructs an export package compatible with the CLI.
 
 #### **Adding data exports**
-The *`JambContract`* can optionally include a list of *`DataExport`* values. These are sample values to supply as datums/redeemers during transaction construction. Any value of a type with a *`ToData`* instance can be exported.
+The *`JambExports`* can optionally include a list of *`DataExport`* values. These are sample values to supply as inputs during transaction construction with `cardano-cli`. Any value of a type with a *`ToData`* instance can be exported.
 
-If data exports are included, the `jamb` CLI will produce serialised JSON versions of them along with your contract script when you use the `jamb -w` command). These optional exports are included as an additional argument to `exportContract` using record syntax and the `dataExports` attribute:
+If data exports are included, the `jamb` CLI will produce serialised JSON versions of them along with your contract script when you use the `jamb -w` command. These optional exports are included as additional input to `defExports` using record update syntax and the `dataExports` attribute:
 
 ```haskell
-exports :: JambContract
+exports :: JambExports
 exports = 
-  exportContract 
-    ("my-contract" `withScript` validator) 
+  export 
+    (defExports contract) -- Parentheses are required when using record update syntax
       { dataExports = 
         [
           () `toJSONfile` "unit",
@@ -644,16 +668,16 @@ exports =
 ```
 >**Note:** the value provided for `dataExports` must be a list, even if you are only exporting a single value.
 
-Running `jamb -w my-contract` will serialise `validator` into a `.plutus` file and save it to `cardano-cli-guru/assets/scripts/plutus/my-contract.plutus`. It will also produce a serialised JSON representation of a unit value (saved to `cardano-cli-guru/assets/data/unit.json`) and the integer 42 (saved to `cardano-cli-guru/assets/data/forty-two.json`).
+In this example, running `jamb -w my-contract` will serialise `contract` into a `.plutus` file and save it to `cardano-cli-guru/assets/scripts/plutus/my-contract.plutus`. It will also produce a serialised JSON representation of a unit value (saved to `cardano-cli-guru/assets/data/unit.json`) and the integer 42 (saved to `cardano-cli-guru/assets/data/forty-two.json`).
 
 #### **Adding emulator test**
-An emulator test value (`::` *`EmulatorTest`*) can also be optionally included in the record argument, using the `emulatorTest` attribute:
+An emulator test value (`::` *`EmulatorTest`*) can also be optionally included in the record input, using the `emulatorTest` attribute:
 
 ```haskell
-exports :: JambContract
+exports :: JambExports
 exports = 
-  exportContract 
-    ("my-contract" `withScript` validator) 
+  export 
+    (defExports contract) 
       { dataExports = 
         [
           () `toJSONfile` "unit",
