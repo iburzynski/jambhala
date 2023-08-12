@@ -14,6 +14,7 @@ module Prelude
     FilePath,
     FromJSON,
     Generic,
+    Int,
     IO,
     Monoid (..),
     Num (..),
@@ -105,6 +106,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Eq (Eq (..))
 import Data.Foldable hiding (all, and, any, find, or)
 import Data.Functor
+import Data.Int (Int)
 import Data.List.Extra (mconcatMap)
 import Data.Monoid (Monoid (..))
 import Data.Ord (Ord (..))
@@ -173,8 +175,8 @@ import PlutusTx.Prelude hiding
     (<*),
     (<*>),
   )
-import qualified PlutusTx.Prelude as P
-import qualified PlutusTx.Ratio as P.Ratio
+import PlutusTx.Prelude qualified as P
+import PlutusTx.Ratio qualified as P.Ratio
 import System.IO (FilePath, IO, print, putStrLn)
 import Text.Printf (printf)
 
