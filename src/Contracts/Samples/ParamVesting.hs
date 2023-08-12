@@ -18,7 +18,7 @@ paramVesting (VParam beneficiary) maturity _ (ScriptContext txInfo _) =
     && traceIfFalse "Maturity not reached" maturityReached
   where
     signedByBeneficiary = txSignedBy txInfo beneficiary
-    maturityReached = contains (from maturity) $ txInfoValidRange txInfo
+    maturityReached = from maturity `contains` txInfoValidRange txInfo
 {-# INLINEABLE paramVesting #-}
 
 type ParamVesting = ValidatorContract "param-vesting"

@@ -19,13 +19,13 @@ vesting (VestingDatum beneficiary maturity) _ (ScriptContext txInfo _) =
     && traceIfFalse "Maturity not reached" maturityReached
   where
     signedByBeneficiary = txSignedBy txInfo beneficiary
-    maturityReached = contains (from maturity) $ txInfoValidRange txInfo
+    maturityReached = from maturity `contains` txInfoValidRange txInfo
 {-# INLINEABLE vesting #-}
 
 type Vesting = ValidatorContract "vesting"
 
-validator :: Vesting
-validator = mkValidatorContract $$(compile [||wrapped||])
+contract :: Vesting
+contract = mkValidatorContract $$(compile [||wrapped||])
   where
     wrapped = mkUntypedValidator vesting
 
@@ -42,8 +42,8 @@ instance ValidatorEndpoints Vesting where
   give (Give lovelace datum) = do
     submitAndConfirm
       Tx
-        { lookups = scriptLookupsFor validator,
-          constraints = mustPayToScriptWithDatum validator datum lovelace
+        { lookups = scriptLookupsFor contract,
+          constraints = mustPayToScriptWithDatum contract datum lovelace
         }
     logStr $
       printf
@@ -56,14 +56,14 @@ instance ValidatorEndpoints Vesting where
   grab _ = do
     pkh <- getOwnPkh
     now <- getCurrentInterval
-    utxos <- getUtxosAt validator
+    utxos <- getUtxosAt contract
     let validUtxos = Map.mapMaybe (isEligible pkh now) utxos
     if validUtxos == mempty
       then logStr "No eligible gifts available"
       else do
         submitAndConfirm
           Tx
-            { lookups = scriptLookupsFor validator `andUtxos` validUtxos,
+            { lookups = scriptLookupsFor contract `andUtxos` validUtxos,
               constraints =
                 mconcat
                   [ mustValidateInTimeRange (fromPlutusInterval now),
@@ -115,7 +115,7 @@ test =
 exports :: JambExports -- Prepare exports for jamb CLI:
 exports =
   export
-    (defExports validator)
+    (defExports contract)
       { dataExports =
           [ VestingDatum
               { -- 1. Use the `key-hash` script from cardano-cli-guru to get the pubkey hash for a beneficiary address.
