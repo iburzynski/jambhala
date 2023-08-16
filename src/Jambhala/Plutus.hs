@@ -55,6 +55,7 @@ module Jambhala.Plutus
     TxInfo (..),
     TxOutRef,
     UnsafeFromData (..),
+    UntypedMintingPolicy,
     UntypedValidator,
     Validator (..),
     ValidatorHash,
@@ -168,7 +169,7 @@ import Plutus.Contract
   )
 import Plutus.Contract.Request (getParams, utxosAt)
 import Plutus.Script.Utils.Ada (lovelaceValueOf)
-import Plutus.Script.Utils.Typed (ValidatorTypes (..))
+import Plutus.Script.Utils.Typed (UntypedMintingPolicy, ValidatorTypes (..))
 import Plutus.Script.Utils.V2.Address (mkMintingPolicyCardanoAddress)
 import Plutus.Script.Utils.V2.Scripts (mintingPolicyHash, scriptCurrencySymbol, validatorHash)
 import Plutus.Script.Utils.V2.Typed.Scripts (UntypedValidator)
