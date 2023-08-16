@@ -34,6 +34,7 @@ contract = mkValidatorContract $$(compile [||untyped||])
   where
     -- conversion to untyped must occur in a different scope when using custom data types
     -- otherwise Template Haskell will try to compile the code before `unstableMakeIsData` completes
+    untyped :: UntypedValidator
     untyped = mkUntypedValidator customTyped
 
 -- PART II: OFF-CHAIN EMULATION

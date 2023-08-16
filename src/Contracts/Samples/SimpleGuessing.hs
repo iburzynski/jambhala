@@ -25,6 +25,7 @@ type Guessing = ValidatorContract "guessing"
 contract :: Guessing
 contract = mkValidatorContract $$(compile [||untyped||])
   where
+    untyped :: UntypedValidator
     untyped = mkUntypedValidator guess
 
 instance ValidatorEndpoints Guessing where

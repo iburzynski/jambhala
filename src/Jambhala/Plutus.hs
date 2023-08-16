@@ -55,6 +55,7 @@ module Jambhala.Plutus
     TxInfo (..),
     TxOutRef,
     UnsafeFromData (..),
+    UntypedValidator,
     Validator (..),
     ValidatorHash,
     ValidatorTypes (..),
@@ -170,6 +171,7 @@ import Plutus.Script.Utils.Ada (lovelaceValueOf)
 import Plutus.Script.Utils.Typed (ValidatorTypes (..))
 import Plutus.Script.Utils.V2.Address (mkMintingPolicyCardanoAddress)
 import Plutus.Script.Utils.V2.Scripts (mintingPolicyHash, scriptCurrencySymbol, validatorHash)
+import Plutus.Script.Utils.V2.Typed.Scripts (UntypedValidator)
 import Plutus.Trace
   ( ContractHandle,
     EmulatorConfig,

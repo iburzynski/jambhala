@@ -31,6 +31,7 @@ type Typed = ValidatorContract "simple-typed"
 typedValidator :: Typed
 typedValidator = mkValidatorContract $$(compile [||untyped||])
   where
+    untyped :: UntypedValidator
     untyped = mkUntypedValidator simpleTyped
 
 typedExports :: JambExports

@@ -10,7 +10,6 @@ module Contracts.Samples.ParamVesting where
 import Data.Map qualified as Map
 import Jambhala.Plutus
 import Jambhala.Utils
-import Plutus.Script.Utils.V2.Typed.Scripts (UntypedValidator)
 
 newtype VestingParam = VParam {beneficiary :: PubKeyHash}
   deriving (Generic, ToJSON, FromJSON)

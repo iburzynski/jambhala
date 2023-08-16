@@ -25,9 +25,10 @@ vesting (VestingDatum beneficiary maturity) _ (ScriptContext txInfo _) =
 type Vesting = ValidatorContract "vesting"
 
 contract :: Vesting
-contract = mkValidatorContract $$(compile [||wrapped||])
+contract = mkValidatorContract $$(compile [||untyped||])
   where
-    wrapped = mkUntypedValidator vesting
+    untyped :: UntypedValidator
+    untyped = mkUntypedValidator vesting
 
 instance ValidatorEndpoints Vesting where
   data GiveParam Vesting = Give
