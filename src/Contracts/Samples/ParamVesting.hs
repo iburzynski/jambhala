@@ -1,11 +1,16 @@
 -- Required for `makeLift`:
 {-# LANGUAGE MultiParamTypeClasses #-}
+-- Allows convenient unpacking of record selectors into named variables
+{-# LANGUAGE RecordWildCards #-}
+-- Required for `makeLift`:
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Contracts.Samples.ParamVesting where
 
+import Data.Map qualified as Map
 import Jambhala.Plutus
 import Jambhala.Utils
+import Plutus.Script.Utils.V2.Typed.Scripts (UntypedValidator)
 
 newtype VestingParam = VParam {beneficiary :: PubKeyHash}
   deriving (Generic, ToJSON, FromJSON)
@@ -21,29 +26,30 @@ paramVesting (VParam beneficiary) maturity _ (ScriptContext txInfo _) =
     maturityReached = from maturity `contains` txInfoValidRange txInfo
 {-# INLINEABLE paramVesting #-}
 
-type ParamVesting = ValidatorContract "param-vesting"
+type VestingContract = ValidatorContract "param-vesting"
 
-contract :: VestingParam -> ParamVesting
-contract p = mkValidatorContract $ $$(compile [||untyped||]) `applyCode` liftCode p
+contract :: VestingParam -> VestingContract
+contract p = mkValidatorContract ($$(compile [||untyped||]) `applyCode` liftCode p)
   where
-    untyped = mkUntypedValidator . paramVesting
+    untyped :: VestingParam -> UntypedValidator
+    untyped p' = mkUntypedValidator $ paramVesting p'
 
-instance ValidatorEndpoints ParamVesting where
-  data GiveParam ParamVesting = Give
+instance ValidatorEndpoints VestingContract where
+  data GiveParam VestingContract = Give
     { lovelace :: Integer,
       forBeneficiary :: PubKeyHash,
       afterMaturity :: POSIXTime
     }
     deriving (Generic, ToJSON, FromJSON)
-  data GrabParam ParamVesting = Grab {withMaturity :: POSIXTime}
+  data GrabParam VestingContract = Grab
     deriving (Generic, ToJSON, FromJSON)
 
-  give :: GiveParam ParamVesting -> ContractM ParamVesting ()
+  give :: GiveParam VestingContract -> ContractM VestingContract ()
   give Give {..} = do
     submitAndConfirm
       Tx
         { lookups = scriptLookupsFor contract',
-          constraints = mustPayToScriptWithDatum contract' () lovelace
+          constraints = mustPayToScriptWithDatum contract' afterMaturity lovelace
         }
     logStr $
       printf
@@ -52,36 +58,41 @@ instance ValidatorEndpoints ParamVesting where
         (show forBeneficiary)
         (show afterMaturity)
     where
-      contract' = contract VParam {beneficiary = forBeneficiary}
+      contract' = contract $ VParam forBeneficiary
 
-  grab :: GrabParam ParamVesting -> ContractM ParamVesting ()
-  grab (Grab maturity) = do
+  grab :: GrabParam VestingContract -> ContractM VestingContract ()
+  grab _ = do
+    pkh <- getOwnPkh
+    let contract' = contract $ VParam pkh
+    utxos <- getUtxosAt contract'
     now <- getCurrentInterval
-    if from maturity `contains` now
-      then do
-        pkh <- getOwnPkh
-        let p = VParam {beneficiary = pkh}
-            contract' = contract p
-        validUtxos <- getUtxosAt contract'
-        if validUtxos == mempty
-          then logStr "No eligible gifts available"
-          else do
-            submitAndConfirm
-              Tx
-                { lookups = scriptLookupsFor contract' `andUtxos` validUtxos,
-                  constraints =
-                    mconcat
-                      [ mustValidateInTimeRange (fromPlutusInterval now),
-                        mustSign pkh,
-                        validUtxos `mustAllBeSpentWith` ()
-                      ]
-                }
-            logStr "Collected eligible gifts"
-      else logStr "Maturity not reached"
+    let validUtxos = Map.mapMaybe (isEligible now) utxos
+    if validUtxos == mempty
+      then logStr "No eligible gifts available"
+      else do
+        submitAndConfirm
+          Tx
+            { lookups = scriptLookupsFor contract' `andUtxos` validUtxos,
+              constraints =
+                mconcat
+                  [ mustValidateInTimeRange (fromPlutusInterval now),
+                    mustSign pkh,
+                    validUtxos `mustAllBeSpentWith` ()
+                  ]
+            }
+        logStr "Collected eligible gifts"
+    where
+      isEligible :: Interval POSIXTime -> DecoratedTxOut -> Maybe DecoratedTxOut
+      isEligible now dto = do
+        (_, dfq) <- getDecoratedTxOutDatum dto
+        Datum d <- getDatumInDatumFromQuery dfq
+        maturity <- fromBuiltinData d
+        guard (from maturity `contains` now)
+        Just dto
 
 test :: EmulatorTest
 test =
-  initEmulator @ParamVesting
+  initEmulator @VestingContract
     4
     [ Give
         { lovelace = 30_000_000,
@@ -95,10 +106,10 @@ test =
           afterMaturity = m
         }
         `fromWallet` 1,
-      Grab {withMaturity = m} `toWallet` 2, -- deadline not reached
+      Grab `toWallet` 2, -- deadline not reached
       waitUntil 20,
-      Grab {withMaturity = m} `toWallet` 3, -- wrong beneficiary
-      Grab {withMaturity = m} `toWallet` 4 -- collect gift
+      Grab `toWallet` 3, -- wrong beneficiary
+      Grab `toWallet` 4 -- collect gift
     ]
   where
     m :: POSIXTime
