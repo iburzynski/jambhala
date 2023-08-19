@@ -31,6 +31,7 @@ customTyped _ (Guess g) _ = traceIfFalse "Sorry, wrong guess!" (g #== 42)
 -- otherwise Template Haskell will try to compile the code before `unstableMakeIsData` completes
 untyped :: UntypedValidator
 untyped = mkUntypedValidator customTyped
+{-# INLINEABLE untyped #-}
 
 type CustomTyped = ValidatorContract "custom-typed"
 
