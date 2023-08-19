@@ -24,6 +24,7 @@ module Jambhala.CLI.Emulator
     mustAllBeSpentWith,
     mustBeSpentWith,
     mustMint,
+    mustMintWithRedeemer,
     mustPayToScriptWithDatum,
     mustSign,
     notImplemented,
@@ -250,6 +251,10 @@ mustSign = mustBeSignedBy . PaymentPubKeyHash
 -- | Requires the transaction to mint a specified quantity of a given token with the `MintingContract`'s currency symbol.
 mustMint :: MintingContract sym -> TokenName -> Integer -> TxConstraints i o
 mustMint policy tokenName tokenQuantity = mustMintValue $ mkMintingValue policy tokenName tokenQuantity
+
+-- | Requires the transaction to mint a specified quantity of a given token with the `MintingContract`'s currency symbol with a redeemer.
+mustMintWithRedeemer :: ToData redeemer => MintingContract sym -> redeemer -> TokenName -> Integer -> TxConstraints i o
+mustMintWithRedeemer policy redeemer tokenName tokenQuantity = mustMintValueWithRedeemer (mkRedeemer redeemer) $ mkMintingValue policy tokenName tokenQuantity
 
 -- | Returns a `Value` containing a specified quantity of a given token with the `MintingContract`'s currency symbol.
 mkMintingValue :: MintingContract sym -> TokenName -> Integer -> Value

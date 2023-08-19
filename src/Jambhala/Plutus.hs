@@ -93,6 +93,7 @@ module Jambhala.Plutus
     mockWalletPaymentPubKeyHash,
     mustBeSignedBy,
     mustMintValue,
+    mustMintValueWithRedeemer,
     mustPayToOtherScriptWithDatumInTx,
     mustSpendScriptOutput,
     mustValidateInTimeRange,
@@ -147,7 +148,7 @@ import Cardano.Ledger.Credential (Credential (..), StakeReference (..))
 import Cardano.Node.Emulator (Params (..), slotToBeginPOSIXTime, slotToEndPOSIXTime)
 import Ledger (DecoratedTxOut (..), Language (..), PaymentPubKeyHash (..), Slot, TxOutRef, Versioned (..), contains, datumInDatumFromQuery, decoratedTxOutDatum, from, getCardanoTxId, interval, mkValidatorCardanoAddress, unitDatum, unitRedeemer)
 import Ledger.Tx (DatumFromQuery)
-import Ledger.Tx.Constraints (ScriptLookups (..), TxConstraints, mustBeSignedBy, mustMintValue, mustPayToOtherScriptWithDatumInTx, mustSpendScriptOutput, mustValidateInTimeRange, plutusV2MintingPolicy, plutusV2OtherScript, unspentOutputs)
+import Ledger.Tx.Constraints (ScriptLookups (..), TxConstraints, mustBeSignedBy, mustMintValue, mustMintValueWithRedeemer, mustPayToOtherScriptWithDatumInTx, mustSpendScriptOutput, mustValidateInTimeRange, plutusV2MintingPolicy, plutusV2OtherScript, unspentOutputs)
 import Ledger.Tx.Constraints.ValidityInterval (fromPlutusInterval)
 import Plutus.Contract
   ( AsContractError,
