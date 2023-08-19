@@ -32,6 +32,8 @@ module Jambhala.Utils
     mkMintingContract,
     mkMintingValue,
     mkRedeemer,
+    mkUntypedMintingPolicy,
+    mkUntypedValidator,
     mkValidatorContract,
     mustAllBeSpentWith,
     mustSign,
@@ -93,3 +95,32 @@ mkMintingContract ::
   CompiledCode (BuiltinData -> BuiltinData -> ()) ->
   MintingContract contract
 mkMintingContract = MintingContract . mkMintingPolicyScript
+
+{-# INLINEABLE mkUntypedValidator #-}
+
+-- | A more efficient implementation of the `mkUntypedValidator` method of the `IsScriptContext` typeclass
+mkUntypedValidator ::
+  ( UnsafeFromData a,
+    UnsafeFromData b
+  ) =>
+  (a -> b -> ScriptContext -> Bool) ->
+  (BuiltinData -> BuiltinData -> BuiltinData -> ())
+mkUntypedValidator f a b ctx =
+  check $
+    f
+      (unsafeFromBuiltinData a)
+      (unsafeFromBuiltinData b)
+      (unsafeFromBuiltinData ctx)
+
+{-# INLINEABLE mkUntypedMintingPolicy #-}
+
+-- | A more efficient implementation of the `mkUntypedMintingPolicy` method of the `IsScriptContext` typeclass
+mkUntypedMintingPolicy ::
+  UnsafeFromData a =>
+  (a -> ScriptContext -> Bool) ->
+  (BuiltinData -> BuiltinData -> ())
+mkUntypedMintingPolicy f a ctx =
+  check $
+    f
+      (unsafeFromBuiltinData a)
+      (unsafeFromBuiltinData ctx)

@@ -22,13 +22,14 @@ vesting (VestingDatum beneficiary maturity) _ (ScriptContext txInfo _) =
     maturityReached = from maturity `contains` txInfoValidRange txInfo
 {-# INLINEABLE vesting #-}
 
+untyped :: UntypedValidator
+untyped = mkUntypedValidator vesting
+{-# INLINEABLE untyped #-}
+
 type Vesting = ValidatorContract "vesting"
 
 contract :: Vesting
 contract = mkValidatorContract $$(compile [||untyped||])
-  where
-    untyped :: UntypedValidator
-    untyped = mkUntypedValidator vesting
 
 instance ValidatorEndpoints Vesting where
   data GiveParam Vesting = Give

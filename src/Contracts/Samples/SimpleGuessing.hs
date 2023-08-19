@@ -20,13 +20,14 @@ guess :: Answer -> Guess -> ScriptContext -> Bool
 guess (Answer a) (Guess g) _ = traceIfFalse "Sorry, wrong guess!" (g #== a)
 {-# INLINEABLE guess #-}
 
+untyped :: UntypedValidator
+untyped = mkUntypedValidator guess
+{-# INLINEABLE untyped #-}
+
 type Guessing = ValidatorContract "guessing"
 
 contract :: Guessing
 contract = mkValidatorContract $$(compile [||untyped||])
-  where
-    untyped :: UntypedValidator
-    untyped = mkUntypedValidator guess
 
 instance ValidatorEndpoints Guessing where
   data GiveParam Guessing = Give

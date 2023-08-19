@@ -42,7 +42,7 @@ library
     Prelude
 
 -- Add new contracts here, i.e.:
---  Contracts.MyContract
+-- Contracts.MyContract
 
   other-modules:
     Jambhala.CLI.Emulator
@@ -60,6 +60,7 @@ library
     Contracts.Samples.Vesting
     Contracts.Samples.ParamVesting
     Contracts.Samples.FreeMinting
+    Contracts.Samples.SignedMinting
   hs-source-dirs:
       src
   build-depends:

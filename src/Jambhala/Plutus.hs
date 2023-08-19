@@ -4,8 +4,6 @@
 {-# OPTIONS_GHC -Wno-deprecations #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
-{-# HLINT ignore "Use fewer imports" #-}
-
 module Jambhala.Plutus
   ( Address (..),
     AddressInEra,
@@ -26,7 +24,6 @@ module Jambhala.Plutus
     Error (..),
     FromData (..),
     Interval (..),
-    IsScriptContext (..),
     Language (..),
     MintingPolicy (..),
     Network,
@@ -152,7 +149,6 @@ import Ledger (DecoratedTxOut (..), Language (..), PaymentPubKeyHash (..), Slot,
 import Ledger.Tx (DatumFromQuery)
 import Ledger.Tx.Constraints (ScriptLookups (..), TxConstraints, mustBeSignedBy, mustMintValue, mustPayToOtherScriptWithDatumInTx, mustSpendScriptOutput, mustValidateInTimeRange, plutusV2MintingPolicy, plutusV2OtherScript, unspentOutputs)
 import Ledger.Tx.Constraints.ValidityInterval (fromPlutusInterval)
-import Ledger.Typed.Scripts (IsScriptContext (..))
 import Plutus.Contract
   ( AsContractError,
     Contract,

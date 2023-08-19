@@ -25,13 +25,14 @@ paramVesting (VParam beneficiary) maturity _ (ScriptContext txInfo _) =
     maturityReached = from maturity `contains` txInfoValidRange txInfo
 {-# INLINEABLE paramVesting #-}
 
+untyped :: VestingParam -> UntypedValidator
+untyped p = mkUntypedValidator $ paramVesting p
+{-# INLINEABLE untyped #-}
+
 type VestingContract = ValidatorContract "param-vesting"
 
 contract :: VestingParam -> VestingContract
 contract p = mkValidatorContract ($$(compile [||untyped||]) `applyCode` liftCode p)
-  where
-    untyped :: VestingParam -> UntypedValidator
-    untyped p' = mkUntypedValidator $ paramVesting p'
 
 instance ValidatorEndpoints VestingContract where
   data GiveParam VestingContract = Give

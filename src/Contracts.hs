@@ -12,6 +12,7 @@ module Contracts (contracts, samples) where
 import Contracts.Samples.CustomTyped qualified as CustomTyped
 import Contracts.Samples.FreeMinting qualified as FreeMinting
 import Contracts.Samples.ParamVesting qualified as ParamVesting
+import Contracts.Samples.SignedMinting qualified as SignedMinting
 import Contracts.Samples.Simple qualified as Simple
 import Contracts.Samples.SimpleGuessing qualified as SimpleGuessing
 import Contracts.Samples.SimpleTyped qualified as SimpleTyped
@@ -36,5 +37,6 @@ samples =
     SimpleGuessing.exports,
     Vesting.exports,
     ParamVesting.exports,
-    FreeMinting.exports
+    FreeMinting.exports,
+    SignedMinting.exports
   ]

@@ -7,10 +7,17 @@ freeMinting :: () -> ScriptContext -> Bool
 freeMinting _ _ = True
 {-# INLINEABLE freeMinting #-}
 
+untyped :: UntypedMintingPolicy
+untyped = mkUntypedMintingPolicy freeMinting
+{-# INLINEABLE untyped #-}
+
 type FreeMinting = MintingContract "free-minting"
 
 contract :: FreeMinting
-contract = mkMintingContract $$(compile [||mkUntypedMintingPolicy freeMinting||])
+contract = mkMintingContract $$(compile [||untyped||])
+
+-- where
+--   untyped = mkUntypedMintingPolicy freeMinting
 
 instance MintingEndpoint FreeMinting where
   data MintParam FreeMinting = Mint

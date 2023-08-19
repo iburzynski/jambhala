@@ -27,15 +27,15 @@ customTyped :: () -> CustomRedeemer -> ScriptContext -> Bool
 customTyped _ (Guess g) _ = traceIfFalse "Sorry, wrong guess!" (g #== 42)
 {-# INLINEABLE customTyped #-}
 
+-- conversion to untyped must occur in a different scope when using custom data types
+-- otherwise Template Haskell will try to compile the code before `unstableMakeIsData` completes
+untyped :: UntypedValidator
+untyped = mkUntypedValidator customTyped
+
 type CustomTyped = ValidatorContract "custom-typed"
 
 contract :: CustomTyped
 contract = mkValidatorContract $$(compile [||untyped||])
-  where
-    -- conversion to untyped must occur in a different scope when using custom data types
-    -- otherwise Template Haskell will try to compile the code before `unstableMakeIsData` completes
-    untyped :: UntypedValidator
-    untyped = mkUntypedValidator customTyped
 
 -- PART II: OFF-CHAIN EMULATION
 

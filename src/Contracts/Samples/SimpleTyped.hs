@@ -26,13 +26,14 @@ simpleTyped :: () -> Integer -> ScriptContext -> Bool
 simpleTyped _ redeemer _ = traceIfFalse "Sorry, wrong guess!" (redeemer #== 42)
 {-# INLINEABLE simpleTyped #-}
 
+untyped :: UntypedValidator
+untyped = mkUntypedValidator simpleTyped
+{-# INLINEABLE untyped #-}
+
 type Typed = ValidatorContract "simple-typed"
 
 typedValidator :: Typed
 typedValidator = mkValidatorContract $$(compile [||untyped||])
-  where
-    untyped :: UntypedValidator
-    untyped = mkUntypedValidator simpleTyped
 
 typedExports :: JambExports
 typedExports =
