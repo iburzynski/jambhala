@@ -16,9 +16,6 @@ type FreeMinting = MintingContract "free-minting"
 contract :: FreeMinting
 contract = mkMintingContract $$(compile [||untyped||])
 
--- where
---   untyped = mkUntypedMintingPolicy freeMinting
-
 instance MintingEndpoint FreeMinting where
   data MintParam FreeMinting = Mint
     { tokenName :: !TokenName,
