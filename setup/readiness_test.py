@@ -4,10 +4,13 @@ import getpass
 import json
 import os
 import platform
+import shutil
 import subprocess
 import sys
+import tempfile
 from functools import partial
-from typing import Any, Callable, TypedDict
+from itertools import groupby
+from typing import Any, Callable, Generator, NoReturn, TypedDict
 
 # Check if Nix is installed
 try:
@@ -62,31 +65,6 @@ DirenvStatus = TypedDict('DirenvStatus', {
                          'installed': bool, 'install?': bool})
 
 
-def add_nix_daemon_snippet():
-    if platform.system() != 'Darwin':
-        daemon_snippet = '''# Nix
-if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
-  . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
-fi
-# End Nix'''
-        dotfiles = ['.bash_profile', '.bashrc', '.zprofile',
-                    '.zshrc']
-        dotfile_paths = [os.path.expanduser(
-            f"~/{dotfile}") for dotfile in dotfiles]
-        for dotfile_path in dotfile_paths:
-            if not os.path.exists(dotfile_path):
-                print_neutral(ind2(f"> Creating '{dotfile_path}' file..."))
-                open(dotfile_path, 'a').close()
-            with open(dotfile_path, 'r') as file:
-                contents = file.read()
-                if daemon_snippet not in contents:
-                    # Prepend the snippet to the file
-                    with open(dotfile_path, 'w') as file:
-                        file.write(daemon_snippet + '\n\n' + contents)
-                    print_neutral(
-                        ind(f"nix-daemon snippet added to {dotfile_path}"))
-
-
 def prompt_install_direnv() -> DirenvStatus:
     response = input(ind2(mk_neutral_text("Install direnv with Nix? (Y/n): ")))
     return {
@@ -115,6 +93,56 @@ def get_direnv_status() -> DirenvStatus:
         return prompt_install_direnv()
 
 
+# Nix daemon failsafe for MacOS users
+daemon_path = "'/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'"
+daemon_snippet_lines = [
+    "# Nix\n",
+    f"[ -e {daemon_path} ] && . {daemon_path}" + "\n",
+    "# End Nix\n"]
+
+
+def remove_excess_newlines(lines: list[str]) -> Generator[str, None, None]:
+    """
+    Prevents accumulation of newlines in dotfiles by removing consecutive newlines in excess of 2.
+    """
+    for _, group in groupby(lines, key=lambda line: line.strip() == ""):
+        lines_in_group = list(group)
+        if not lines_in_group[0].strip():
+            yield "\n" if len(lines_in_group) <= 2 else ""
+        else:
+            yield "\n".join(line.strip() for line in lines_in_group) + "\n"
+
+
+def overwrite_dotfile_safely(
+        dotfile_path: str, new_content: list[str]) -> None | NoReturn:
+    """
+    Creates a temporary backup of a given dotfile before overwriting its contents.
+    Restores the backup if an exception occurs.
+    """
+
+    temp_dir = tempfile.mkdtemp()
+    filename = os.path.basename(dotfile_path)
+    backup_path = os.path.join(temp_dir, f"{filename}.bak")
+
+    try:
+        shutil.copy2(dotfile_path, backup_path)
+        with open(dotfile_path, 'w') as dotfile:
+            dotfile.writelines(remove_excess_newlines(new_content))
+
+    except Exception as e:
+        print_fail(
+            f'\n{ind(f"An error occurred updating {dotfile_path}: restoring original file.")}\n')
+        shutil.copy2(backup_path, dotfile_path)
+        raise e
+
+    finally:
+        shutil.rmtree(temp_dir)
+
+
+def is_hook(line: str) -> bool:
+    return line.startswith('eval "$(direnv hook')
+
+
 def check_direnv() -> bool:
     print_neutral(ind("> Checking direnv..."))
     direnv_status = get_direnv_status()
@@ -139,8 +167,9 @@ def check_direnv() -> bool:
             ready = False
 
     if installed or installing:
+        is_darwin = platform.system() == 'Darwin'
         dotfiles = ['.bash_profile', '.bashrc', '.zprofile',
-                    '.zshrc'] if platform.system() == 'Darwin' else ['.bashrc']
+                    '.zshrc'] if is_darwin else ['.bashrc']
         bash_hook = 'eval "$(direnv hook bash)"\n'
         zsh_hook = 'eval "$(direnv hook zsh)"\n'
         hooks = {
@@ -156,19 +185,27 @@ def check_direnv() -> bool:
                     print_neutral(ind2(f"> Creating '{file_path}' file..."))
                     open(file_path, 'a').close()
 
-                print_neutral(
-                    ind(f"> Adding direnv hook to '{file_path}'"))
+                print_neutral(ind(
+                    f"> Adding {'Nix daemon failsafe and ' if is_darwin else ''} direnv hook to '{file_path}'"))
 
                 with open(file_path, 'r') as f:
                     lines = f.readlines()
 
-                    hook = hooks[dotfile]
-                    dotfile_contents = [
+                    common_content = ["\n", hooks[dotfile]]
+                    linux_content = [
                         line for line in lines if
-                        not line.startswith('eval "$(direnv hook')] + [hook]
+                        not is_hook(line)
+                    ] + common_content
+                    # Add Nix daemon failsafe to user dotfiles on darwin
+                    # (Prevents breakage of Nix from MacOS system updates)
+                    darwin_content = [*daemon_snippet_lines, "\n"] + [
+                        line for line in lines if
+                        not is_hook(line)
+                        and not line.strip() + "\n" in daemon_snippet_lines
+                    ] + common_content
 
-                with open(file_path, 'w') as f:
-                    f.writelines(dotfile_contents)
+                overwrite_dotfile_safely(
+                    file_path, darwin_content if is_darwin else linux_content)
             except:
                 print_fail(ind2(f"Unable to configure {dotfile} file"))
                 ready = False
@@ -252,7 +289,7 @@ def check_nix_conf() -> bool:
 
 def test_readiness() -> None:
     print(ind("JAMBHALA READINESS TEST:\n"))
-    add_nix_daemon_snippet()
+    # add_nix_daemon_snippet()
     direnv_passed = check_direnv()
     nix_conf_passed = check_nix_conf()
     passed = direnv_passed and nix_conf_passed
