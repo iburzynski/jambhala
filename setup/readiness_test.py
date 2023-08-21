@@ -186,7 +186,7 @@ def check_direnv() -> bool:
                     open(file_path, 'a').close()
 
                 print_neutral(ind(
-                    f"> Adding {'Nix daemon failsafe and ' if is_darwin else ''} direnv hook to '{file_path}'"))
+                    f"> Adding {'Nix daemon failsafe and' if is_darwin else ''} direnv hook to '{file_path}'"))
 
                 with open(file_path, 'r') as f:
                     lines = f.readlines()
