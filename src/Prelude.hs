@@ -55,12 +55,16 @@ module Prelude
     guard,
     mconcatMap,
     pabs,
+    pall,
+    pand,
+    pany,
     pasum,
     pcompare,
     pconcat,
     pconcatMap,
     pelem,
     perror,
+    pfind,
     pfmapDefault,
     pfoldMapDefault,
     pfold,
@@ -81,6 +85,8 @@ module Prelude
     pmin,
     pnegate,
     pnotElem,
+    pnull,
+    por,
     ppred,
     pproduct,
     ppure,
@@ -104,7 +110,7 @@ import Control.Applicative
 import Control.Monad (guard)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Eq (Eq (..))
-import Data.Foldable hiding (all, and, any, find, or)
+import Data.Foldable
 import Data.Functor
 import Data.Int (Int)
 import Data.List.Extra (mconcatMap)
@@ -133,11 +139,15 @@ import PlutusTx.Prelude hiding
     Semigroup (..),
     Traversable (..),
     abs,
+    all,
+    and,
+    any,
     asum,
     concat,
     concatMap,
     elem,
     error,
+    find,
     fold,
     foldMap,
     foldl,
@@ -156,6 +166,7 @@ import PlutusTx.Prelude hiding
     negate,
     notElem,
     null,
+    or,
     product,
     sequence,
     sequenceA,
@@ -318,6 +329,11 @@ ptoList :: PFoldable t => t a -> [a]
 {-# INLINE ptoList #-}
 ptoList = P.toList
 
+-- | Plutus Tx version of 'Data.Foldable.null'.
+{-# INLINEABLE pnull #-}
+pnull :: PFoldable t => t a -> Bool
+pnull = P.null
+
 -- | Plutus Tx version of 'Data.Foldable.length'.
 {-# INLINEABLE plength #-}
 plength :: PFoldable t => t a -> Integer
@@ -360,6 +376,31 @@ pconcat = P.concat
 {-# INLINE pconcatMap #-}
 pconcatMap :: PFoldable t => (a -> [b]) -> t a -> [b]
 pconcatMap = P.concatMap
+
+-- | Plutus Tx version of 'Data.Foldable.and'.
+{-# INLINEABLE pand #-}
+pand :: PFoldable t => t Bool -> Bool
+pand = P.and
+
+-- | Plutus Tx version of 'Data.Foldable.or'.
+{-# INLINEABLE por #-}
+por :: PFoldable t => t Bool -> Bool
+por = P.or
+
+-- | Plutus Tx version of 'Data.Foldable.any'.
+{-# INLINEABLE pany #-}
+pany :: PFoldable t => (a -> Bool) -> t a -> Bool
+pany = P.any
+
+-- | Plutus Tx version of 'Data.Foldable.all'.
+{-# INLINEABLE pall #-}
+pall :: PFoldable t => (a -> Bool) -> t a -> Bool
+pall = P.all
+
+-- | Plutus Tx version of 'Data.Foldable.find'.
+{-# INLINEABLE pfind #-}
+pfind :: PFoldable t => (a -> Bool) -> t a -> Maybe a
+pfind = P.find
 
 -- | Plutus Tx version of Semigroup
 type PSemigroup = P.Semigroup

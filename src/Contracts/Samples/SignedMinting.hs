@@ -18,39 +18,36 @@ contract :: PubKeyHash -> SignedMinting
 contract pkh = mkMintingContract ($$(compile [||untyped||]) `applyCode` liftCode pkh)
 
 instance MintingEndpoint SignedMinting where
-  data MintParam SignedMinting = Mint
-    { signatory :: !PubKeyHash,
-      tokenName :: !TokenName,
-      tokenQuantity :: !Integer
-    }
+  data MintParam SignedMinting
+    = Mint !Integer !TokenName
+    | Burn !Integer !TokenName
     deriving (Generic, FromJSON, ToJSON)
   mint :: MintParam SignedMinting -> ContractM SignedMinting ()
-  mint Mint {..} = do
-    let contract' = contract signatory
-    submitAndConfirm
-      Tx
-        { lookups = scriptLookupsFor contract',
-          constraints =
-            mustMint contract' tokenName tokenQuantity
-              <> mustSign signatory
-        }
+  mint mp = do
+    pkh <- getOwnPkh
+    let contract' = contract pkh
+        mint' :: Integer -> TokenName -> ContractM SignedMinting ()
+        mint' tQuantity tName = do
+          let mintAction = if tQuantity > 0 then "Minted" :: String else "Burned"
+          submitAndConfirm
+            Tx
+              { lookups = scriptLookupsFor contract',
+                constraints =
+                  mustMint contract' tName tQuantity
+                    <> mustSign pkh
+              }
+          logStr $ printf "%s %d %s" mintAction (abs tQuantity) (show tName)
+    case mp of
+      Mint tQuantity tName -> mint' tQuantity tName
+      Burn tQuantity tName -> mint' (negate tQuantity) tName
 
 test :: EmulatorTest
 test =
   initEmulator @SignedMinting
     2
-    [ Mint
-        { signatory = pkhForWallet 1,
-          tokenName = "jambcoin",
-          tokenQuantity = 1_000_000
-        }
-        `forWallet` 1, -- can mint
-      Mint
-        { signatory = pkhForWallet 1,
-          tokenName = "jambcoin",
-          tokenQuantity = 1_000_000
-        }
-        `forWallet` 2 -- can't mint (wrong signatory)
+    [ Mint 1_000_000 "jambcoin" `forWallet` 1,
+      Mint 1_000_000 "jambcoin" `forWallet` 2, -- different currency symbol!
+      Burn 100_000 "jambcoin" `forWallet` 1
     ]
 
 exports :: JambExports

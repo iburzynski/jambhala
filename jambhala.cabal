@@ -61,6 +61,7 @@ library
     Contracts.Samples.ParamVesting
     Contracts.Samples.FreeMinting
     Contracts.Samples.SignedMinting
+    Contracts.Samples.NFT
   hs-source-dirs:
       src
   build-depends:
@@ -95,10 +96,6 @@ library
     , row-types
     , time
     , turtle
-  -- mixins:
-  --     base hiding (Prelude)
-    -- , plutus-tx (PlutusTx.Prelude as Prelude)
-    -- , plutus-tx
   default-extensions:
     -- Allows promotion of types to "kinds", enabling more expressive type-level programming (required for all Plutus contracts):
       DataKinds

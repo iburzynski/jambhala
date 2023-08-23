@@ -14,8 +14,11 @@ module Jambhala.CLI.Emulator
     getCurrencySymbol,
     getDatumInDatumFromQuery,
     getDecoratedTxOutDatum,
+    getDecoratedTxOutValue,
     getOwnPkh,
+    getPubKeyUtxos,
     getUtxosAt,
+    getWalletAddress,
     initEmulator,
     logStr,
     mkDatum,
@@ -32,12 +35,15 @@ module Jambhala.CLI.Emulator
     runJambEmulator,
     submitAndConfirm,
     toWallet,
+    unsafeMkTxOutRef,
     wait,
     waitUntil,
     (IntMap.!),
   )
 where
 
+import Cardano.Api (AsType (..), deserialiseFromRawBytesHex)
+import Cardano.Api qualified as C
 import Control.Lens ((^?))
 import Control.Monad.Freer (Eff, Member)
 import Control.Monad.Freer.Reader (asks, runReader)
@@ -46,20 +52,26 @@ import Data.IntMap.Strict (Key, (!))
 import Data.IntMap.Strict qualified as IntMap
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
-import Data.Row (KnownSymbol)
+import Data.Row (KnownSymbol, Row)
+import Data.Text.Encoding qualified as Text
 import Jambhala.CLI.Emulator.Types
 import Jambhala.CLI.Types
 import Jambhala.Plutus
+import Ledger (decoratedTxOutValue)
+import Ledger.Tx.CardanoAPI (fromCardanoTxId, fromCardanoValue)
 import Plutus.Contract (HasEndpoint)
 import Plutus.Contract.Trace (defaultDistFor)
 import Plutus.Trace (EmulatorConfig (..), EmulatorRuntimeError (..))
 import Plutus.Trace.Effects.Waiting (Waiting)
 import Plutus.Trace.Emulator (ContractConstraints, throwError)
-import Wallet.Emulator.Types (knownWallets)
+import Wallet.Emulator.Types (knownWallets, mockWalletAddress)
 
 -- | Returns the `PaymentPubKeyHash` for the specified mock wallet.
 pkhForWallet :: Key -> PubKeyHash
 pkhForWallet = unPaymentPubKeyHash . mockWalletPaymentPubKeyHash . knownWallet . fromIntegral
+
+getWalletAddress :: Key -> CardanoAddress
+getWalletAddress = mockWalletAddress . knownWallet . fromIntegral
 
 -- Emulator Actions
 
@@ -112,6 +124,7 @@ forWallet ::
 p `forWallet` w = do
   h <- asks (! w)
   callEndpoint @"mint" @(MintParam contract) @() @(Schema contract) @Text h p
+  wait
 
 -- | Wait 1 slot in an `EmulatorTest`.
 wait :: Member Waiting effs => Eff effs ()
@@ -133,7 +146,7 @@ submitAndConfirm ::
   ContractM contract ()
 submitAndConfirm Tx {..} = submit >>= awaitTxConfirmed
   where
-    submit :: ContractM contract TxId
+    submit :: ContractM contract C.TxId
     submit =
       getCardanoTxId
         <$> submitTxConstraintsWith @contract @() @(Schema contract) @Text lookups constraints
@@ -190,6 +203,13 @@ getContractAddress script = do
 getUtxosAt :: forall sym. KnownSymbol sym => ValidatorContract sym -> ContractM (ValidatorContract sym) (Map TxOutRef DecoratedTxOut)
 getUtxosAt script = getContractAddress @(ValidatorContract sym) script >>= utxosAt
 
+getPubKeyUtxos ::
+  forall w (s :: Row *) e.
+  AsContractError e =>
+  CardanoAddress ->
+  Contract w s e (Map TxOutRef DecoratedTxOut)
+getPubKeyUtxos = utxosAt
+
 -- | Returns the `PubKeyHash` for the mock wallet initiating the transaction.
 getOwnPkh :: AsContractError e => Contract w s e PubKeyHash
 getOwnPkh = fmap unPaymentPubKeyHash ownFirstPaymentPubKeyHash
@@ -215,6 +235,9 @@ defaultSlotEndTime = slotToEndPOSIXTime def
 -- | A non-lens version of the `decoratedTxOutDatum` getter.
 getDecoratedTxOutDatum :: DecoratedTxOut -> Maybe (DatumHash, DatumFromQuery)
 getDecoratedTxOutDatum dto = dto ^? decoratedTxOutDatum
+
+getDecoratedTxOutValue :: DecoratedTxOut -> Maybe Value
+getDecoratedTxOutValue dto = fromCardanoValue <$> dto ^? decoratedTxOutValue
 
 -- | A non-lens version of the `datumInDatumFromQuery` getter.
 getDatumInDatumFromQuery :: DatumFromQuery -> Maybe Datum
@@ -250,11 +273,18 @@ mustSign = mustBeSignedBy . PaymentPubKeyHash
 
 -- | Requires the transaction to mint a specified quantity of a given token with the `MintingContract`'s currency symbol.
 mustMint :: MintingContract sym -> TokenName -> Integer -> TxConstraints i o
-mustMint policy tokenName tokenQuantity = mustMintValue $ mkMintingValue policy tokenName tokenQuantity
+mustMint policy tName tokenQuantity = mustMintValue $ mkMintingValue policy tName tokenQuantity
 
 -- | Requires the transaction to mint a specified quantity of a given token with the `MintingContract`'s currency symbol with a redeemer.
-mustMintWithRedeemer :: ToData redeemer => MintingContract sym -> redeemer -> TokenName -> Integer -> TxConstraints i o
-mustMintWithRedeemer policy redeemer tokenName tokenQuantity = mustMintValueWithRedeemer (mkRedeemer redeemer) $ mkMintingValue policy tokenName tokenQuantity
+mustMintWithRedeemer ::
+  ToData redeemer =>
+  MintingContract sym ->
+  redeemer ->
+  TokenName ->
+  Integer ->
+  TxConstraints i o
+mustMintWithRedeemer policy redeemer tName tokenQuantity =
+  mustMintValueWithRedeemer (mkRedeemer redeemer) $ mkMintingValue policy tName tokenQuantity
 
 -- | Returns a `Value` containing a specified quantity of a given token with the `MintingContract`'s currency symbol.
 mkMintingValue :: MintingContract sym -> TokenName -> Integer -> Value
@@ -263,3 +293,14 @@ mkMintingValue policy = singleton (getCurrencySymbol policy)
 -- | `logInfo` with the input type as `String`.
 logStr :: String -> Contract () schema Text ()
 logStr = logInfo @String
+
+-- | Converts a Text representation of a TxHash and an index into a Plutus Ledger TxId value.
+--   Throws a runtime error if the TxHash cannot be converted.
+--   Can be used in emulator tests
+unsafeMkTxOutRef :: Text -> Integer -> TxOutRef
+unsafeMkTxOutRef txHash = TxOutRef txId
+  where
+    txId =
+      either (const (error "Unable to deserialise to TxId")) fromCardanoTxId
+        . deserialiseFromRawBytesHex AsTxId
+        $ Text.encodeUtf8 txHash
