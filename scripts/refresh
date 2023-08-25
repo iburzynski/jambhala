@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+if [ "$1" == "-r" ]; then
+    direnv reload
+else
+    direnv allow
+fi
