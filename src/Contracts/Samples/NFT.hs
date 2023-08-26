@@ -49,29 +49,26 @@ instance MintingEndpoint NFTMinting where
     | Burn !TxOutRef !TokenName
     deriving (Generic, FromJSON, ToJSON)
   mint :: MintParam NFTMinting -> ContractM NFTMinting ()
-  mint mp = do
+  mint (Mint tName) = do
+    oref <- getUnspentOutput
+    let contract' = contract oref tName
     minterUtxos <- ownUtxos
-    case mp of
-      Mint tName -> do
-        oref <- getUnspentOutput
-        let contract' = contract oref tName
-        submitAndConfirm
-          Tx
-            { lookups = scriptLookupsFor contract' `andUtxos` minterUtxos,
-              constraints =
-                mustMintWithRedeemer contract' Minting tName 1
-                  <> mustSpendPubKeyOutput oref
-            }
-        logStr $ "Minted 1 " ++ show tName
-      Burn mintTxOutRef tName -> do
-        let contract' = contract mintTxOutRef tName
-            cSymbol = getCurrencySymbol contract'
-        submitAndConfirm
-          Tx
-            { lookups = scriptLookupsFor contract',
-              constraints = mustMintWithRedeemer contract' Burning tName (-1)
-            }
-        logStr $ "Burned 1 " ++ show tName
+    submitAndConfirm
+      Tx
+        { lookups = scriptLookupsFor contract' `andUtxos` minterUtxos,
+          constraints =
+            mustMintWithRedeemer contract' Minting tName 1
+              <> mustSpendPubKeyOutput oref
+        }
+    logStr $ "Minted 1 " ++ show tName
+  mint (Burn mintTxOutRef tName) = do
+    let contract' = contract mintTxOutRef tName
+    submitAndConfirm
+      Tx
+        { lookups = scriptLookupsFor contract',
+          constraints = mustMintWithRedeemer contract' Burning tName (-1)
+        }
+    logStr $ "Burned 1 " ++ show tName
 
 test :: EmulatorTest
 test =
