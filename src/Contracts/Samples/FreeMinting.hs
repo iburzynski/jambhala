@@ -24,22 +24,20 @@ instance MintingEndpoint FreeMinting where
     deriving (Generic, FromJSON, ToJSON)
 
   mint :: MintParam FreeMinting -> ContractM FreeMinting ()
-  mint mp = do
-    case mp of
-      Mint tQuantity tName -> do
-        submitAndConfirm
-          Tx
-            { lookups = scriptLookupsFor contract,
-              constraints = mustMint contract tName tQuantity
-            }
-        logStr $ printf "Minted %d %s" tQuantity (show tName)
-      Burn tQuantity tName -> do
-        submitAndConfirm
-          Tx
-            { lookups = scriptLookupsFor contract,
-              constraints = mustMint contract tName (negate tQuantity)
-            }
-        logStr $ printf "Burned %d %s" tQuantity (show tName)
+  mint (Mint tQuantity tName) = do
+    submitAndConfirm
+      Tx
+        { lookups = scriptLookupsFor contract,
+          constraints = mustMint contract tName tQuantity
+        }
+    logStr $ printf "Minted %d %s" tQuantity (show tName)
+  mint (Burn tQuantity tName) = do
+    submitAndConfirm
+      Tx
+        { lookups = scriptLookupsFor contract,
+          constraints = mustMint contract tName (negate tQuantity)
+        }
+    logStr $ printf "Burned %d %s" tQuantity (show tName)
 
 test :: EmulatorTest
 test =
