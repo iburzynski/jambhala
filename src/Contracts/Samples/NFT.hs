@@ -68,7 +68,7 @@ instance MintingEndpoint NFTMinting where
             cSymbol = getCurrencySymbol contract'
         submitAndConfirm
           Tx
-            { lookups = scriptLookupsFor contract' `andUtxos` minterUtxos,
+            { lookups = scriptLookupsFor contract',
               constraints = mustMintWithRedeemer contract' Burning tName (-1)
             }
         logStr $ "Burned 1 " ++ show tName
