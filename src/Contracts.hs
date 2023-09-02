@@ -10,6 +10,7 @@ module Contracts (contracts, samples) where
 -- import  Contracts.MyContract qualified as MyContract
 
 import Contracts.Samples.CustomTyped qualified as CustomTyped
+import Contracts.Samples.ForwardMinting qualified as ForwardMinting
 import Contracts.Samples.FreeMinting qualified as FreeMinting
 import Contracts.Samples.NFT qualified as NFT
 import Contracts.Samples.ParamVesting qualified as ParamVesting
@@ -40,5 +41,7 @@ samples =
     ParamVesting.exports,
     FreeMinting.exports,
     SignedMinting.exports,
-    NFT.exports
+    NFT.exports,
+    ForwardMinting.validatorExports,
+    ForwardMinting.policyExports
   ]

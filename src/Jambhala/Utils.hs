@@ -25,6 +25,8 @@ module Jambhala.Utils
     getDatumInDatumFromQuery,
     getDecoratedTxOutDatum,
     getDecoratedTxOutValue,
+    getFwdMintingPolicy,
+    getFwdMintingPolicyId,
     getOwnPkh,
     getPubKeyUtxos,
     getWalletAddress,
@@ -134,3 +136,9 @@ mkUntypedMintingPolicy f a ctx =
     f
       (unsafeFromBuiltinData a)
       (unsafeFromBuiltinData ctx)
+
+getFwdMintingPolicy :: ValidatorContract sym1 -> MintingContract sym2
+getFwdMintingPolicy = MintingContract . mkForwardingMintingPolicy . validatorHash . unValidatorContract
+
+getFwdMintingPolicyId :: ValidatorContract sym -> CurrencySymbol
+getFwdMintingPolicyId = scriptCurrencySymbol . mkForwardingMintingPolicy . validatorHash . unValidatorContract

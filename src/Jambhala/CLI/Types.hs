@@ -163,7 +163,9 @@ instance
       grab' :: Promise () (Schema (ValidatorContract sym)) Text ()
       grab' = endpoint @"grab" @(GrabParam (ValidatorContract sym)) @_ @(Schema (ValidatorContract sym)) $ grab
   scriptLookupsFor :: ValidatorContract sym -> ScriptLookups (ValidatorContract sym)
-  scriptLookupsFor = scriptLookupFunc @_ @(ValidatorContract sym)
+  scriptLookupsFor vc =
+    scriptLookupFunc @_ @(ValidatorContract sym) vc
+      <> (plutusV2MintingPolicy . mkForwardingMintingPolicy . validatorHash $ unValidatorContract vc)
 
 instance
   ( MintingEndpoint (MintingContract sym),

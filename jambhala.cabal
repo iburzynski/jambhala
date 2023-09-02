@@ -62,6 +62,7 @@ library
     Contracts.Samples.FreeMinting
     Contracts.Samples.SignedMinting
     Contracts.Samples.NFT
+    Contracts.Samples.ForwardMinting
   hs-source-dirs:
       src
   build-depends:

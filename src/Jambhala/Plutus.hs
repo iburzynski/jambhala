@@ -5,7 +5,8 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 module Jambhala.Plutus
-  ( Address (..),
+  ( Ada (..),
+    Address (..),
     AddressInEra,
     AsContractError,
     BabbageEra,
@@ -47,11 +48,12 @@ module Jambhala.Plutus
     Slot,
     StakeReference (..),
     ToData (..),
-    TokenName,
+    TokenName (..),
     TxConstraints,
     TxId (..),
     TxInInfo (..),
     TxInfo (..),
+    TxOut (..),
     TxOutRef (..),
     UnsafeFromData (..),
     UntypedMintingPolicy,
@@ -63,6 +65,8 @@ module Jambhala.Plutus
     Versioned (..),
     type (.\/),
     activateContractWallet,
+    adaSymbol,
+    adaToken,
     applyCode,
     awaitTxConfirmed,
     builtinDataToData,
@@ -88,8 +92,10 @@ module Jambhala.Plutus
     lovelaceValueOf,
     makeIsDataIndexed,
     makeLift,
+    minAdaTxOutEstimated,
     mintingPolicyHash,
     mkI,
+    mkForwardingMintingPolicy,
     mkMintingPolicyCardanoAddress,
     mkMintingPolicyScript,
     mkValidatorCardanoAddress,
@@ -99,9 +105,11 @@ module Jambhala.Plutus
     mustMintValue,
     mustMintValueWithRedeemer,
     mustPayToOtherScriptWithDatumInTx,
+    mustPayToPubKey,
     mustSpendPubKeyOutput,
     mustSpendScriptOutput,
     mustValidateInTimeRange,
+    ownCurrencySymbol,
     ownFirstPaymentPubKeyHash,
     ownUtxos,
     plutusV2OtherScript,
@@ -116,9 +124,11 @@ module Jambhala.Plutus
     singleton,
     slotToBeginPOSIXTime,
     slotToEndPOSIXTime,
+    stringToBuiltinByteString,
     submitTxConstraintsWith,
     toData,
     tokenName,
+    toPubKeyHash,
     toShelleyScriptHash,
     txSignedBy,
     unitDatum,
@@ -128,6 +138,7 @@ module Jambhala.Plutus
     unstableMakeIsData,
     utxosAt,
     validatorHash,
+    valueOf,
     waitNSlots,
     waitUntilSlot,
     writeFileTextEnvelope,
@@ -153,30 +164,18 @@ import Cardano.Api.Shelley
 import Cardano.Ledger.BaseTypes (Network)
 import Cardano.Ledger.Credential (Credential (..), StakeReference (..))
 import Cardano.Node.Emulator (Params (..), slotToBeginPOSIXTime, slotToEndPOSIXTime)
-import Ledger (CardanoAddress, DecoratedTxOut (..), Language (..), PaymentPubKeyHash (..), Slot, TxOutRef, Versioned (..), contains, datumInDatumFromQuery, decoratedTxOutDatum, from, getCardanoTxId, interval, mkValidatorCardanoAddress, unitDatum, unitRedeemer)
+import Ledger (CardanoAddress, DecoratedTxOut (..), Language (..), PaymentPubKeyHash (..), Slot, TxOutRef, Versioned (..), contains, datumInDatumFromQuery, decoratedTxOutDatum, from, getCardanoTxId, interval, minAdaTxOutEstimated, mkValidatorCardanoAddress, unitDatum, unitRedeemer)
 import Ledger.Tx (DatumFromQuery)
-import Ledger.Tx.Constraints
-  ( ScriptLookups (..),
-    TxConstraints,
-    mustBeSignedBy,
-    mustMintValue,
-    mustMintValueWithRedeemer,
-    mustPayToOtherScriptWithDatumInTx,
-    mustSpendPubKeyOutput,
-    mustSpendScriptOutput,
-    mustValidateInTimeRange,
-    plutusV2MintingPolicy,
-    plutusV2OtherScript,
-    unspentOutputs,
-  )
+import Ledger.Tx.Constraints (ScriptLookups (..), TxConstraints, mustBeSignedBy, mustMintValue, mustMintValueWithRedeemer, mustPayToOtherScriptWithDatumInTx, mustPayToPubKey, mustSpendPubKeyOutput, mustSpendScriptOutput, mustValidateInTimeRange, plutusV2MintingPolicy, plutusV2OtherScript, unspentOutputs)
 import Ledger.Tx.Constraints.ValidityInterval (fromPlutusInterval)
 import Plutus.Contract (AsContractError, Contract, Endpoint, Promise (..), awaitTxConfirmed, currentNodeClientTimeRange, endpoint, logInfo, ownFirstPaymentPubKeyHash, ownUtxos, select, submitTxConstraintsWith, type (.\/))
 import Plutus.Contract.Request (getParams, getUnspentOutput, utxosAt)
-import Plutus.Script.Utils.Ada (lovelaceValueOf)
+import Plutus.Script.Utils.Ada (Ada (..), lovelaceValueOf)
 import Plutus.Script.Utils.Typed (UntypedMintingPolicy, ValidatorTypes (..))
 import Plutus.Script.Utils.V2.Address (mkMintingPolicyCardanoAddress)
+import Plutus.Script.Utils.V2.Contexts (TxOut (..))
 import Plutus.Script.Utils.V2.Scripts (mintingPolicyHash, scriptCurrencySymbol, validatorHash)
-import Plutus.Script.Utils.V2.Typed.Scripts (UntypedValidator)
+import Plutus.Script.Utils.V2.Typed.Scripts (UntypedValidator, mkForwardingMintingPolicy)
 import Plutus.Trace
   ( ContractHandle,
     EmulatorConfig,
@@ -190,10 +189,17 @@ import Plutus.Trace
     waitNSlots,
     waitUntilSlot,
   )
-import Plutus.V1.Ledger.Address (scriptHashAddress)
-import Plutus.V1.Ledger.Value (flattenValue, tokenName)
-import Plutus.V2.Ledger.Api (CurrencySymbol (..), Datum (..), DatumHash, Interval (..), MintingPolicy (..), MintingPolicyHash, POSIXTime, PubKeyHash (..), Redeemer (..), ScriptContext (..), ToData (..), TokenName, TxId (..), TxInInfo (..), TxOutRef (..), Validator (..), ValidatorHash, Value, mkMintingPolicyScript, mkValidatorScript, singleton, toData, unMintingPolicyScript)
-import Plutus.V2.Ledger.Contexts (TxInfo (..), txSignedBy)
+import Plutus.V1.Ledger.Address (scriptHashAddress, toPubKeyHash)
+import Plutus.V1.Ledger.Value
+  ( TokenName (..),
+    adaSymbol,
+    adaToken,
+    flattenValue,
+    tokenName,
+    valueOf,
+  )
+import Plutus.V2.Ledger.Api (CurrencySymbol (..), Datum (..), DatumHash, Interval (..), MintingPolicy (..), MintingPolicyHash, POSIXTime, PubKeyHash (..), Redeemer (..), ScriptContext (..), ToData (..), TxId (..), TxInInfo (..), TxOutRef (..), Validator (..), ValidatorHash, Value, mkMintingPolicyScript, mkValidatorScript, singleton, toData, unMintingPolicyScript)
+import Plutus.V2.Ledger.Contexts (TxInfo (..), ownCurrencySymbol, txSignedBy)
 import PlutusTx
   ( CompiledCode,
     FromData (..),
@@ -207,6 +213,7 @@ import PlutusTx
     unstableMakeIsData,
   )
 import PlutusTx.Builtins (mkI)
+import PlutusTx.Builtins.Class (stringToBuiltinByteString)
 import Wallet.Emulator (knownWallet, mockWalletPaymentPubKeyHash)
 
 -- | Temporary replacement for deprecated function (not yet exported by Plutus.Trace.Emulator)
