@@ -28,7 +28,6 @@ instance MintingEndpoint SignedMinting where
     let contract' = contract pkh
         mint' :: Integer -> TokenName -> ContractM SignedMinting ()
         mint' tQuantity tName = do
-          let mintAction = if tQuantity > 0 then "Minted" :: String else "Burned"
           submitAndConfirm
             Tx
               { lookups = scriptLookupsFor contract',
@@ -36,6 +35,7 @@ instance MintingEndpoint SignedMinting where
                   mustMint contract' tName tQuantity
                     <> mustSign pkh
               }
+          let mintAction = if tQuantity > 0 then "Minted" :: String else "Burned"
           logStr $ printf "%s %d %s" mintAction (abs tQuantity) (show tName)
     case mp of
       Mint tQuantity tName -> mint' tQuantity tName

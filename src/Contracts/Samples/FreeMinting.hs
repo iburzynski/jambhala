@@ -30,12 +30,12 @@ instance MintingEndpoint FreeMinting where
     where
       mint' :: Integer -> TokenName -> ContractM FreeMinting ()
       mint' tQuantity tName = do
-        let mintAction = if tQuantity > 0 then "Minted" :: String else "Burned"
         submitAndConfirm
           Tx
             { lookups = scriptLookupsFor contract,
               constraints = mustMint contract tName tQuantity
             }
+        let mintAction = if tQuantity > 0 then "Minted" :: String else "Burned"
         logStr $ printf "%s %d %s" mintAction (abs tQuantity) (show tName)
 
 test :: EmulatorTest
