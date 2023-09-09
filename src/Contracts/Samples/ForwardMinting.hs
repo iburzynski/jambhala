@@ -6,8 +6,18 @@ import Data.Maybe (fromJust)
 import Jambhala.Plutus
 import Jambhala.Utils
 
+-- 1. Declare Types
+
+-- Synonyms for clearer semantics.
 type HostPKH = PubKeyHash
 
+type RedeemerCode = BuiltinByteString
+
+type RedeemerCodeString = String
+
+type TicketPrice = Integer
+
+-- | Custom datum type.
 data TicketDatum = TicketDatum
   { policySymbol :: CurrencySymbol,
     redeemerCodeHash :: BuiltinByteString,
@@ -18,28 +28,27 @@ data TicketDatum = TicketDatum
 
 unstableMakeIsData ''TicketDatum
 
-type RedeemerCode = BuiltinByteString
+-- 2. Define Lambda
 
-type RedeemerCodeString = String
-
-type TicketPrice = Integer
-
+-- | Helper function to check if any UTxO pays the ticket price to the host.
 checkPayment :: HostPKH -> TicketPrice -> [TxOut] -> Bool
 checkPayment pkh price = pany (isValidOutput pkh price)
 {-# INLINEABLE checkPayment #-}
 
+-- | Helper function to check if an individual UTxO pays the ticket price to the host.
 isValidOutput :: HostPKH -> TicketPrice -> TxOut -> Bool
 isValidOutput pkh price TxOut {..} = case toPubKeyHash txOutAddress of
   Nothing -> False
   Just pkh' -> pkh' #== pkh && valueOf txOutValue adaSymbol adaToken #== price
 {-# INLINEABLE isValidOutput #-}
 
+-- | Helper function to check that the correct quantity of the given token is minted.
 checkMint :: CurrencySymbol -> TokenName -> Value -> Bool
 checkMint cs tn minted =
   pany (\(cs', tn', q) -> cs' #== cs && tn' #== tn && q #== 1) $ flattenValue minted
 {-# INLINEABLE checkMint #-}
 
--- | Helper function to generate a unique token name from a UTxO input
+-- | Helper function to generate a unique token name from a UTxO input.
 mkTicketName :: TxOutRef -> TokenName
 mkTicketName (TxOutRef (TxId txHash) txIdx) =
   -- 1. Convert txIdx (:: Integer) to BuiltinData with mkI
@@ -50,7 +59,7 @@ mkTicketName (TxOutRef (TxId txHash) txIdx) =
   TokenName . sha2_256 . appendByteString txHash . serialiseData $ mkI txIdx
 {-# INLINEABLE mkTicketName #-}
 
--- | Typed version of the spending validator
+-- | Define typed version of the spending validator lambda.
 ticketingLambda :: HostPKH -> TicketDatum -> RedeemerCode -> ScriptContext -> Bool
 ticketingLambda pkh TicketDatum {..} redeemerCode ctx@(ScriptContext TxInfo {..} _) =
   case findOwnInput ctx of
@@ -61,7 +70,7 @@ ticketingLambda pkh TicketDatum {..} redeemerCode ctx@(ScriptContext TxInfo {..}
         && traceIfFalse "Invalid ticket mint" (checkMint policySymbol (mkTicketName oref) txInfoMint)
 {-# INLINEABLE ticketingLambda #-}
 
--- | Untyped version of the spending validator.
+-- | Untyped version of the spending validator lambda.
 untypedLambda :: HostPKH -> UntypedValidator
 untypedLambda = mkUntypedValidator . ticketingLambda
 {-# INLINEABLE untypedLambda #-}
@@ -164,6 +173,7 @@ mkTicketDatum hostPKH redeemerCodeStr price =
       ticketPrice = price
     }
 
+-- | Define emulator test.
 test :: EmulatorTest
 test =
   initEmulator @TicketValidator
