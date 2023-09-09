@@ -12,10 +12,13 @@ module Jambhala.Utils
     ValidatorContract,
     ValidatorEndpoints (..),
     andUtxos,
+    convertDecoratedTxOutDatum,
+    datumSatisfies,
     defExports,
     defaultSlotBeginTime,
     defaultSlotEndTime,
     export,
+    filterByDatum,
     forWallet,
     fromWallet,
     getContractAddress,
@@ -27,7 +30,7 @@ module Jambhala.Utils
     getDecoratedTxOutValue,
     getFwdMintingPolicy,
     getFwdMintingPolicyId,
-    getOwnPkh,
+    getOwnPKH,
     getPubKeyUtxos,
     getWalletAddress,
     initEmulator,
@@ -45,7 +48,8 @@ module Jambhala.Utils
     mustBeSpentWith,
     mustMint,
     mustMintWithRedeemer,
-    mustPayToScriptWithDatum,
+    mustPayPKH,
+    mustPayScriptWithDatum,
     pkhForWallet,
     scriptLookupsFor,
     toJSONfile,
@@ -58,8 +62,11 @@ where
 
 import Jambhala.CLI.Emulator
   ( andUtxos,
+    convertDecoratedTxOutDatum,
+    datumSatisfies,
     defaultSlotBeginTime,
     defaultSlotEndTime,
+    filterByDatum,
     forWallet,
     fromWallet,
     getContractAddress,
@@ -68,7 +75,7 @@ import Jambhala.CLI.Emulator
     getDatumInDatumFromQuery,
     getDecoratedTxOutDatum,
     getDecoratedTxOutValue,
-    getOwnPkh,
+    getOwnPKH,
     getPubKeyUtxos,
     getUtxosAt,
     getWalletAddress,
@@ -81,7 +88,8 @@ import Jambhala.CLI.Emulator
     mustBeSpentWith,
     mustMint,
     mustMintWithRedeemer,
-    mustPayToScriptWithDatum,
+    mustPayPKH,
+    mustPayScriptWithDatum,
     mustSign,
     pkhForWallet,
     submitAndConfirm,
@@ -110,7 +118,7 @@ mkMintingContract = MintingContract . mkMintingPolicyScript
 
 {-# INLINEABLE mkUntypedValidator #-}
 
--- | A more efficient implementation of the `mkUntypedValidator` method of the `IsScriptContext` typeclass
+-- | A more efficient implementation of the `mkUntypedValidator` method of the `IsScriptContext` typeclass.
 mkUntypedValidator ::
   ( UnsafeFromData a,
     UnsafeFromData b
@@ -126,7 +134,7 @@ mkUntypedValidator f a b ctx =
 
 {-# INLINEABLE mkUntypedMintingPolicy #-}
 
--- | A more efficient implementation of the `mkUntypedMintingPolicy` method of the `IsScriptContext` typeclass
+-- | A more efficient implementation of the `mkUntypedMintingPolicy` method of the `IsScriptContext` typeclass.
 mkUntypedMintingPolicy ::
   UnsafeFromData a =>
   (a -> ScriptContext -> Bool) ->
@@ -137,8 +145,10 @@ mkUntypedMintingPolicy f a ctx =
       (unsafeFromBuiltinData a)
       (unsafeFromBuiltinData ctx)
 
-getFwdMintingPolicy :: ValidatorContract sym1 -> MintingContract sym2
+-- | Returns the compiled forwarding `MintingContract` for a compiled Jambhala `ValidatorContract`.
+getFwdMintingPolicy :: ValidatorContract validatorName -> MintingContract policyName
 getFwdMintingPolicy = MintingContract . mkForwardingMintingPolicy . validatorHash . unValidatorContract
 
-getFwdMintingPolicyId :: ValidatorContract sym -> CurrencySymbol
+-- | Returns the policy ID (currency symbol) of the forwarding `MintingContract` for a compiled Jambhala `ValidatorContract`.
+getFwdMintingPolicyId :: ValidatorContract validatorName -> CurrencySymbol
 getFwdMintingPolicyId = scriptCurrencySymbol . mkForwardingMintingPolicy . validatorHash . unValidatorContract

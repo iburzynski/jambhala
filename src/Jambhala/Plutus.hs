@@ -77,6 +77,7 @@ module Jambhala.Plutus
     datumInDatumFromQuery,
     decoratedTxOutDatum,
     endpoint,
+    findOwnInput,
     flattenValue,
     from,
     fromPlutusData,
@@ -120,6 +121,7 @@ module Jambhala.Plutus
     scriptDataToJson,
     scriptHashAddress,
     select,
+    serialiseData,
     serialiseToBech32,
     singleton,
     slotToBeginPOSIXTime,
@@ -173,7 +175,7 @@ import Plutus.Contract.Request (getParams, getUnspentOutput, utxosAt)
 import Plutus.Script.Utils.Ada (Ada (..), lovelaceValueOf)
 import Plutus.Script.Utils.Typed (UntypedMintingPolicy, ValidatorTypes (..))
 import Plutus.Script.Utils.V2.Address (mkMintingPolicyCardanoAddress)
-import Plutus.Script.Utils.V2.Contexts (TxOut (..))
+import Plutus.Script.Utils.V2.Contexts (TxOut (..), findOwnInput)
 import Plutus.Script.Utils.V2.Scripts (mintingPolicyHash, scriptCurrencySymbol, validatorHash)
 import Plutus.Script.Utils.V2.Typed.Scripts (UntypedValidator, mkForwardingMintingPolicy)
 import Plutus.Trace
@@ -212,7 +214,7 @@ import PlutusTx
     makeLift,
     unstableMakeIsData,
   )
-import PlutusTx.Builtins (mkI)
+import PlutusTx.Builtins (mkI, serialiseData)
 import PlutusTx.Builtins.Class (stringToBuiltinByteString)
 import Wallet.Emulator (knownWallet, mockWalletPaymentPubKeyHash)
 

@@ -26,13 +26,13 @@ import Jambhala.Plutus
 import Jambhala.Utils
 
 -- 3. Define validator:
-gift :: BuiltinData -> BuiltinData -> BuiltinData -> ()
-gift _ _ _ = () -- always succeeds
-{-# INLINEABLE gift #-}
+giftLambda :: BuiltinData -> BuiltinData -> BuiltinData -> ()
+giftLambda _ _ _ = () -- always succeeds
+{-# INLINEABLE giftLambda #-}
 
-burn :: BuiltinData -> BuiltinData -> BuiltinData -> ()
-burn _ _ _ = perror () -- always fails
-{-# INLINEABLE burn #-}
+burnLambda :: BuiltinData -> BuiltinData -> BuiltinData -> ()
+burnLambda _ _ _ = perror () -- always fails
+{-# INLINEABLE burnLambda #-}
 
 -- 4. Define custom type for contract:
 type Gift = ValidatorContract "gift"
@@ -40,23 +40,23 @@ type Gift = ValidatorContract "gift"
 type Burn = ValidatorContract "burn"
 
 -- 5. Compile to custom contract type:
-giftContract :: Gift
-giftContract = mkValidatorContract $$(compile [||gift||])
+giftCompiled :: Gift
+giftCompiled = mkValidatorContract $$(compile [||giftLambda||])
 
-burnContract :: Burn
-burnContract = mkValidatorContract $$(compile [||burn||])
+burnCompiled :: Burn
+burnCompiled = mkValidatorContract $$(compile [||burnLambda||])
 
 -- 6. Prepare exports for use with jamb CLI:
 giftExports :: JambExports
 giftExports =
   export
-    (defExports giftContract)
+    (defExports giftCompiled)
       { dataExports =
           [ () `toJSONfile` "unit"
           ]
       }
 
 burnExports :: JambExports
-burnExports = export (defExports burnContract)
+burnExports = export (defExports burnCompiled)
 
 -- (Now import JambExports values and add to list in `src/Contracts.hs`)

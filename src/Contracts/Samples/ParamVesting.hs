@@ -1,124 +1,46 @@
--- Required for `makeLift`:
-{-# LANGUAGE MultiParamTypeClasses #-}
 -- Allows convenient unpacking of record selectors into named variables
 {-# LANGUAGE RecordWildCards #-}
--- Required for `makeLift`:
-{-# LANGUAGE ScopedTypeVariables #-}
 
+-- 0. Create Module & Declare Imports
 module Contracts.Samples.ParamVesting where
 
-import Data.Map qualified as Map
 import Jambhala.Plutus
 import Jambhala.Utils
 
-newtype VestingParam = VParam {beneficiary :: PubKeyHash}
-  deriving (Generic, ToJSON, FromJSON)
+-- 1. Declare Types: N/A
 
-makeLift ''VestingParam
+-- 2. Define Lambda
 
-paramVesting :: VestingParam -> POSIXTime -> () -> ScriptContext -> Bool
-paramVesting (VParam beneficiary) maturity _ (ScriptContext txInfo _) =
-  traceIfFalse "Wrong beneficiary" signedByBeneficiary
-    && traceIfFalse "Maturity not reached" maturityReached
-  where
-    signedByBeneficiary = txSignedBy txInfo beneficiary
-    maturityReached = from maturity `contains` txInfoValidRange txInfo
-{-# INLINEABLE paramVesting #-}
+paramVestingLambda :: PubKeyHash -> (POSIXTime -> () -> ScriptContext -> Bool)
+paramVestingLambda beneficiaryPKH maturity _ (ScriptContext txInfo _) =
+  traceIfFalse "Wrong beneficiary" (txSignedBy txInfo beneficiaryPKH)
+    && traceIfFalse "Maturity not reached" (from maturity `contains` txInfoValidRange txInfo)
+{-# INLINEABLE paramVestingLambda #-}
 
-untyped :: VestingParam -> UntypedValidator
-untyped p = mkUntypedValidator $ paramVesting p
-{-# INLINEABLE untyped #-}
+untypedLambda :: PubKeyHash -> UntypedValidator
+untypedLambda beneficiaryPKH = mkUntypedValidator $ paramVestingLambda beneficiaryPKH
+{-# INLINEABLE untypedLambda #-}
 
-type VestingContract = ValidatorContract "param-vesting"
+-- 3. Pre-Compile Lambda
 
-contract :: VestingParam -> VestingContract
-contract p = mkValidatorContract ($$(compile [||untyped||]) `applyCode` liftCode p)
+-- | Declare contract synonym with unique symbolic identifier.
+type Vesting = ValidatorContract "param-vesting"
 
-instance ValidatorEndpoints VestingContract where
-  data GiveParam VestingContract = Give
-    { lovelace :: Integer,
-      forBeneficiary :: PubKeyHash,
-      afterMaturity :: POSIXTime
-    }
-    deriving (Generic, ToJSON, FromJSON)
-  data GrabParam VestingContract = Grab
-    deriving (Generic, ToJSON, FromJSON)
+-- | Compile the untyped lambda to a UPLC script and splice back to Haskell.
+compileScript :: PubKeyHash -> Vesting
+compileScript beneficiaryPKH =
+  mkValidatorContract
+    ( $$(compile [||untypedLambda||]) -- compile the untyped parameterized validator
+        `applyCode` liftCode beneficiaryPKH -- apply the result to the "lifted" argument
+    )
 
-  give :: GiveParam VestingContract -> ContractM VestingContract ()
-  give Give {..} = do
-    submitAndConfirm
-      Tx
-        { lookups = scriptLookupsFor contract',
-          constraints = mustPayToScriptWithDatum contract' afterMaturity lovelace
-        }
-    logStr $
-      printf
-        "Made a gift of %d lovelace to %s with maturity %s"
-        lovelace
-        (show forBeneficiary)
-        (show afterMaturity)
-    where
-      contract' = contract $ VParam forBeneficiary
+-- 4. Export Contract to Jambhala
 
-  grab :: GrabParam VestingContract -> ContractM VestingContract ()
-  grab _ = do
-    pkh <- getOwnPkh
-    let contract' = contract $ VParam pkh
-    utxos <- getUtxosAt contract'
-    now <- getCurrentInterval
-    let validUtxos = Map.mapMaybe (isEligible now) utxos
-    if validUtxos == mempty
-      then logStr "No eligible gifts available"
-      else do
-        submitAndConfirm
-          Tx
-            { lookups = scriptLookupsFor contract' `andUtxos` validUtxos,
-              constraints =
-                mconcat
-                  [ mustValidateInTimeRange (fromPlutusInterval now),
-                    mustSign pkh,
-                    validUtxos `mustAllBeSpentWith` ()
-                  ]
-            }
-        logStr "Collected eligible gifts"
-    where
-      isEligible :: Interval POSIXTime -> DecoratedTxOut -> Maybe DecoratedTxOut
-      isEligible now dto = do
-        (_, dfq) <- getDecoratedTxOutDatum dto
-        Datum d <- getDatumInDatumFromQuery dfq
-        maturity <- fromBuiltinData d
-        guard (from maturity `contains` now)
-        Just dto
-
-test :: EmulatorTest
-test =
-  initEmulator @VestingContract
-    4
-    [ Give
-        { lovelace = 30_000_000,
-          forBeneficiary = pkhForWallet 2,
-          afterMaturity = m
-        }
-        `fromWallet` 1,
-      Give
-        { lovelace = 30_000_000,
-          forBeneficiary = pkhForWallet 4,
-          afterMaturity = m
-        }
-        `fromWallet` 1,
-      Grab `toWallet` 2, -- deadline not reached
-      waitUntil 20,
-      Grab `toWallet` 3, -- wrong beneficiary
-      Grab `toWallet` 4 -- collect gift
-    ]
-  where
-    m :: POSIXTime
-    m = defaultSlotBeginTime 20
-
+-- | Define `exports` value for use with `jamb` CLI.
 exports :: JambExports
 exports =
   export
-    (defExports contract')
+    (defExports appliedScript)
       { -- 1. With cardano-node running, use the `calc-time` script from cardano-cli-guru to get a POSIX time value
         --    (add the `--plus MINUTES` option, replacing MINUTES with a number of minutes to add).
         -- 2. Replace the placeholder POSIXTime value below with your POSIX time value.
@@ -127,11 +49,84 @@ exports =
         emulatorTest = test
       }
   where
-    -- The validator must be applied to some parameter to generate a hash or serialise the script to a file.
-    contract' =
-      contract
-        VParam
-          { -- 4. Use the `key-hash` script from cardano-cli-guru to get the pubkey hash for a beneficiary address.
-            -- 5. Replace the placeholder hex string below with the beneficiary address pubkey hash.
-            beneficiary = "3a5039efcafd4c82c9169b35afb27a17673f6ed785ea087139a65a5d"
-          }
+    -- The parameterized validator must be applied to a `PubKeyHash` argument before it can be exported.
+    appliedScript =
+      -- 4. Use the `key-hash` script from cardano-cli-guru to get the pubkey hash for a beneficiary address.
+      -- 5. Replace the placeholder hex string below with the beneficiary address pubkey hash.
+      compileScript "3a5039efcafd4c82c9169b35afb27a17673f6ed785ea087139a65a5d"
+
+-- 5. Define Emulator Component
+
+instance ValidatorEndpoints Vesting where
+  data GiveParam Vesting = Give
+    { lovelace :: Integer,
+      forBeneficiary :: PubKeyHash,
+      availableAfter :: POSIXTime
+    }
+    deriving (Generic, ToJSON, FromJSON)
+  data GrabParam Vesting = Grab
+    deriving (Generic, ToJSON, FromJSON)
+
+  give :: GiveParam Vesting -> ContractM Vesting ()
+  give Give {..} = do
+    submitAndConfirm
+      Tx
+        { lookups = scriptLookupsFor validator,
+          constraints = mustPayScriptWithDatum validator availableAfter (lovelaceValueOf lovelace)
+        }
+    logStr $
+      printf
+        "Made a gift of %d lovelace to %s with maturity %s"
+        lovelace
+        (show forBeneficiary)
+        (show availableAfter)
+    where
+      validator = compileScript forBeneficiary
+
+  grab :: GrabParam Vesting -> ContractM Vesting ()
+  grab _ = do
+    beneficiaryPKH <- getOwnPKH
+    let appliedScript = compileScript beneficiaryPKH
+    utxos <- getUtxosAt appliedScript
+    now <- getCurrentInterval
+    let validUtxos = filterByDatum (\maturity -> from maturity `contains` now) utxos
+    if validUtxos == mempty
+      then logStr "No eligible gifts available"
+      else do
+        submitAndConfirm
+          Tx
+            { lookups = scriptLookupsFor appliedScript `andUtxos` validUtxos,
+              constraints =
+                mconcat
+                  [ mustValidateInTimeRange (fromPlutusInterval now),
+                    mustSign beneficiaryPKH,
+                    validUtxos `mustAllBeSpentWith` ()
+                  ]
+            }
+        logStr "Collected eligible gifts"
+
+-- | Define emulator test.
+test :: EmulatorTest
+test =
+  initEmulator @Vesting
+    4
+    [ Give
+        { lovelace = 30_000_000,
+          forBeneficiary = pkhForWallet 2,
+          availableAfter = maturity
+        }
+        `fromWallet` 1,
+      Give
+        { lovelace = 30_000_000,
+          forBeneficiary = pkhForWallet 4,
+          availableAfter = maturity
+        }
+        `fromWallet` 1,
+      Grab `toWallet` 2, -- deadline not reached
+      waitUntil 20,
+      Grab `toWallet` 3, -- wrong beneficiary
+      Grab `toWallet` 4 -- collect gift
+    ]
+  where
+    maturity :: POSIXTime
+    maturity = defaultSlotBeginTime 20

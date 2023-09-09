@@ -1,22 +1,43 @@
+-- 0. Create Module & Declare Imports
 module Contracts.Samples.FreeMinting where
 
 import Jambhala.Plutus
 import Jambhala.Utils
 
-freeMinting :: () -> ScriptContext -> Bool
-freeMinting _ _ = True
-{-# INLINEABLE freeMinting #-}
+-- 2. Define Lambda
+
+-- | Define typed version of the validator lambda.
+freeMintingLambda :: () -> ScriptContext -> Bool
+freeMintingLambda _ _ = True
+{-# INLINEABLE freeMintingLambda #-}
 
 -- type UntypedMintingPolicy = BuiltinData -> BuiltinData -> ()
-untyped :: UntypedMintingPolicy
-untyped = mkUntypedMintingPolicy freeMinting
-{-# INLINEABLE untyped #-}
+untypedLambda :: UntypedMintingPolicy
+untypedLambda = mkUntypedMintingPolicy freeMintingLambda
+{-# INLINEABLE untypedLambda #-}
 
+-- 3. Pre-Compile Lambda
+
+-- | Declare contract synonym with unique symbolic identifier.
 type FreeMinting = MintingContract "free-minting"
 
-contract :: FreeMinting -- MintingContract "free-minting"
-contract = mkMintingContract $$(compile [||untyped||])
+-- | Compile the untyped lambda to a UPLC script and splice back to Haskell.
+compiledScript :: FreeMinting
+compiledScript = mkMintingContract $$(compile [||untypedLambda||])
 
+-- 4. Export Contract to Jambhala
+
+-- | Define `exports` value for use with `jamb` CLI.
+exports :: JambExports
+exports =
+  export
+    (defExports compiledScript)
+      { emulatorTest = test
+      }
+
+-- 5. Define Emulator Component
+
+-- | Define `MintingEndpoint` instance for the contract synonym.
 instance MintingEndpoint FreeMinting where
   data MintParam FreeMinting
     = Mint !Integer !TokenName
@@ -32,12 +53,13 @@ instance MintingEndpoint FreeMinting where
       mint' tQuantity tName = do
         submitAndConfirm
           Tx
-            { lookups = scriptLookupsFor contract,
-              constraints = mustMint contract tName tQuantity
+            { lookups = scriptLookupsFor compiledScript,
+              constraints = mustMint compiledScript tName tQuantity
             }
         let mintAction = if tQuantity > 0 then "Minted" :: String else "Burned"
         logStr $ printf "%s %d %s" mintAction (abs tQuantity) (show tName)
 
+-- | Define emulator test.
 test :: EmulatorTest
 test =
   initEmulator @FreeMinting
@@ -46,10 +68,3 @@ test =
       Mint 1_000_000 "jambcoin" `forWallet` 2,
       Burn 100_000 "jambcoin" `forWallet` 1
     ]
-
-exports :: JambExports
-exports =
-  export
-    (defExports contract)
-      { emulatorTest = test
-      }

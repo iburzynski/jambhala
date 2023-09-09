@@ -5,8 +5,11 @@
 module Jambhala.CLI.Emulator
   ( EmulatorTest,
     andUtxos,
+    convertDecoratedTxOutDatum,
+    datumSatisfies,
     defaultSlotBeginTime,
     defaultSlotEndTime,
+    filterByDatum,
     forWallet,
     fromWallet,
     getContractAddress,
@@ -15,7 +18,7 @@ module Jambhala.CLI.Emulator
     getDatumInDatumFromQuery,
     getDecoratedTxOutDatum,
     getDecoratedTxOutValue,
-    getOwnPkh,
+    getOwnPKH,
     getPubKeyUtxos,
     getUtxosAt,
     getWalletAddress,
@@ -28,7 +31,8 @@ module Jambhala.CLI.Emulator
     mustBeSpentWith,
     mustMint,
     mustMintWithRedeemer,
-    mustPayToScriptWithDatum,
+    mustPayPKH,
+    mustPayScriptWithDatum,
     mustSign,
     notImplemented,
     pkhForWallet,
@@ -211,8 +215,8 @@ getPubKeyUtxos ::
 getPubKeyUtxos = utxosAt
 
 -- | Returns the `PubKeyHash` for the mock wallet initiating the transaction.
-getOwnPkh :: AsContractError e => Contract w s e PubKeyHash
-getOwnPkh = fmap unPaymentPubKeyHash ownFirstPaymentPubKeyHash
+getOwnPKH :: AsContractError e => Contract w s e PubKeyHash
+getOwnPKH = fmap unPaymentPubKeyHash ownFirstPaymentPubKeyHash
 
 -- | Returns the currency symbol for the `MintingContract`.
 getCurrencySymbol :: MintingContract sym -> CurrencySymbol
@@ -231,6 +235,20 @@ defaultSlotEndTime :: Slot -> POSIXTime
 defaultSlotEndTime = slotToEndPOSIXTime def
 
 -- Get Datum from UTxO
+
+-- | Filter a UTxO `Map` to include only UTxOs with datum satisfying a given predicate.
+filterByDatum :: FromData datum => (datum -> Bool) -> Map TxOutRef DecoratedTxOut -> Map TxOutRef DecoratedTxOut
+filterByDatum p = Map.filter (datumSatisfies p)
+
+datumSatisfies :: FromData datum => (datum -> Bool) -> DecoratedTxOut -> Bool
+datumSatisfies p dto = isJust $ convertDecoratedTxOutDatum dto >>= guard . p
+
+-- | Gets the `Datum` from a `DecoratedTxOut` value (if present), then attempts to convert it to a value of a specified type.
+convertDecoratedTxOutDatum :: FromData datum => DecoratedTxOut -> Maybe datum
+convertDecoratedTxOutDatum dto = do
+  (_, dfq) <- getDecoratedTxOutDatum dto
+  Datum d <- getDatumInDatumFromQuery dfq
+  fromBuiltinData d
 
 -- | A non-lens version of the `decoratedTxOutDatum` getter.
 getDecoratedTxOutDatum :: DecoratedTxOut -> Maybe (DatumHash, DatumFromQuery)
@@ -251,13 +269,16 @@ andUtxos scriptLookups utxos = scriptLookups <> unspentOutputs utxos
 
 -- TXConstraints
 
--- | Requires the transaction to pay a given quantity of Lovelace to a validator's script address with a specified datum value.
-mustPayToScriptWithDatum :: ToData datum => ValidatorContract sym -> datum -> Integer -> TxConstraints rType dType
-mustPayToScriptWithDatum validator datum lovelace =
+-- | Requires the transaction to pay a given value to a spending validator's script address with a specified datum value.
+mustPayScriptWithDatum :: ToData datum => ValidatorContract sym -> datum -> Value -> TxConstraints rType dType
+mustPayScriptWithDatum validator datum =
   mustPayToOtherScriptWithDatumInTx
-    (validatorHash (unValidatorContract validator))
+    (validatorHash $ unValidatorContract validator)
     (mkDatum datum)
-    (lovelaceValueOf lovelace)
+
+-- | Requires the transaction to pay a given value to a public key address.
+mustPayPKH :: PubKeyHash -> Value -> TxConstraints rType dType
+mustPayPKH pkh = mustPayToPubKey (PaymentPubKeyHash pkh)
 
 -- | Requires the specified UTxO to be spent in the transaction with the specified redeemer value.
 mustBeSpentWith :: ToData redeemer => TxOutRef -> redeemer -> TxConstraints rType dType

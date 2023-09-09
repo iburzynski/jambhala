@@ -1,34 +1,57 @@
--- Used for post-fix style qualified imports:
-{-# LANGUAGE ImportQualifiedPost #-}
-
+-- 0. Create Module & Declare Imports
 module Contracts.Samples.SimpleGuessing where
 
-import Data.Map qualified as Map
 import Jambhala.Plutus
 import Jambhala.Utils
 
--- Datum
+-- 1. Declare Types
+
+-- | Custom Datum type for the guessing validator.
 newtype Answer = Answer Integer
 
--- Redeemer
+-- | Generate `FromData` and `ToData` instances for the custom type with Template Haskell.
+--   These typeclasses provide methods to convert to/from the `BuiltinData` type.
+unstableMakeIsData ''Answer
+
+-- | Custom Redeemer type for the guessing validator.
 newtype Guess = Guess Integer
 
-unstableMakeIsData ''Answer
 unstableMakeIsData ''Guess
 
-guess :: Answer -> Guess -> ScriptContext -> Bool
-guess (Answer a) (Guess g) _ = traceIfFalse "Sorry, wrong guess!" (g #== a)
-{-# INLINEABLE guess #-}
+-- 2. Define Lambda
 
-untyped :: UntypedValidator
-untyped = mkUntypedValidator guess
-{-# INLINEABLE untyped #-}
+-- | Define typed guessing validator lambda.
+guessLambda :: Answer -> Guess -> ScriptContext -> Bool
+guessLambda (Answer a) (Guess g) _ = traceIfFalse "Sorry, wrong guess!" (g #== a)
+{-# INLINEABLE guessLambda #-}
 
+-- | Convert lambda into "untyped" form before pre-compilation (:: BuiltinData -> BuiltinData -> BuiltinData -> ())
+untypedLambda :: UntypedValidator
+untypedLambda = mkUntypedValidator guessLambda
+{-# INLINEABLE untypedLambda #-}
+
+-- 3. Pre-Compile Lambda
+
+-- | Declare contract synonym with unique symbolic identifier.
 type Guessing = ValidatorContract "guessing"
 
-contract :: Guessing
-contract = mkValidatorContract $$(compile [||untyped||])
+-- | Compile the untyped lambda to a UPLC script and splice back to Haskell.
+compiledScript :: Guessing
+compiledScript = mkValidatorContract $$(compile [||untypedLambda||])
 
+-- 4. Export Contract to Jambhala
+
+-- | Define `exports` value for use with `jamb` CLI.
+exports :: JambExports -- Prepare exports for jamb CLI:
+exports =
+  export
+    (defExports compiledScript)
+      { emulatorTest = test
+      }
+
+-- 5. Define Emulator Component
+
+-- | Define `ValidatorEndpoints` instance for contract synonym.
 instance ValidatorEndpoints Guessing where
   data GiveParam Guessing = Give
     { lovelace :: !Integer,
@@ -39,36 +62,29 @@ instance ValidatorEndpoints Guessing where
     deriving (Generic, ToJSON, FromJSON)
 
   give :: GiveParam Guessing -> ContractM Guessing ()
-  give (Give q a) = do
+  give (Give lovelace answer) = do
     submitAndConfirm
       Tx
-        { lookups = scriptLookupsFor contract,
-          constraints = mustPayToScriptWithDatum contract (Answer a) q
+        { lookups = scriptLookupsFor compiledScript,
+          constraints = mustPayScriptWithDatum compiledScript (Answer answer) (lovelaceValueOf lovelace)
         }
-    logStr $ printf "Gave %d lovelace" q
+    logStr $ printf "Gave %d lovelace" lovelace
 
   grab :: GrabParam Guessing -> ContractM Guessing ()
   grab (Grab g) = do
-    utxos <- getUtxosAt contract
-    let validUtxos = Map.mapMaybe hasMatchingDatum utxos
+    utxos <- getUtxosAt compiledScript
+    let validUtxos = filterByDatum (\(Answer a) -> a == g) utxos
     if validUtxos == mempty
-      then logStr "No matching UTXOs"
+      then logStr "No matching UTxOs"
       else do
         submitAndConfirm
           Tx
-            { lookups = scriptLookupsFor contract `andUtxos` validUtxos,
+            { lookups = scriptLookupsFor compiledScript `andUtxos` validUtxos,
               constraints = validUtxos `mustAllBeSpentWith` Guess g
             }
         logStr "Collected gifts"
-    where
-      hasMatchingDatum :: DecoratedTxOut -> Maybe DecoratedTxOut
-      hasMatchingDatum dto = do
-        (_, dfq) <- getDecoratedTxOutDatum dto
-        Datum d <- getDatumInDatumFromQuery dfq
-        Answer a <- fromBuiltinData d
-        guard (g == a) -- terminate with Nothing if guess doesn't match answer
-        Just dto -- else return the matching utxo
 
+-- | Define emulator test.
 test :: EmulatorTest
 test =
   initEmulator @Guessing
@@ -80,10 +96,3 @@ test =
       Grab {withGuess = 21} `toWallet` 5,
       Grab {withGuess = 42} `toWallet` 6
     ]
-
-exports :: JambExports -- Prepare exports for jamb CLI:
-exports =
-  export
-    (defExports contract)
-      { emulatorTest = test
-      }
