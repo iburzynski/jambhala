@@ -904,5 +904,7 @@ It's possible the project dependencies haven't been properly built via `cabal`, 
   ```
 
   Note that it will be time-consuming to `cabal build` the project from scratch, so be sure to exhaust all other troubleshooting options before attempting.
+  
+- **Delete `~/.local/state/cabal/store`:** if you have pre-existing Haskell tooling installed system-wide (i.e. via GHCup, or the Haskell extension in VS Codium/Code), it's possible that build artifacts from Cabal can conflict with the Jambhala environment, resulting in Cabal errors or preventing IDE support from Haskell Language Server to work correctly in the editor. Removing `~/.local/state/cabal/store` can resolve such errors (the contents of this directory are always safe to remove and will not break any functionality).
 
 **For assistance or bug reporting, file an issue or email `ian.burzynski@emurgo.io`.**
