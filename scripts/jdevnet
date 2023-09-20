@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+# Prepare a "target" directory holding credentials, a dummy topology and
+# "up-to-date" genesis files. If the directory exists, it is wiped out.
+set -e
+
+BASEDIR="."
+TARGETDIR="$BASEDIR/devnet/target"
+
+[ -d "$TARGETDIR" ] && { echo "Cleaning up directory $TARGETDIR" ; sudo rm -r $TARGETDIR ; }
+
+cp -af "$BASEDIR/devnet/config/genesis/" "$TARGETDIR"
+cp -af "$BASEDIR/devnet/config/protocol-parameters.json" "$TARGETDIR"
+
+cp $BASEDIR/devnet/config/credentials/faucet.vkey $BASEDIR/cardano-cli-guru/assets/keys
+cp $BASEDIR/devnet/config/credentials/faucet.skey $BASEDIR/cardano-cli-guru/assets/keys
+cp $BASEDIR/devnet/config/credentials/faucet.addr $BASEDIR/cardano-cli-guru/assets/addr
+
+echo '{"Producers": []}' > "$TARGETDIR/topology.json"
+sed -i "s/\"startTime\": [0-9]*/\"startTime\": $(date +%s)/" "$TARGETDIR/genesis-byron.json" && \
+sed -i "s/\"systemStart\": \".*\"/\"systemStart\": \"$(date -u +%FT%TZ)\"/" "$TARGETDIR/genesis-shelley.json"
+
+COEFF=$(jq -n 1/$1)
+echo "Setting slot time to $1: coeffecient=$COEFF"
+sed -i "s/\"activeSlotsCoeff\": .*/\"activeSlotsCoeff\": $COEFF,/" "$TARGETDIR/genesis-shelley.json"
+
+find $TARGETDIR -type f -exec chmod 0400 {} \;
+mkdir "$TARGETDIR/ipc"
+echo "Prepared devnet, starting cluster now"
+
+cardano-node --version
+cardano-node run \
+  --config $TARGETDIR/cardano-node.json \
+  --topology $TARGETDIR/topology.json \
+  --database-path $TARGETDIR/db \
+  --socket-path $CARDANO_NODE_SOCKET_PATH \
+  --shelley-operational-certificate $TARGETDIR/opcert.cert \
+  --shelley-kes-key $TARGETDIR/kes.skey \
+  --shelley-vrf-key $TARGETDIR/vrf.skey
