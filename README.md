@@ -468,7 +468,7 @@ If you want to hide the sample contracts from the `jamb` utility and only serve 
 ```haskell
 main :: IO ()
 main = runJamb contracts -- << replace `allContracts` with `contracts` to hide sample contracts
-  where allContracts = samples <> contracts
+  where allContracts = contracts <> samples
 ```
 
 ***
