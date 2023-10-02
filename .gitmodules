@@ -7,3 +7,6 @@
 [submodule "cardano-cli-guru"]
 	path = cardano-cli-guru
 	url = https://github.com/iburzynski/cardano-cli-guru
+[submodule "cardano-devnet"]
+	path = cardano-devnet
+	url = https://github.com/cryptophonic/cardano-devnet.git
