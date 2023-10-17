@@ -6,10 +6,10 @@ module Jambhala.Utils
     JambContracts,
     DataExport (..),
     EmulatorTest,
-    MintingContract,
+    MintingContract (..),
     MintingEndpoint (..),
     Transaction (..),
-    ValidatorContract,
+    ValidatorContract (..),
     ValidatorEndpoints (..),
     andUtxos,
     convertDecoratedTxOutDatum,
@@ -53,6 +53,7 @@ module Jambhala.Utils
     pkhForWallet,
     scriptLookupsFor,
     toJSONfile,
+    tokenNameToString,
     toWallet,
     unsafeMkTxOutRef,
     wait,
@@ -101,6 +102,7 @@ import Jambhala.CLI.Emulator
 import Jambhala.CLI.Export (ExportTemplate (..), JambExports, defExports, export, toJSONfile)
 import Jambhala.CLI.Types
 import Jambhala.Plutus
+import Plutus.V1.Ledger.Value (toString)
 
 -- Make Jambhala-compatible contracts
 
@@ -152,3 +154,7 @@ getFwdMintingPolicy = MintingContract . mkForwardingMintingPolicy . validatorHas
 -- | Returns the policy ID (currency symbol) of the forwarding `MintingContract` for a compiled Jambhala `ValidatorContract`.
 getFwdMintingPolicyId :: ValidatorContract validatorName -> CurrencySymbol
 getFwdMintingPolicyId = scriptCurrencySymbol . mkForwardingMintingPolicy . validatorHash . unValidatorContract
+
+-- | Converts a `TokenName` value to a `String` value, removing the `"0x"` prefix.
+tokenNameToString :: TokenName -> String
+tokenNameToString = drop 2 . toString

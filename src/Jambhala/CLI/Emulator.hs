@@ -33,6 +33,7 @@ module Jambhala.CLI.Emulator
     mustMintWithRedeemer,
     mustPayPKH,
     mustPayScriptWithDatum,
+    mustPayScriptWithInlineDatum,
     mustSign,
     notImplemented,
     pkhForWallet,
@@ -63,6 +64,7 @@ import Jambhala.CLI.Types
 import Jambhala.Plutus
 import Ledger (decoratedTxOutValue)
 import Ledger.Tx.CardanoAPI (fromCardanoTxId, fromCardanoValue)
+import Ledger.Tx.Constraints (mustPayToOtherScriptWithInlineDatum)
 import Plutus.Contract (HasEndpoint)
 import Plutus.Contract.Trace (defaultDistFor)
 import Plutus.Trace (EmulatorConfig (..), EmulatorRuntimeError (..))
@@ -273,6 +275,13 @@ andUtxos scriptLookups utxos = scriptLookups <> unspentOutputs utxos
 mustPayScriptWithDatum :: ToData datum => ValidatorContract sym -> datum -> Value -> TxConstraints rType dType
 mustPayScriptWithDatum validator datum =
   mustPayToOtherScriptWithDatumInTx
+    (validatorHash $ unValidatorContract validator)
+    (mkDatum datum)
+
+-- | Requires the transaction to pay a given value to a spending validator's script address with a specified inline datum value.
+mustPayScriptWithInlineDatum :: ToData datum => ValidatorContract contract -> datum -> Value -> TxConstraints rType dType
+mustPayScriptWithInlineDatum validator datum =
+  mustPayToOtherScriptWithInlineDatum
     (validatorHash $ unValidatorContract validator)
     (mkDatum datum)
 

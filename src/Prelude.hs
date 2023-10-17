@@ -15,6 +15,7 @@ module Prelude
     FromJSON,
     Generic,
     Int,
+    Integral (toInteger),
     IO,
     Monoid (..),
     Num (..),
@@ -51,7 +52,9 @@ module Prelude
     (#-),
     (#*),
     (/),
+    drop,
     fromIntegral,
+    fromJust,
     guard,
     mconcatMap,
     pabs,
@@ -113,7 +116,9 @@ import Data.Eq (Eq (..))
 import Data.Foldable
 import Data.Functor
 import Data.Int (Int)
+import Data.List (drop)
 import Data.List.Extra (mconcatMap)
+import Data.Maybe (fromJust)
 import Data.Monoid (Monoid (..))
 import Data.Ord (Ord (..))
 import Data.Semigroup (Semigroup (..))
@@ -126,7 +131,7 @@ import GHC.Enum (Enum (..))
 import GHC.Err
 import GHC.Generics (Generic)
 import GHC.Num (Num (..))
-import GHC.Real (fromIntegral, (/))
+import GHC.Real (Integral (..), fromIntegral, (/))
 import GHC.Show (Show (..))
 import PlutusTx.Prelude hiding
   ( Applicative (..),

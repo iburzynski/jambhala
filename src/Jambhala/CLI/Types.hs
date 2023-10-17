@@ -16,7 +16,7 @@ import Data.Map.Strict (Map)
 import Data.Proxy (Proxy (..))
 import Data.Row (Row)
 import GHC.Natural (Natural)
-import GHC.Real (Integral, Real)
+import GHC.Real (Real)
 import GHC.TypeLits (KnownSymbol, Symbol, symbolVal)
 import Jambhala.Plutus
 
@@ -47,6 +47,14 @@ newtype WalletQuantity = WalletQuantity {walletQ :: Natural}
 -- | A test that interacts with a contract in an emulated blockchain environment.
 --   `EmulatorTest` values are constructed using the `initEmulator` function.
 data EmulatorTest = ETest {numWallets :: !WalletQuantity, jTrace :: !(Eff EmulatorEffects ())}
+
+instance Semigroup EmulatorTest where
+  (<>) :: EmulatorTest -> EmulatorTest -> EmulatorTest
+  (ETest n1 trace1) <> (ETest n2 trace2) = ETest (max n1 n2) (sequence_ [trace1, trace2])
+
+instance Monoid EmulatorTest where
+  mempty :: EmulatorTest
+  mempty = ETest 1 $ pure ()
 
 data ContractExports = ContractExports
   { script :: !ScriptExport,
