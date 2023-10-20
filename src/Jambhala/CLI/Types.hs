@@ -220,5 +220,5 @@ data Command
   | Addr !ContractName !Network
   | Hash !ContractName
   | Test !ContractName
-  | Write !ContractName !(Maybe FileName)
+  | Write !ContractName !(Maybe FileName) !Network
   | Update !(Maybe String)

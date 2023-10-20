@@ -56,6 +56,8 @@ module Prelude
     fromIntegral,
     fromJust,
     guard,
+    init,
+    last,
     mconcatMap,
     pabs,
     pall,
@@ -116,7 +118,7 @@ import Data.Eq (Eq (..))
 import Data.Foldable
 import Data.Functor
 import Data.Int (Int)
-import Data.List (drop)
+import Data.List (drop, init, last)
 import Data.List.Extra (mconcatMap)
 import Data.Maybe (fromJust)
 import Data.Monoid (Monoid (..))

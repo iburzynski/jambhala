@@ -37,7 +37,7 @@ parseNetwork =
     mconcat
       [ long "main",
         short 'm',
-        help "Display mainnet address instead of testnet"
+        help "Use mainnet address instead of testnet"
       ]
 
 parseHash :: MonadReader JambContracts m => m (Parser Command)
@@ -62,12 +62,12 @@ parseTest =
 
 parseWrite :: MonadReader JambContracts m => m (Parser Command)
 parseWrite =
-  fmap ((<*> parseFName) . fmap Write) . parseContractName $
+  fmap ((<*> parseNetwork) . (<*> parseFName) . fmap Write) . parseContractName $
     mconcat
       [ long "write",
         short 'w',
         metavar "CONTRACT",
-        help "Write CONTRACT to file with optional FILENAME (default is CONTRACT.plutus)"
+        help "Write CONTRACT to file with optional FILENAME (default is CONTRACT.plutus) and mainnet flag"
       ]
   where
     parseFName = optional $ argument str (metavar "FILENAME")
