@@ -63,6 +63,7 @@ library
     Contracts.Samples.SignedMinting
     Contracts.Samples.NFT
     Contracts.Samples.ForwardMinting
+    Contracts.Samples.StateCounter
   hs-source-dirs:
       src
   build-depends:

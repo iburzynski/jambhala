@@ -37,14 +37,18 @@
 
 ## **3. Pre-Compile Lambda**
   * 3a. Declare a Jambhala **contract synonym** for the compiled script.
-  * 3b. Pre-compile the Jambhala contract with the above synonym as type.
+  * 3b. Define a **compilation expression** to pre-compile the Jambhala contract using Template Haskell and the appropriate Jambhala wrapper function (`mkValidatorContract` or `mkMintingContract`). 
+    * For non-parameterized scripts, the compilation expression defines a constant value (with its type being the contract synonym declared above).
+    * For parameterized scripts, the compilation expression is a function that receives the extra parameter(s) and returns a value of the contract synonym.
+    * A type signature terminating in the contract synonym must always be included with the compilation expression, in order to "tag" the resulting compiled script value with the contract's symbolic identifier. This is critical to how the Jambhala framework understands the identities of individual contracts and augments them with additional functionality via the `jamb` CLI.
   ### **Recap:**
   * A **contract synonym** serves as a unique type-level identifier for a specific Jambhala contract.
   * Can be thought of like a contract's "nametag", which is used internally by the Jambhala framework.
   * Contract synonyms consist of the following:
-    * **Left-hand-side:** the `type` keyword followed by the synonym (the type that will be used to reference the contract in type signatures and annotations)
-    * **Right-hand-side:** a Jambhala contract type constructor (*`ValidatorContract`* or *`MintingContract`*) followed by a unique (type-level) string literal (*`Symbol`*), which serves as the contract's unique identifier. Another Jambhala term for this string is the contract's **symbolic identifier**. It can be any string, provided it hasn't been used for any other contracts in the same project.
+    * Left-hand-side: the `type` keyword followed by the synonym (the type that will be used to reference the contract in type signatures and annotations)
+    * Right-hand-side: a Jambhala contract type constructor (*`ValidatorContract`* or *`MintingContract`*) followed by a unique (type-level) string literal (*`Symbol`*), which serves as the contract's unique identifier. Another Jambhala term for this string is the contract's **symbolic identifier**. It can be any string, provided it hasn't been used for any other contracts in the same project.
   * The contract synonym is the *return type* for a compiled Jambhala contract.
+  * Pre-compilation from PlutusTx (Haskell) to UPLC (and re-insertion as a Haskell value) occurs via the **compilation expression**: a constant value (for non-parameterized scripts) or function (for parameterized scripts) that returns a value with type equal to the contract synonym.
   * Pre-compilation of a Jambhala contract consists of two steps:
     1. Pre-compilation from PlutusTx (Haskell) code to Untyped Plutus Core (UPLC) via Template Haskell.
     2. Conversion of pre-compiled code to a Jambhala contract value.
@@ -83,10 +87,10 @@
 
 ## **5. (Optional) Define Emulator Component**
   * 5a. Declare an **endpoint class instance** for the contract synonym (*`ValidatorEndpoints`*/*`MintingEndpoint`*).
-  * 5b. Define the **associated endpoint parameter(s)**: 
+  * 5b. Define the associated **endpoint parameter(s)**: 
     * *`GiveParam`* & *`GrabParam`* for spending validators
     * *`MintParam`* for minting policies
-  * 5c. Define the **endpoint(s)** method(s):
+  * 5c. Define the **endpoint method(s)**:
     * `give :: GiveParam contract -> ContractM contract ()` for spending validators
     * `grab :: GrabParam contract -> ContractM contract ()` for spending validators
     * `mint :: MintParam contract -> ContractM contract ()` for minting policies
@@ -99,7 +103,7 @@
     * Is defined for the contract synonym.
     * Which class is instantiated depends on the kind of script: 
       * *`ValidatorEndpoints`* class for spending validators.
-      * *`MintingEndpoint` class for minting policies.
+      * *`MintingEndpoint`* class for minting policies.
     * Instances consist of:
       * One or two **associated endpoint parameters**. These are open-ended data types tied to the class, which serve as the input(s) to the class's endpoint method(s). They are declared within the instance by applying a *type family* (type-level function) to the contract synonym, and defining one or more *constructors*.
       * One or two **endpoint methods**. These are functions containing instructions to perform within the emulator environment.

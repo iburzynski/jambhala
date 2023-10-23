@@ -18,6 +18,7 @@ import Contracts.Samples.SignedMinting qualified as SignedMinting
 import Contracts.Samples.Simple qualified as Simple
 import Contracts.Samples.SimpleGuessing qualified as SimpleGuessing
 import Contracts.Samples.SimpleTyped qualified as SimpleTyped
+import Contracts.Samples.StateCounter qualified as StateCounter
 import Contracts.Samples.Vesting qualified as Vesting
 import Jambhala.CLI.Types (JambContracts)
 
@@ -42,6 +43,7 @@ samples =
     FreeMinting.exports,
     SignedMinting.exports,
     NFT.exports,
+    StateCounter.exports,
     ForwardMinting.validatorExports,
     ForwardMinting.policyExports
   ]

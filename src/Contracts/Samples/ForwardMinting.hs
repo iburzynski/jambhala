@@ -2,7 +2,6 @@
 module Contracts.Samples.ForwardMinting where
 
 import Data.Map qualified as Map
-import Data.Maybe (fromJust)
 import Jambhala.Plutus
 import Jambhala.Utils
 
@@ -21,31 +20,30 @@ type TicketPrice = Integer
 data TicketDatum = TicketDatum
   { policySymbol :: CurrencySymbol,
     redeemerCodeHash :: BuiltinByteString,
-    ticketPrice :: Integer
+    ticketPrice :: TicketPrice
   }
   -- Must be convertible to/from JSON due to reuse in off-chain emulator code
   deriving (Generic, FromJSON, ToJSON)
 
 unstableMakeIsData ''TicketDatum
 
--- 2. Define Lambda
+-- 2. Define Helper Functions & Lambda
 
 -- | Helper function to check if any UTxO pays the ticket price to the host.
 checkPayment :: HostPKH -> TicketPrice -> [TxOut] -> Bool
-checkPayment pkh price = pany (isValidOutput pkh price)
+checkPayment hostPKH price = pany (isValidOutput hostPKH price) -- :: [TxOut] -> Bool
 {-# INLINEABLE checkPayment #-}
 
 -- | Helper function to check if an individual UTxO pays the ticket price to the host.
 isValidOutput :: HostPKH -> TicketPrice -> TxOut -> Bool
-isValidOutput pkh price TxOut {..} = case toPubKeyHash txOutAddress of
+isValidOutput hostPKH price TxOut {..} = case toPubKeyHash txOutAddress of
   Nothing -> False
-  Just pkh' -> pkh' #== pkh && valueOf txOutValue adaSymbol adaToken #== price
+  Just pkh -> pkh #== hostPKH && valueOf txOutValue adaSymbol adaToken #== price
 {-# INLINEABLE isValidOutput #-}
 
 -- | Helper function to check that the correct quantity of the given token is minted.
 checkMint :: CurrencySymbol -> TokenName -> Value -> Bool
-checkMint cs tn minted =
-  pany (\(cs', tn', q) -> cs' #== cs && tn' #== tn && q #== 1) $ flattenValue minted
+checkMint cs tn minting = pany (\(cs', tn', q) -> cs' #== cs && tn' #== tn && q #== 1) $ flattenValue minting
 {-# INLINEABLE checkMint #-}
 
 -- | Helper function to generate a unique token name from a UTxO input.
@@ -56,7 +54,7 @@ mkTicketName (TxOutRef (TxId txHash) txIdx) =
   -- 3. Concatenate txHash and index bytestring with appendByteString
   -- 4. Hash the concatenated bytestring (to prevent exceeding token name size limit)
   -- 5. Apply TokenName constructor to hashed bytestring
-  TokenName . sha2_256 . appendByteString txHash . serialiseData $ mkI txIdx
+  TokenName . sha2_256 $ consByteString txIdx txHash
 {-# INLINEABLE mkTicketName #-}
 
 -- | Define typed version of the spending validator lambda.
@@ -66,14 +64,16 @@ ticketingLambda pkh TicketDatum {..} redeemerCode ctx@(ScriptContext TxInfo {..}
     Nothing -> trace "Input not found" False
     Just (TxInInfo oref _) ->
       traceIfFalse "Invalid redeemer code" (sha2_256 redeemerCode #== redeemerCodeHash)
-        && traceIfFalse "Insufficient payment" (checkPayment pkh ticketPrice txInfoOutputs)
+        && traceIfFalse "Insufficient payment to host" (checkPayment pkh ticketPrice txInfoOutputs)
         && traceIfFalse "Invalid ticket mint" (checkMint policySymbol (mkTicketName oref) txInfoMint)
 {-# INLINEABLE ticketingLambda #-}
 
 -- | Untyped version of the spending validator lambda.
-untypedLambda :: HostPKH -> UntypedValidator
+untypedLambda :: HostPKH -> UntypedValidator -- BuiltinData -> BuiltinData -> BuiltinData -> ()
 untypedLambda = mkUntypedValidator . ticketingLambda
 {-# INLINEABLE untypedLambda #-}
+
+-- 3. Pre-compilation
 
 -- | The type synonym for the compiled spending validator script.
 type TicketValidator = ValidatorContract "forward-minting"
@@ -92,52 +92,63 @@ compilePolicy = getFwdMintingPolicy . compileValidator
 -- 4. Export Contract to Jambhala
 
 -- | Get a PKH for a testnet address to apply the parameterized script to.
-sampleHostPKH :: HostPKH
-sampleHostPKH = "3a5039efcafd4c82c9169b35afb27a17673f6ed785ea087139a65a5d"
+sampleHost :: HostPKH
+sampleHost = "3a5039efcafd4c82c9169b35afb27a17673f6ed785ea087139a65a5d"
+
+-- | Helper function for assembling a datum.
+mkTicketDatum :: HostPKH -> RedeemerCodeString -> TicketPrice -> TicketDatum
+mkTicketDatum hostPKH redeemerCodeStr price =
+  TicketDatum
+    { policySymbol = getFwdMintingPolicyId (compileValidator hostPKH),
+      redeemerCodeHash = sha2_256 $ stringToBuiltinByteString redeemerCodeStr,
+      ticketPrice = price
+    }
 
 -- | Define spending validator exports value for use with `jamb` CLI.
 validatorExports :: JambExports
 validatorExports =
   export
-    (defExports $ compileValidator sampleHostPKH)
+    (defExports $ compileValidator sampleHost)
       { dataExports =
-          [ mkTicketDatum' "DWGCGQkW7i" 25_000_000 `toJSONfile` "ticketSilver",
-            mkTicketDatum' "JvXw7RJtvo" 50_000_000 `toJSONfile` "ticketGold"
+          [ mkSampleTicketDatum "E875RPSE9M" 50_000_000 `toJSONfile` "goldTicket",
+            mkSampleTicketDatum "YIMNUUU528" 25_000_000 `toJSONfile` "silverTicket",
+            stringToBuiltinByteString "E875RPSE9M" `toJSONfile` "goldRedeemer",
+            stringToBuiltinByteString "YIMNUUU528" `toJSONfile` "silverRedeemer"
           ],
         emulatorTest = test
       }
   where
-    mkTicketDatum' = mkTicketDatum sampleHostPKH
+    mkSampleTicketDatum = mkTicketDatum sampleHost
 
 -- | Define minting policy exports value for use with `jamb` CLI.
 policyExports :: JambExports
-policyExports = export (defExports $ compilePolicy sampleHostPKH)
+policyExports =
+  export (defExports $ compilePolicy sampleHost) {dataExports = [() `toJSONfile` "unit"]}
 
--- 5. Define Emulator Component
+-- EMULATOR COMPONENT ---
 
--- | Define `ValidatorEndpoints` instance for the validator synonym (`MintingEndpoint` instance not required for the policy synonym).
 instance ValidatorEndpoints TicketValidator where
   newtype GiveParam TicketValidator = Register TicketDatum
     deriving (Generic, FromJSON, ToJSON)
   data GrabParam TicketValidator = Claim
-    { hostPKH :: PubKeyHash,
+    { hostPKH :: HostPKH,
       redeemerCode :: BuiltinByteString
     }
     deriving (Generic, FromJSON, ToJSON)
 
   give :: GiveParam TicketValidator -> ContractM TicketValidator ()
-  give (Register datum@TicketDatum {..}) = do
+  give (Register datum) = do
     hostPKH <- getOwnPKH
     let appliedValidator = compileValidator hostPKH
     submitAndConfirm
       Tx
-        { lookups = scriptLookupsFor appliedValidator, -- lookups for the associated forwarding minting policy are automatically included
+        { lookups = scriptLookupsFor appliedValidator,
           constraints = mustPayScriptWithDatum appliedValidator datum (lovelaceValueOf 2_000_000)
         }
     logStr $
       printf
         "Registered ticket with price %d lovelace"
-        ticketPrice
+        (ticketPrice datum)
 
   grab :: GrabParam TicketValidator -> ContractM TicketValidator ()
   grab Claim {..} = do
@@ -159,37 +170,28 @@ instance ValidatorEndpoints TicketValidator where
         logStr $ printf "Claimed ticket with redeemer code %s" (show redeemerCode)
       _noTicket -> logStr "No eligible ticket found"
     where
-      appliedValidator :: TicketValidator
       appliedValidator = compileValidator hostPKH
       hasCode :: RedeemerCode -> TicketDatum -> Bool
       hasCode rc ticketDatum = sha2_256 rc == redeemerCodeHash ticketDatum
-
--- | Helper function for assembling a datum.
-mkTicketDatum :: HostPKH -> RedeemerCodeString -> TicketPrice -> TicketDatum
-mkTicketDatum hostPKH redeemerCodeStr price =
-  TicketDatum
-    { policySymbol = getFwdMintingPolicyId (compileValidator hostPKH),
-      redeemerCodeHash = sha2_256 $ stringToBuiltinByteString redeemerCodeStr,
-      ticketPrice = price
-    }
 
 -- | Define emulator test.
 test :: EmulatorTest
 test =
   initEmulator @TicketValidator
     3
-    [ Register (mkTicketDatum1 "DWGCGQkW7i" 25_000_000) `fromWallet` 1,
-      Register (mkTicketDatum1 "JvXw7RJtvo" 50_000_000) `fromWallet` 1,
-      Claim {hostPKH = pkhForWallet 1, redeemerCode = stringToBuiltinByteString "DWGCGQkW7i"} `toWallet` 2,
-      Claim {hostPKH = pkhForWallet 1, redeemerCode = stringToBuiltinByteString "JvXw7RJtvo"} `toWallet` 3
+    [ Register (mkTicketDatum1 "E875RPSE9M" 50_000_000) `fromWallet` 1,
+      Register (mkTicketDatum1 "YIMNUUU528" 25_000_000) `fromWallet` 1,
+      Claim {hostPKH = pkh1, redeemerCode = "E875RPSE9M"} `toWallet` 2,
+      Claim {hostPKH = pkh1, redeemerCode = "YIMNUUU528"} `toWallet` 3
     ]
   where
+    pkh1 = pkhForWallet 1
     mkTicketDatum1 :: RedeemerCodeString -> TicketPrice -> TicketDatum
-    mkTicketDatum1 = mkTicketDatum $ pkhForWallet 1 -- construct datum with Wallet 1 as host
+    mkTicketDatum1 = mkTicketDatum pkh1
 
 -- Misc. Utilities
 
 -- | Helper function to get the token name for the ticket NFT that will be minted when consuming a given UTxO "voucher".
 --   This can be used to create a token whitelist for admission at the event.
-getTicketName :: Text -> Integer -> TokenName
-getTicketName txHash = mkTicketName . unsafeMkTxOutRef txHash
+getTicketName :: Text -> Integer -> String
+getTicketName txHash txIdx = tokenNameToString . mkTicketName $ unsafeMkTxOutRef txHash txIdx

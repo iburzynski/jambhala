@@ -17,7 +17,7 @@ paramVestingLambda beneficiaryPKH maturity _ (ScriptContext txInfo _) =
     && traceIfFalse "Maturity not reached" (from maturity `contains` txInfoValidRange txInfo)
 {-# INLINEABLE paramVestingLambda #-}
 
-untypedLambda :: PubKeyHash -> UntypedValidator
+untypedLambda :: PubKeyHash -> UntypedValidator -- BuiltinData -> BuiltinData -> BuiltinData -> ()
 untypedLambda beneficiaryPKH = mkUntypedValidator $ paramVestingLambda beneficiaryPKH
 {-# INLINEABLE untypedLambda #-}
 

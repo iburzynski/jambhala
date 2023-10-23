@@ -1,4 +1,7 @@
 # 🎟️ **VIP Ticket dApp (Forwarding Minting Policy)**
+
+>Source file: `src/Contracts/Samples/ForwardMinting.hs`
+
 The use case for this example smart contract is to facilitate minting NFTs that serve as tickets to an exclusive event (the contract code can also be adapted for similar use cases).
 
 The contract is parameterized by the *`PubKeyHash`* of a particular event host. Each host creates a unique version of the validator script, which will be used to generate a corresponding unique currency symbol for their tickets.
@@ -22,7 +25,7 @@ Note that neither condition can be met without satisfying the other:
 1. *To unlock a voucher UTxO, the transaction must mint exactly one token with the correct token name.*
 2. *To mint a token with the validator's forwarding minting policy, the corresponding UTxO voucher must be consumed as an input.*
 
-A third validation conditon requires the consumer to supply a special redeemer code, granting them the right to consume a voucher (*see next secion*).
+A third validation condition requires the consumer to supply a special redeemer code, granting them the right to consume a voucher (*see next secion*).
 
 ### **Voucher Datum & Redeemer Code**
 For the validator to be aware of its forwarding minting policy that will be used to satisfy its minting constraint, it must be supplied the *`CurrencySymbol`* (i.e. policy ID) of the FMP script. This is provided as a field on the voucher datum. 

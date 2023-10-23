@@ -7,7 +7,7 @@ import Jambhala.Utils
 
 -- 1. Declare Types
 
--- Define a custom data type for the redeemer.
+-- | Define a custom data type for the datum.
 data VestingDatum = VestingDatum
   { toBeneficiary :: PubKeyHash,
     afterMaturity :: POSIXTime

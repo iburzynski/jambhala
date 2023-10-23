@@ -10,6 +10,7 @@ module Jambhala.CLI.Emulator
     defaultSlotBeginTime,
     defaultSlotEndTime,
     filterByDatum,
+    filterByValue,
     forWallet,
     fromWallet,
     getContractAddress,
@@ -238,6 +239,10 @@ defaultSlotEndTime = slotToEndPOSIXTime def
 
 -- Get Datum from UTxO
 
+-- | Filter a UTxO `Map` to include only UTxOs whose flattened value satisfies a given predicate.
+filterByValue :: ([(CurrencySymbol, TokenName, Integer)] -> Bool) -> Map TxOutRef DecoratedTxOut -> Map TxOutRef DecoratedTxOut
+filterByValue p = Map.filter (maybe False p . getDecoratedTxOutFlatValue)
+
 -- | Filter a UTxO `Map` to include only UTxOs with datum satisfying a given predicate.
 filterByDatum :: FromData datum => (datum -> Bool) -> Map TxOutRef DecoratedTxOut -> Map TxOutRef DecoratedTxOut
 filterByDatum p = Map.filter (datumSatisfies p)
@@ -258,6 +263,9 @@ getDecoratedTxOutDatum dto = dto ^? decoratedTxOutDatum
 
 getDecoratedTxOutValue :: DecoratedTxOut -> Maybe Value
 getDecoratedTxOutValue dto = fromCardanoValue <$> dto ^? decoratedTxOutValue
+
+getDecoratedTxOutFlatValue :: DecoratedTxOut -> Maybe [(CurrencySymbol, TokenName, Integer)]
+getDecoratedTxOutFlatValue dto = flattenValue . fromCardanoValue <$> dto ^? decoratedTxOutValue
 
 -- | A non-lens version of the `datumInDatumFromQuery` getter.
 getDatumInDatumFromQuery :: DatumFromQuery -> Maybe Datum
