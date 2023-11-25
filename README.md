@@ -95,7 +95,7 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
     # Sample /etc/nix/nix.conf
 
     # Step 2a: Add this line to enable Flakes if missing (if you used the Zero-to-Nix installer this should already be added)
-    experimental-features = nix-command flakes
+    experimental-features = nix-command flakes ca-derivations
 
     # Step 2b: Add your username to trusted-users (also include 'root' to prevent overriding default setting)
     trusted-users = root your-username
