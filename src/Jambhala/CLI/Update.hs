@@ -2,29 +2,29 @@
 
 module Jambhala.CLI.Update (updatePlutusApps) where
 
-import qualified Control.Foldl as Fold
+import Control.Foldl qualified as Fold
 import Control.Monad (filterM, unless)
 import Control.Monad.Reader (MonadIO (..), MonadReader (..), ReaderT (..))
-import qualified Data.ByteString as BS
+import Data.ByteString qualified as BS
 import Data.List (break, isPrefixOf)
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
-import qualified Data.Text.IO as TIO
+import Data.Text qualified as T
+import Data.Text.Encoding qualified as T
+import Data.Text.IO qualified as TIO
 import Data.Time (getCurrentTime)
 import Data.Time.Format.ISO8601 (iso8601Show)
-import Jambhala.CLI.Update.Parsers
-  ( CabalProjectData (..),
-    Dependency (..),
-    cabalProjectParser,
-    prefetchGitParser,
-  )
+import Jambhala.CLI.Update.Parsers (
+  CabalProjectData (..),
+  Dependency (..),
+  cabalProjectParser,
+  prefetchGitParser,
+ )
 import Text.Megaparsec (errorBundlePretty, runParser)
 import Turtle (ExitCode (..))
-import qualified Turtle as Sh
+import Turtle qualified as Sh
 
 type Revision = Text
 
-updatePlutusApps :: MonadIO m => Maybe String -> m ()
+updatePlutusApps :: (MonadIO m) => Maybe String -> m ()
 updatePlutusApps mRev = do
   rev <- getCurrentPlutusAppsRev
   fp <- findPlutusApps
@@ -47,7 +47,7 @@ updatePlutusApps mRev = do
       either (error . errorBundlePretty) id
         . runParser (cabalProjectParser rv) ""
 
-getCurrentPlutusAppsRev :: MonadIO m => m Revision
+getCurrentPlutusAppsRev :: (MonadIO m) => m Revision
 getCurrentPlutusAppsRev = do
   mRev <- fmap Sh.lineToText <$> Sh.fold (Sh.inshell cmd Sh.empty) Fold.head
   maybe (error "plutus-apps source-repository-package not found in cabal.project!") pure mRev
@@ -56,7 +56,7 @@ getCurrentPlutusAppsRev = do
       "grep -A 1 \"location: https://github.com/input-output-hk/plutus-apps.git\" cabal.project"
         <> " | tail -n 1 | awk '{ sub(/\\r?\\n/, \"\"); print $NF }'"
 
-findPlutusApps :: MonadIO m => m FilePath
+findPlutusApps :: (MonadIO m) => m FilePath
 findPlutusApps =
   Sh.fold (Sh.ls src) Fold.list
     >>= filterM (\d -> Sh.testdir d <&> ((src ++ "plutus-ap_") `isPrefixOf` d &&))
@@ -68,7 +68,7 @@ findPlutusApps =
     src = "dist-newstyle/src/"
     err = error "plutus-apps directory not found! Run `cabal build` and try again."
 
-git :: MonadIO m => [Text] -> m ExitCode
+git :: (MonadIO m) => [Text] -> m ExitCode
 git = flip (Sh.proc "git") Sh.empty
 
 resetPlutusApps :: (MonadReader FilePath m, MonadIO m) => Maybe Revision -> m Revision
@@ -100,15 +100,15 @@ gitReset rev = do
   where
     resetTo r = git ["reset", "--hard", r]
 
-runOrDie :: MonadIO m => m a -> ExitCode -> m a
+runOrDie :: (MonadIO m) => m a -> ExitCode -> m a
 runOrDie onSuccess = \case
   ExitSuccess -> onSuccess
   ExitFailure n -> cdRoot >> Sh.die ("Failed with exit code: " <> Sh.repr n)
 
-cdRoot :: MonadIO m => m ()
+cdRoot :: (MonadIO m) => m ()
 cdRoot = Sh.cd "../../.."
 
-makeFlakeDependencies :: MonadIO m => [Dependency] -> m Text
+makeFlakeDependencies :: (MonadIO m) => [Dependency] -> m Text
 makeFlakeDependencies deps =
   formatFlakeDeps <$> do
     let sourceArgs = ([depLoc, depTag] <*>) . pure <$> deps
@@ -122,11 +122,11 @@ makeFlakeDependencies deps =
         . map
           ( \(Dependency {..}, sha) ->
               T.unlines
-                [ "source-repository-package",
-                  "    type: " <> depType,
-                  "    location: " <> depLoc,
-                  "    tag: " <> depTag,
-                  "    --sha256: " <> sha
+                [ "source-repository-package"
+                , "    type: " <> depType
+                , "    location: " <> depLoc
+                , "    tag: " <> depTag
+                , "    --sha256: " <> sha
                 ]
                 <> maybe "" ("    subdir:\n" <>) depSubdirs
           )

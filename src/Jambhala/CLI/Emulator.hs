@@ -2,50 +2,52 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Jambhala.CLI.Emulator
-  ( EmulatorTest,
-    andUtxos,
-    convertDecoratedTxOutDatum,
-    datumSatisfies,
-    defaultSlotBeginTime,
-    defaultSlotEndTime,
-    filterByDatum,
-    filterByValue,
-    forWallet,
-    fromWallet,
-    getContractAddress,
-    getCurrentInterval,
-    getCurrencySymbol,
-    getDatumInDatumFromQuery,
-    getDecoratedTxOutDatum,
-    getDecoratedTxOutValue,
-    getOwnPKH,
-    getPubKeyUtxos,
-    getUtxosAt,
-    getWalletAddress,
-    initEmulator,
-    logStr,
-    mkDatum,
-    mkMintingValue,
-    mkRedeemer,
-    mustAllBeSpentWith,
-    mustBeSpentWith,
-    mustMint,
-    mustMintWithRedeemer,
-    mustPayPKH,
-    mustPayScriptWithDatum,
-    mustPayScriptWithInlineDatum,
-    mustSign,
-    notImplemented,
-    pkhForWallet,
-    runJambEmulator,
-    submitAndConfirm,
-    toWallet,
-    unsafeMkTxOutRef,
-    wait,
-    waitUntil,
-    (IntMap.!),
-  )
+module Jambhala.CLI.Emulator (
+  EmulatorTest,
+  addConstraints,
+  andUtxos,
+  convertDecoratedTxOutDatum,
+  datumSatisfies,
+  defaultSlotBeginTime,
+  defaultSlotEndTime,
+  filterByDatum,
+  filterByFlatValue,
+  filterByValue,
+  forWallet,
+  fromWallet,
+  getContractAddress,
+  getCurrentInterval,
+  getCurrencySymbol,
+  getDatumInDatumFromQuery,
+  getDecoratedTxOutDatum,
+  getDecoratedTxOutValue,
+  getOwnPKH,
+  getPubKeyUtxos,
+  getUtxosAt,
+  getWalletAddress,
+  initEmulator,
+  logStr,
+  mkDatum,
+  mkMintingValue,
+  mkRedeemer,
+  mustAllBeSpentWith,
+  mustBeSpentWith,
+  mustMint,
+  mustMintWithRedeemer,
+  mustPayPKH,
+  mustPayScriptWithDatum,
+  mustPayScriptWithInlineDatum,
+  mustSign,
+  notImplemented,
+  pkhForWallet,
+  runJambEmulator,
+  submitAndConfirm,
+  toWallet,
+  unsafeMkTxOutRef,
+  wait,
+  waitUntil,
+  (IntMap.!),
+)
 where
 
 import Cardano.Api (AsType (..), deserialiseFromRawBytesHex)
@@ -82,14 +84,15 @@ getWalletAddress = mockWalletAddress . knownWallet . fromIntegral
 
 -- Emulator Actions
 
--- | Calls the validator contract's `give` endpoint with the provided `GiveParam` value,
---   locking the output from the specified mock wallet at the script address.
---   This function should be used infix.
+{- | Calls the validator contract's `give` endpoint with the provided `GiveParam` value,
+  locking the output from the specified mock wallet at the script address.
+  This function should be used infix.
+-}
 fromWallet ::
   forall contract.
-  ( ToJSON (GiveParam contract),
-    ContractConstraints (Schema contract),
-    HasEndpoint "give" (GiveParam contract) (Schema contract)
+  ( ToJSON (GiveParam contract)
+  , ContractConstraints (Schema contract)
+  , HasEndpoint "give" (GiveParam contract) (Schema contract)
   ) =>
   GiveParam contract ->
   WalletID ->
@@ -99,14 +102,15 @@ p `fromWallet` w = do
   callEndpoint @"give" @(GiveParam contract) @() @(Schema contract) @Text h p
   wait
 
--- | Calls the validator contract's `grab` endpoint with the provided `GrabParam` value,
---   sending the output to the specified mock wallet.
---   This function should be used infix.
+{- | Calls the validator contract's `grab` endpoint with the provided `GrabParam` value,
+  sending the output to the specified mock wallet.
+  This function should be used infix.
+-}
 toWallet ::
   forall contract.
-  ( ToJSON (GrabParam contract),
-    ContractConstraints (Schema contract),
-    HasEndpoint "grab" (GrabParam contract) (Schema contract)
+  ( ToJSON (GrabParam contract)
+  , ContractConstraints (Schema contract)
+  , HasEndpoint "grab" (GrabParam contract) (Schema contract)
   ) =>
   GrabParam contract ->
   WalletID ->
@@ -116,14 +120,15 @@ p `toWallet` w = do
   callEndpoint @"grab" @(GrabParam contract) @() @(Schema contract) @Text h p
   wait
 
--- | Calls the contract's `mint` endpoint with the provided `MintParam` value,
---   sending the minted assets to the specified mock wallet.
---   This function should be used infix.
+{- | Calls the contract's `mint` endpoint with the provided `MintParam` value,
+  sending the minted assets to the specified mock wallet.
+  This function should be used infix.
+-}
 forWallet ::
   forall contract.
-  ( ToJSON (MintParam contract),
-    ContractConstraints (Schema contract),
-    HasEndpoint "mint" (MintParam contract) (Schema contract)
+  ( ToJSON (MintParam contract)
+  , ContractConstraints (Schema contract)
+  , HasEndpoint "mint" (MintParam contract) (Schema contract)
   ) =>
   MintParam contract ->
   WalletID ->
@@ -134,20 +139,20 @@ p `forWallet` w = do
   wait
 
 -- | Wait 1 slot in an `EmulatorTest`.
-wait :: Member Waiting effs => Eff effs ()
+wait :: (Member Waiting effs) => Eff effs ()
 wait = void $ waitNSlots 1
 
 -- | Wait until the specified slot in an `EmulatorTest`.
-waitUntil :: Member Waiting effs => Slot -> Eff effs ()
+waitUntil :: (Member Waiting effs) => Slot -> Eff effs ()
 waitUntil slot = void $ waitUntilSlot slot
 
 -- | Submits a `Transaction` value to the emulated blockchain and waits until confirmation.
 submitAndConfirm ::
   forall contract.
-  ( FromData (DatumType contract),
-    ToData (DatumType contract),
-    ToData (RedeemerType contract),
-    Emulatable contract
+  ( FromData (DatumType contract)
+  , ToData (DatumType contract)
+  , ToData (RedeemerType contract)
+  , Emulatable contract
   ) =>
   Transaction contract ->
   ContractM contract ()
@@ -158,9 +163,10 @@ submitAndConfirm Tx {..} = submit >>= awaitTxConfirmed
       getCardanoTxId
         <$> submitTxConstraintsWith @contract @() @(Schema contract) @Text lookups constraints
 
--- | Constructs an `EmulatorTest` with a specified number of mock wallets and a list of `EmulatorAction` values.
---   This function requires the `contract` type to be disambiguated using a type application, i.e.:
--- @ initEmulator \@MyContract @
+{- | Constructs an `EmulatorTest` with a specified number of mock wallets and a list of `EmulatorAction` values.
+  This function requires the `contract` type to be disambiguated using a type application, i.e.:
+@ initEmulator \@MyContract @
+-}
 initEmulator ::
   forall contract.
   (ContractConstraints (Schema contract), Emulatable contract) =>
@@ -174,8 +180,9 @@ initEmulator numWallets@(WalletQuantity wq) effs = ETest {..}
       let hs' = IntMap.fromList $ zip [1 .. fromIntegral wq] hs
       runReader hs' (sequence_ effs)
 
--- | A default `EmulatorTest` value used in the `defExports` template,
---   which throws an error if the test is run.
+{- | A default `EmulatorTest` value used in the `defExports` template,
+  which throws an error if the test is run.
+-}
 notImplemented :: EmulatorTest
 notImplemented = ETest {numWallets = 1, jTrace = logNotImplemented}
   where
@@ -193,32 +200,32 @@ runJambEmulator ETest {..} =
 -- Make Transaction Inputs
 
 -- | Converts a value to `BuiltinData` and makes it a `Datum`.
-mkDatum :: ToData a => a -> Datum
+mkDatum :: (ToData a) => a -> Datum
 mkDatum = Datum . toBuiltinData
 
 -- | Converts a value to `BuiltinData` and makes it a `Redeemer`.
-mkRedeemer :: ToData a => a -> Redeemer
+mkRedeemer :: (ToData a) => a -> Redeemer
 mkRedeemer = Redeemer . toBuiltinData
 
 -- | Returns the script address for a validator or minting policy.
-getContractAddress :: IsScript contract => contract -> ContractM contract (AddressInEra BabbageEra)
+getContractAddress :: (IsScript contract) => contract -> ContractM contract (AddressInEra BabbageEra)
 getContractAddress script = do
   nId <- pNetworkId <$> getParams
   pure $ addressFunc nId script
 
 -- | Returns a `Map` of the UTxOs locked at a `ValidatorContract`.
-getUtxosAt :: forall sym. KnownSymbol sym => ValidatorContract sym -> ContractM (ValidatorContract sym) (Map TxOutRef DecoratedTxOut)
+getUtxosAt :: forall sym. (KnownSymbol sym) => ValidatorContract sym -> ContractM (ValidatorContract sym) (Map TxOutRef DecoratedTxOut)
 getUtxosAt script = getContractAddress @(ValidatorContract sym) script >>= utxosAt
 
 getPubKeyUtxos ::
-  forall w (s :: Row *) e.
-  AsContractError e =>
+  forall w (s :: Row (*)) e.
+  (AsContractError e) =>
   CardanoAddress ->
   Contract w s e (Map TxOutRef DecoratedTxOut)
 getPubKeyUtxos = utxosAt
 
 -- | Returns the `PubKeyHash` for the mock wallet initiating the transaction.
-getOwnPKH :: AsContractError e => Contract w s e PubKeyHash
+getOwnPKH :: (AsContractError e) => Contract w s e PubKeyHash
 getOwnPKH = fmap unPaymentPubKeyHash ownFirstPaymentPubKeyHash
 
 -- | Returns the currency symbol for the `MintingContract`.
@@ -226,7 +233,7 @@ getCurrencySymbol :: MintingContract sym -> CurrencySymbol
 getCurrencySymbol = scriptCurrencySymbol . unMintingContract
 
 -- | Returns the node's current `POSIXTime` `Interval`.
-getCurrentInterval :: AsContractError e => Contract w s e (Interval POSIXTime)
+getCurrentInterval :: (AsContractError e) => Contract w s e (Interval POSIXTime)
 getCurrentInterval = uncurry interval <$> currentNodeClientTimeRange
 
 -- | Returns the POSIXTime value for the beginning of a slot.
@@ -239,19 +246,23 @@ defaultSlotEndTime = slotToEndPOSIXTime def
 
 -- Get Datum from UTxO
 
+-- | Filter a UTxO `Map` to include only UTxOs whose value satisfies a given predicate.
+filterByValue :: (Value -> Bool) -> Map TxOutRef DecoratedTxOut -> Map TxOutRef DecoratedTxOut
+filterByValue p = Map.filter (maybe False p . getDecoratedTxOutValue)
+
 -- | Filter a UTxO `Map` to include only UTxOs whose flattened value satisfies a given predicate.
-filterByValue :: ([(CurrencySymbol, TokenName, Integer)] -> Bool) -> Map TxOutRef DecoratedTxOut -> Map TxOutRef DecoratedTxOut
-filterByValue p = Map.filter (maybe False p . getDecoratedTxOutFlatValue)
+filterByFlatValue :: ([(CurrencySymbol, TokenName, Integer)] -> Bool) -> Map TxOutRef DecoratedTxOut -> Map TxOutRef DecoratedTxOut
+filterByFlatValue p = Map.filter (maybe False p . getDecoratedTxOutFlatValue)
 
 -- | Filter a UTxO `Map` to include only UTxOs with datum satisfying a given predicate.
-filterByDatum :: FromData datum => (datum -> Bool) -> Map TxOutRef DecoratedTxOut -> Map TxOutRef DecoratedTxOut
+filterByDatum :: (FromData datum) => (datum -> Bool) -> Map TxOutRef DecoratedTxOut -> Map TxOutRef DecoratedTxOut
 filterByDatum p = Map.filter (datumSatisfies p)
 
-datumSatisfies :: FromData datum => (datum -> Bool) -> DecoratedTxOut -> Bool
+datumSatisfies :: (FromData datum) => (datum -> Bool) -> DecoratedTxOut -> Bool
 datumSatisfies p dto = isJust $ convertDecoratedTxOutDatum dto >>= guard . p
 
 -- | Gets the `Datum` from a `DecoratedTxOut` value (if present), then attempts to convert it to a value of a specified type.
-convertDecoratedTxOutDatum :: FromData datum => DecoratedTxOut -> Maybe datum
+convertDecoratedTxOutDatum :: (FromData datum) => DecoratedTxOut -> Maybe datum
 convertDecoratedTxOutDatum dto = do
   (_, dfq) <- getDecoratedTxOutDatum dto
   Datum d <- getDatumInDatumFromQuery dfq
@@ -279,15 +290,19 @@ andUtxos scriptLookups utxos = scriptLookups <> unspentOutputs utxos
 
 -- TXConstraints
 
+-- | Add additional transaction constraints to a `Transaction` value.
+addConstraints :: Transaction contract -> TxConstraints (RedeemerType contract) (DatumType contract) -> Transaction contract
+addConstraints (Tx lookups commonConstraints) extraConstraints = Tx lookups (commonConstraints <> extraConstraints)
+
 -- | Requires the transaction to pay a given value to a spending validator's script address with a specified datum value.
-mustPayScriptWithDatum :: ToData datum => ValidatorContract sym -> datum -> Value -> TxConstraints rType dType
+mustPayScriptWithDatum :: (ToData datum) => ValidatorContract sym -> datum -> Value -> TxConstraints rType dType
 mustPayScriptWithDatum validator datum =
   mustPayToOtherScriptWithDatumInTx
     (validatorHash $ unValidatorContract validator)
     (mkDatum datum)
 
 -- | Requires the transaction to pay a given value to a spending validator's script address with a specified inline datum value.
-mustPayScriptWithInlineDatum :: ToData datum => ValidatorContract contract -> datum -> Value -> TxConstraints rType dType
+mustPayScriptWithInlineDatum :: (ToData datum) => ValidatorContract contract -> datum -> Value -> TxConstraints rType dType
 mustPayScriptWithInlineDatum validator datum =
   mustPayToOtherScriptWithInlineDatum
     (validatorHash $ unValidatorContract validator)
@@ -298,11 +313,11 @@ mustPayPKH :: PubKeyHash -> Value -> TxConstraints rType dType
 mustPayPKH pkh = mustPayToPubKey (PaymentPubKeyHash pkh)
 
 -- | Requires the specified UTxO to be spent in the transaction with the specified redeemer value.
-mustBeSpentWith :: ToData redeemer => TxOutRef -> redeemer -> TxConstraints rType dType
+mustBeSpentWith :: (ToData redeemer) => TxOutRef -> redeemer -> TxConstraints rType dType
 utxo `mustBeSpentWith` redeemer = mustSpendScriptOutput utxo $ mkRedeemer redeemer
 
 -- | Requires a `Map` of UTxOs to all be spent in the transaction with the specified redeemer value.
-mustAllBeSpentWith :: ToData redeemer => Map TxOutRef DecoratedTxOut -> redeemer -> TxConstraints rType dType
+mustAllBeSpentWith :: (ToData redeemer) => Map TxOutRef DecoratedTxOut -> redeemer -> TxConstraints rType dType
 utxos `mustAllBeSpentWith` redeemer = mconcatMap (`mustBeSpentWith` redeemer) $ Map.keys utxos
 
 -- | Requires the transaction be signed by the private key corresponding to a `PubKeyHash`.
@@ -315,7 +330,7 @@ mustMint policy tName tokenQuantity = mustMintValue $ mkMintingValue policy tNam
 
 -- | Requires the transaction to mint a specified quantity of a given token with the `MintingContract`'s currency symbol with a redeemer.
 mustMintWithRedeemer ::
-  ToData redeemer =>
+  (ToData redeemer) =>
   MintingContract sym ->
   redeemer ->
   TokenName ->
@@ -332,9 +347,10 @@ mkMintingValue policy = singleton (getCurrencySymbol policy)
 logStr :: String -> Contract () schema Text ()
 logStr = logInfo @String
 
--- | Converts a Text representation of a TxHash and an index into a Plutus Ledger TxId value.
---   Throws a runtime error if the TxHash cannot be converted.
---   Can be used in emulator tests
+{- | Converts a Text representation of a TxHash and an index into a Plutus Ledger TxId value.
+  Throws a runtime error if the TxHash cannot be converted.
+  Can be used in emulator tests
+-}
 unsafeMkTxOutRef :: Text -> Integer -> TxOutRef
 unsafeMkTxOutRef txHash = TxOutRef txId
   where

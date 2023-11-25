@@ -45,8 +45,8 @@ exports =
         --    (add the `--plus MINUTES` option, replacing MINUTES with a number of minutes to add).
         -- 2. Replace the placeholder POSIXTime value below with your POSIX time value.
         -- 3. Note the NEW SLOT value for later use in transaction construction.
-        dataExports = [(1689950332 :: POSIXTime) `toJSONfile` "maturity"],
-        emulatorTest = test
+        dataExports = [(1689950332 :: POSIXTime) `toJSONfile` "maturity"]
+      , emulatorTest = test
       }
   where
     -- The parameterized validator must be applied to a `PubKeyHash` argument before it can be exported.
@@ -59,9 +59,9 @@ exports =
 
 instance ValidatorEndpoints Vesting where
   data GiveParam Vesting = Give
-    { lovelace :: Integer,
-      forBeneficiary :: PubKeyHash,
-      availableAfter :: POSIXTime
+    { lovelace :: Integer
+    , forBeneficiary :: PubKeyHash
+    , availableAfter :: POSIXTime
     }
     deriving (Generic, ToJSON, FromJSON)
   data GrabParam Vesting = Grab
@@ -71,8 +71,8 @@ instance ValidatorEndpoints Vesting where
   give Give {..} = do
     submitAndConfirm
       Tx
-        { lookups = scriptLookupsFor validator,
-          constraints = mustPayScriptWithDatum validator availableAfter (lovelaceValueOf lovelace)
+        { lookups = scriptLookupsFor validator
+        , constraints = mustPayScriptWithDatum validator availableAfter (lovelaceValueOf lovelace)
         }
     logStr $
       printf
@@ -95,12 +95,12 @@ instance ValidatorEndpoints Vesting where
       else do
         submitAndConfirm
           Tx
-            { lookups = scriptLookupsFor appliedScript `andUtxos` validUtxos,
-              constraints =
+            { lookups = scriptLookupsFor appliedScript `andUtxos` validUtxos
+            , constraints =
                 mconcat
-                  [ mustValidateInTimeRange (fromPlutusInterval now),
-                    mustSign beneficiaryPKH,
-                    validUtxos `mustAllBeSpentWith` ()
+                  [ mustValidateInTimeRange (fromPlutusInterval now)
+                  , mustSign beneficiaryPKH
+                  , validUtxos `mustAllBeSpentWith` ()
                   ]
             }
         logStr "Collected eligible gifts"
@@ -111,21 +111,21 @@ test =
   initEmulator @Vesting
     4
     [ Give
-        { lovelace = 30_000_000,
-          forBeneficiary = pkhForWallet 2,
-          availableAfter = maturity
+        { lovelace = 30_000_000
+        , forBeneficiary = pkhForWallet 2
+        , availableAfter = maturity
         }
-        `fromWallet` 1,
-      Give
-        { lovelace = 30_000_000,
-          forBeneficiary = pkhForWallet 4,
-          availableAfter = maturity
+        `fromWallet` 1
+    , Give
+        { lovelace = 30_000_000
+        , forBeneficiary = pkhForWallet 4
+        , availableAfter = maturity
         }
-        `fromWallet` 1,
-      Grab `toWallet` 2, -- deadline not reached
-      waitUntil 20,
-      Grab `toWallet` 3, -- wrong beneficiary
-      Grab `toWallet` 4 -- collect gift
+        `fromWallet` 1
+    , Grab `toWallet` 2 -- deadline not reached
+    , waitUntil 20
+    , Grab `toWallet` 3 -- wrong beneficiary
+    , Grab `toWallet` 4 -- collect gift
     ]
   where
     maturity :: POSIXTime

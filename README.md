@@ -11,15 +11,15 @@
   * **[Configure `nix.conf`](#2-configure-nixconf)**
   * **[Create your repository](#3-create-your-repository)**
   * **[Clone repository & test readiness](#4-clone-repository--test-readiness)**
-  * **[Build environment & set up project](#5-build-environment--set-up-project)**
+  * **[Build environment](#5-build-environment)**
+  * **[Getting started: j commands and setup wizard](#6-getting-started-j-commands-and-setup-wizard)**
   * **[Start coding](#6-start-coding)**
-* **[Using the `jamb` CLI](#using-the-jamb-cli)**
 * **[Writing contracts](#writing-contracts)**
   * **[Creating a contract](#creating-a-contract)**
-    * **[Writing emulator tests](#writing-emulator-tests)**
-    * **[Using the `jamb` CLI](#using-the-jamb-cli)**
+  * **[Writing emulator tests](#writing-emulator-tests)**
+  * **[Using `j cli`](#using-j-cli)**
   * **[Using GHCi](#using-ghci)**
-  * **[Serving `plutus-apps` docs](#serving-plutus-apps-docs)**
+  * **[Serving docs](#serving-docs)**
 * **[Updating Jambhala](#updating-jambhala)**
 * **[Updating Plutus dependencies](#updating-plutus-dependencies)**
   * **[Set `plutus-apps` to a specific commit/tag](#set-plutus-apps-to-a-specific-committag)**
@@ -32,7 +32,7 @@
 Jambhala brings Cardano development nirvana by presenting five jewels:
 
 💎 #1: **Painless installation of Cardano tooling**
-  - Only `git`, and **[`nix`](#1-install-nix)** are required to get started.
+  - Only `git` and **[`nix`](#1-install-nix)** are required to get started.
   - Jambhala's **Readiness Test** confirms system readiness before proceeding with installation, preventing wastage of time and resources on failed builds.
   - Jambhala's setup wizard handles everything else, including easy installation of `cardano-node` and `cardano-cli` using **[Cardano EZ-Installer](https://github.com/iburzynski/cardano-ez-installer)**.
   - **[plutus-apps](https://github.com/input-output-hk/plutus-apps)** is installed internally to your project, so you don't need to maintain a central clone and use its associated Nix shell as the entry point for your projects (See **Jewel #4** below).
@@ -40,15 +40,15 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
 
 💎 #2: **Minimize contract boilerplate**
   - Jambhala uses a custom `Prelude` module which includes both the `PlutusTx.Prelude` and common Haskell items .
-    - No need to use `NoImplicitPrelude` pragma, manually import `PlutusTx.Prelude` and Haskell's prelude
+    - No need to use `NoImplicitPrelude` pragma and manually import `PlutusTx.Prelude` or Haskell's prelude
     - No need to use `hiding` clauses or qualified imports to avoid nameclashes: `PlutusTx` versions of functions that clash with their Haskell counterparts are prefixed with `p` (for prefix functions) and `#` (for infix operators)
   - The amount of required language extensions for Plutus development are significantly reduced, and commonly required extensions are enabled by default.
-  - Common Plutustypes and functions are re-exported from their respective modules by `Jambhala.Plutus`, so you don't need to keep track of messy import boilerplate. You can always import Plutus modules explicitly if you prefer.
+  - Common Plutus types and functions are re-exported from their respective modules by `Jambhala.Plutus`, so you don't need to keep track of messy import boilerplate. You can always import Plutus modules explicitly if you prefer.
   - `Jambhala.Utils` provides common utility functions to avoid contract clutter.
 
 💎 #3: **Perform common `cardano-cli` and Plutus tasks with simple commands**
   - Jambhala includes **[Cardano CLI Guru](https://github.com/iburzynski/cardano-cli-guru)**, which provides utility scripts for common `cardano-cli` tasks that can be run as terminal commands.
-  - A Haskell-based executable CLI called `jamb` lets you easily perform common tasks with your Plutus contracts, including:
+  - A Haskell-based executable CLI (`j cli`) lets you easily perform common tasks with your Plutus contracts, including:
     - Computing validator hashes and script addresses
     - Running emulator tests
     - Serializing contracts and their associated input data to JSON files
@@ -56,7 +56,6 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
 💎 #4: **Keep projects in sync with `plutus-apps`**
   - Jhambala uses **[haskell.nix](https://input-output-hk.github.io/haskell.nix/)** to provide a fully self-reliant Plutus development environment for each of your projects, which can be brought up to date with the current state of `plutus-apps` using a single command.
   - No wrangling of dependency boilerplate: just build your project environment and get to work, then bump `plutus-apps` for a specific project whenever you like.
-  - Serve Haddock documentation for the specific `plutus-apps` revision your project uses with the `serve-docs` command.
 
 💎 #5: **Learn from a wealth of high-quality tutorials and samples**
   - **[Cardano CLI Guru](https://github.com/iburzynski/cardano-cli-guru)** provides a series of easy-to-follow `cardano-cli` tutorials that teach you how to build increasingly complex transactions and native scripts.
@@ -69,9 +68,8 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
 
   * This project uses the Nix package manager to build a fully-functioning and reproducible Cardano development environment.
   * Nix is only compatible with Unix-like operating systems, so you must be using a Linux distribution, MacOS, or WSL2 (Windows Subsystem for Linux) to install Jambhala.
-  * Your system must have `bash` and `git` installed. Run `bash --version` and `git -v` in a terminal window to confirm.
-    * **NOTE for MacOS users:** MacOS may ship with versions of `bash` and `grep` that are incompatible with this workflow. You should install `bash`/`grep` using Homebrew first before proceeding.
-  * This project assumes the use of `VS Codium` (a preconfigured installation is provided) or `VS Code` as editor and `bash` as shell (also provided in the Nix development environment). Other tools will require alternative workflows that are not covered here.
+  * Your system must have `git` installed. Run `git -v` in a terminal window to confirm.
+  * This project assumes the use of `VS Codium` (a preconfigured installation is provided) or `VS Code` as editor. Other editors will require alternative workflows that are not covered here.
   * Jambhala and `cardano-node` are storage-intensive. We suggest you have at least `50GB` of free disk space before proceeding further.
 
 ***
@@ -88,6 +86,8 @@ Jambhala brings Cardano development nirvana by presenting five jewels:
       ```sh
       sudo nano /etc/nix/nix.conf
       ```
+
+    >**Note:** if no configuration file exists at `/etc/nix/nix.conf` it's possible the file is located elsewhere, depending on your OS. Run `find / -name "nix.conf" 2>/dev/null` to find the location of the file (this may take several minutes).
 
   * Modify the file following the instructions below:
 
@@ -169,7 +169,7 @@ Clone your new repository in a terminal session:
 
   >**Note:** Jambhala uses git submodules to incorporate companion projects (like **[Cardano EZ-Installer](https://github.com/iburzynski/cardano-ez-installer)**, **[Cardano CLI Guru](https://github.com/iburzynski/cardano-cli-guru)**, and **[Jambhalucid](https://github.com/iburzynski/jambhalucid)**). These projects are maintained as separate repositories. To include them when you clone your fork, you must use the `--recurse-submodules` flag.
 
-Before proceeding to Step 5, navigate to your project directory in a terminal window and run the **Jambhala Readiness Test** to confirm whether your system is ready to install the Jambhala environment:
+Before proceeding to Step 5, navigate to your project directory in a terminal window and run the **Jambhala Readiness Test** to confirm that your system is ready to install the Jambhala environment:
 
 ```sh
 ./ready?
@@ -193,7 +193,7 @@ Jambhala uses the `direnv` utility to provide seamless loading of the Nix enviro
 After the `./ready?` script completes, correct any issues and re-run it until all tests pass.
 
 ***
-### 5. **Build environment & set up project**
+### 5. **Build environment**
 ***
 
   * Open a new terminal window and navigate to your project directory:
@@ -234,45 +234,39 @@ After the `./ready?` script completes, correct any issues and re-run it until al
   - Some dependencies will need to be built from source, but if you see "building" for certain packages that should be downloadable from a binary cache (particularly GHC) or if you see any warning such as `warning: ignoring substitute`, this means your system is not configured correctly and Nix is attempting to build packages from source that it should be fetching from a cache. Exit with `CTRL + c` and repeat **[Step 4](#2-configure-nixconf)**, then try again. Make sure to restart the `nix-daemon`!
   - **If you see any HTTP-related errors**, it means the IOG binary cache is non-responsive. Wait a bit and try again later.
 
-  - Once the Nix environment build process completes, run `jsetup` to launch the Jambhala setup wizard:
+***
+### 6. **Getting started: `j` commands and setup wizard**
+***
 
-    ```sh
-    jsetup
-    ```
+Once the environment loads successfully, you can get started using Jambhala's `j` commands (also called "recipes"). These provide concise commands to run common tasks from within the Jambhala environment.
 
-  - The setup wizard runs differently depending on whether you're using Jambhala in **Learning** or **Development** mode:
-    - If you created your repository by forking (**Learning Mode**), the wizard will simply build the project without any personalization.
-    - If you created your repository by generating from the template (**Development Mode**), the wizard will provide a series of prompts to personalize your project.
-      - Your `.cabal` and `LICENSE` files will be customized using your answers to the prompts.
-      - The Jambhala `README` file will be moved to the `docs` directory, and a new `README` for your project will be created
+To see available "recipes", run `j --list`. You'll see a list of commands displayed along with brief descriptions of what they do. You can run any of these by adding `j ` in front of the command. Specific `j` commands will be explained in later sections. 
 
-  - The project will then be built using `cabal`. While seemingly redundant (since the project's dependencies have already been built using Nix), a `cabal build` is necessary for proper Haskell Language Server support in VS Codium/Code. This step will also take some time to complete:
+We'll run our first `j` command to launch the Jambhala setup wizard (`j setup`), which is the final step of the installation process. It helps set up required Cardano tooling like `cardano-node` and `cardano-cli`, and personalizes your project if you're using **Developer Mode**.
 
-    ```
-                  _=_
-                q(-_-)p
-                '_) (_`
-                /__/  \
-              _(<_   / )_
-    _________(__\_\_|_/__)_________
+```sh
+j setup
+```
 
-    Om Dzambhala Dzalentraye Svaha!
-    ```
+If you created your repository by generating from the template (**Development Mode**), the wizard will begin by providing a series of prompts allowing you to personalize your project:
+  - Your `.cabal` and `LICENSE` files will be customized using your answers to the prompts.
+  - You can optionally move the Jambhala `README` file to the `docs` directory, and create a new `README` for your project.
 
-  - **Installing `cardano-node` & `cardano-cli`**
-    - Once the project has built, the setup wizard will prompt you to install `cardano-node` and `cardano-cli`.
-    - You'll need a fully-synced `cardano-node` with `cardano-cli` to submit example transactions to the blockchain. The setup wizard runs **[Cardano EZ-Installer](https://github.com/iburzynski/cardano-ez-installer)** to easily install and configure these tools in a single step.
-    - This installation method also makes it easy to update your node/cli to a new version later.
-    - If you've already installed `cardano-node` and `cardano-cli` through other means, you can also configure your existing installation to work with Jambhala.
-    - See the **[Cardano EZ-Installer README](./cardano-ez-installer/README.md)** for more information.
-    - A tutorial with guided exercises for learning to use `cardano-cli` is provided in the `cardano-cli-guru/tutorial` directory.
+#### **Installing `cardano-node` & `cardano-cli`**
+Next, the setup wizard will prompt you to install `cardano-node` and `cardano-cli`.
+  - You'll need a fully-synced `cardano-node` with `cardano-cli` to submit example transactions to the blockchain. The setup wizard runs **[Cardano EZ-Installer](https://github.com/iburzynski/cardano-ez-installer)** to easily install and configure these tools in a single step.
+  - This installation method also makes it easy to update your node/cli to a new version later.
+  - If you've already installed `cardano-node` and `cardano-cli` through other means, you can also configure your existing installation to work with Jambhala.
+  - See the **[Cardano EZ-Installer README](./cardano-ez-installer/README.md)** for more information.
+  - A tutorial with guided exercises for learning to use `cardano-cli` is provided in the `cardano-cli-guru/tutorial` directory.
+  - The EZ-Installer will also ask if you want to install **[Ogmios](https://ogmios.dev/)**. Choose `y` if you want to use the optional `cardano-devnet` add-on utility, which required Ogmios.
 
 ***
-### 6. **Start coding**
+### 7. **Start coding**
 ***
 Jambhala's development environment includes a preconfigured instance of VS Codium (a community-driven, freely-licensed distribution of VS Code without Microsoft branding or telemetry). This "Jambhala Editor" comes with all the required extensions for Cardano development already installed via Nix. 
 
-Simply use the `jcode` command from your project's root directory in your terminal to open the Jambhala editor and start coding!
+Simply use the `j code` command from your project's root directory in your terminal to open the Jambhala editor and start coding!
 
 >**Note:** when you open a Haskell (`*.hs`) file for the first time in your editor, you may see the following popup appear:
   ```
@@ -280,10 +274,10 @@ Simply use the `jcode` command from your project's root directory in your termin
 
     Manually via PATH   Cancel    Automatically via GHCup
   ```
-  Select **`Manually via PATH`**. Our project is using the Haskell tooling installed via Nix in the development environment, *not* a system-wide installation via GHCup. If you select GHCup the Haskell Language Server (HLS) won't work properly in the editor.
+  Select **`Manually via PATH`**. Our project is using the Haskell tooling installed via Nix in the development environment, *not* a system-wide installation via GHCup. If you select GHCup the Haskell Language Server (HLS) may not work properly in the editor.
 
-#### **Adding Extensions to Jambhala Editor**
-Because the Jambhala Editor is installed via Nix, it isn't possible to install additional extensions in the usual manner from within the application. Instead, they can be added to the `flake.nix` file and installed via Nix when you load the development environment using `direnv`. To add an extension:
+#### **Adding extensions to `j code` editor**
+Because the `j code` editor is installed via Nix, it isn't possible to update VS Codium or install additional extensions in the usual manner from within the application. Extensions can instead be added to the `flake.nix` file and installed via Nix the next time you load the Jambhala environment. To add an extension:
 - Click the `Extensions` icon in the left menu panel and look up the extension in the marketplace. 
 - Click on the extension you wish to install and click the **gear icon** next to the `Install` button. 
 - Select `Copy Extension ID`. 
@@ -308,7 +302,7 @@ Because the Jambhala Editor is installed via Nix, it isn't possible to install a
   ```
 - Paste the Extension ID into the list of extensions on a new line and save the changes.
 - Close VS Codium, and run `direnv reload` in your terminal (inside your project root directory).
-- Run the `jcode` command to relaunch VS Codium. Your extension should now be installed and ready for use.
+- Run the `j code` command to relaunch VS Codium. Your extension should now be installed and ready for use.
 
 \* If your desired extension isn't available in `nixpkgs`, it is still possible to add it to `flake.nix`, but the process is more complex and will not be covered here. You can **file an issue** to request a particular extension be added if you feel it will be beneficial to Jambhala users, and I will consider adding it to the flake upstream.
 
@@ -344,56 +338,8 @@ The first time you open the project, you'll be prompted to install some recommen
 Accept any pop-up prompts from the `direnv` extension when you encounter them.
 
 ***
-# **Using the `jamb` CLI**
-Jambhala includes a simple command-line utility called `jamb`, which reduces boilerplate and provides a simple API for the following uses:
 
-### **Listing Contracts**
-You can run the following command to view the names of available contracts in your project, for use with other commands:
-
-```sh
-  jamb -l
-```
-
-### **Hashing Validators**
-You can calculate the validator hash for any available contract like this:
-
-```sh
-jamb -s CONTRACT
-```
-
-where `CONTRACT` is the name of the contract to hash.
-
-### **Testing Contracts with Emulator Trace**
-You can run the emulator test defined for a contract with the following command:
-
-```sh
-jamb -t CONTRACT
-```
-
-where `CONTRACT` is the name of the contract to test.
-
-### **Compiling Contracts to `.plutus` Files**
-You can run the following command from the workspace terminal to write a contract to a `.plutus` file:
-
-```sh
-jamb -w CONTRACT [FILENAME]
-```
-
-where `CONTRACT` is the name of the contract to compile, and `[FILENAME]` is an optional file name (the contract name is used as the filename by default if no argument is given). Contracts are saved in the `assets` directory of the `cardano-cli-guru` submodule, where they can be used to easily submit transactions via `cardano-cli`, assisted by the various utility scripts provided by `cardano-cli-guru`. When the command finishes, you'll get a `CONTRACT.plutus` file at `cardano-cli-guru/assets/scripts/plutus` that contains a JSON envelope of the UPLC code:
-
-```json
-{
-    "type": "PlutusScriptV2",
-    "description": "",
-    "cborHex": "5907c05907bd0100003232323232323232323..."
-}
-```
-
-This file can now be used in on-chain transactions. 
-
-***
-
-# **Writing Contracts**
+# **Writing contracts**
 
 ### **🚨 Read This First!**
 Jambhala makes certain opinionated decisions in order to vastly reduce the boilerplate required to write Plutus contracts.
@@ -434,13 +380,16 @@ The following language extensions are enabled project-wide by Jambhala using the
     -- Allows more than one type parameter in class and instance declarations (required to lift parameters in parameterized validators):
     , MultiParamTypeClasses
 
+    -- A syntactic convenience for constructing record values:
+    , NamedFieldPuns
+
     -- Allows more readable representations of large integers (i.e. 1_000_000), useful for lovelace quantities
     , NumericUnderscores
 
     -- Allows construction of Text and other string-like values as string literals:
     , OverloadedStrings
 
-    -- A syntactic convenience for working with record values (used by Jambhala's utilities):
+    -- A syntactic convenience for destructuring record values:
     , RecordWildCards
 
     -- Allows referencing type variables in multiple scopes (required to lift parameters in parameterized validators):
@@ -463,7 +412,7 @@ Keep in mind that Haskell language extensions are experimental modifications to 
 #### **Sample contracts**
 The source code for the sample Plutus contracts live in the `src/Contracts/Samples` folder.
 
-If you want to hide the sample contracts from the `jamb` utility and only serve your own contracts, you can modify the `main` action in `app/Main.hs` accordingly:
+If you want to hide the sample contracts from the `j cli` utility and only serve your own contracts, you can modify the `main` action in `j-cli/Main.hs` accordingly:
 
 ```haskell
 main :: IO ()
@@ -472,8 +421,8 @@ main = runJamb contracts -- << replace `allContracts` with `contracts` to hide s
 ```
 
 ***
-## **Creating a Contract**
-***
+## **Creating a contract**
+
 To create a new contract, create a new `.hs` file in the `src/Contracts` directory, and write a module declaration, i.e.:
 
 ```haskell
@@ -499,8 +448,6 @@ library
 ...
 ```
 
->**🚨 IMPORTANT:** you must stage any new contract files you create to git before they are visible to Nix for compilation. Use the `Source Control` option in the left sidebar of VS Codium/Code or stage changes from the command line with `git add`.
-
 We're now ready to write our contract. We begin by defining a predicate function to express the validator or minting policy logic. 
 
 We then define a custom type synonym for our contract, using either *`ValidatorContract`* or *`MintingContract`* with a type-level string as an identifier:
@@ -515,7 +462,7 @@ or...
 type MyMintingPolicy = MintingContract "my-minting-policy"
 ```
 
-The string identifier will be used to reference the contract in `jamb` CLI commands.
+The string identifier will be used to reference the contract in `j cli` commands.
 
 Then we compile the predicate code into Plutus (using Template Haskell) and apply the appropriate Jambhala constructor function based on the type of our contract. We must provide a type signature for this value with the type synonym chosen above:
 
@@ -533,15 +480,15 @@ contract = mkMintingContract $$(compile [||policy||])
 
 >See the contracts in `src/Contracts/Samples` for examples of predicate definition and compilation.
 
-### **Writing Emulator Tests**
+## **Writing emulator tests**
 Jambhala provides an enhanced variant of the `plutus-apps` blockchain emulator with a simpler and more intuitive API. This tool (and the associated utilities imported from `Jambhala.Utils`) allows us to write simple and readable off-chain code in Haskell and conduct simple tests of our contracts.
 
 The emulator environment's behavior doesn't always perfectly match the way contracts behave on-chain (for instance, fee amounts may vary and should not be used for predictive purposes). For rigorous testing of contracts intended for production, more robust tools like `plutus-simple-model` should be used. However, the emulator provides a way to confirm the expected behavior of on-chain scripts, as well as a good way to practice Haskell fundamentals.
 
-#### ***`ValidatorEndpoints`* & *`MintingEndpoint`* Classes**
+### ***`ValidatorEndpoints`* & *`MintingEndpoint`* Classes**
 After defining a custom type synonym for our contract using either *`ValidatorContract`* or *`MintingContract`* and a type-level string identifier, we must instantiate one of two corresponding typeclasses to implement emulation endpoints. 
 
-#### ***`ValidatorEndpoints`***
+### ***`ValidatorEndpoints`***
 The *`ValidatorEndpoints`* class consists of the following:
   * Two associated data types: *`GiveParam`* and *`GrabParam`*. These represent the types of the inputs our off-chain endpoint actions will accept.
   * Two methods, `give` and `grab`, which define the off-chain endpoint actions through which we can lock and unlock UTxOs at our contract's script address in an emulated blockchain environment.
@@ -591,7 +538,7 @@ submitAndConfirm
         }
 ```
 
-#### ***`MintingEndpoint`***
+### ***`MintingEndpoint`***
 The *`MintingEndpoint`* class is similar to *`ValidatorEndpoints`*, but is simpler due to the comparative simplicity of minting policies vs. validators. It consists of the following:
   * One associated data type: *`MintParam`*
   * One method, `mint`, which defines the off-chain endpoint action through which we can mint assets with the policy.
@@ -614,7 +561,7 @@ instance MintingEndpoint MyMinting where
 
 >**Note:** Off-chain endpoint code is more complex than on-chain predicate functions and is beyond the scope of our tutorial at this time: refer to the sample contracts containing off-chain emulation for more examples.
 
-#### **Define the test**
+### **Define the test**
 Now that we've implemented our endpoint actions, we're ready to define our emulator test. We begin by declaring a variable for our test (i.e. `test :: EmulatorTest`).
 
 The test is constructed by calling the `initEmulator` function (imported from `Jambhala.Utils`). This function requires a type application (i.e. `@MyContract`) to disambiguate the type of the contract being emulated. It then receives two arguments: 
@@ -637,8 +584,18 @@ This test is initialized with 2 mock wallets. Wallet 1 gives 3 ADA to the script
 
 *`EmulatorAction`* values can also be included in the list to simulate the passage of time. The `waitUntil` action takes a slot number and advances the emulated blockchain to that slot, which is useful for testing contracts involving deadlines (see `Vesting.hs` and `ParamVesting.hs`)
 
-### **Using the `jamb` CLI**
-The `jamb` CLI can perform various operations on your contracts, including calculating its script hash, testing it using a blockchain emulator, and compiling it into a `.plutus` file. To do this we need to prepare a *`JambExports`* value in each of our contracts. Start by declaring a value of this type (i.e. `exports ::` *`JambExports`*).
+## **Using `j cli`**
+Jambhala includes a simple command-line utility (`j cli`), which reduces boilerplate and provides a simple API for common contract-related tasks.
+
+### **Listing contracts**
+You can run the following command to view the names of available contracts in your project, for use with other commands:
+
+```sh
+j cli -l
+```
+
+### **Exporting contracts**
+`j cli` can perform various operations on your contracts, including calculating its script hash, testing it using a blockchain emulator, and compiling it into a `.plutus` file. To do this we need to prepare a *`JambExports`* value in each of our contracts. Start by declaring a value of this type (i.e. `exports ::` *`JambExports`*).
 
 Construct the exported contract using the `defExports` and `export` utility functions (imported from `Jambhala.Utils`):
 
@@ -652,7 +609,7 @@ The `defExports` (default exports) function takes a contract value and produces 
 #### **Adding data exports**
 The *`JambExports`* can optionally include a list of *`DataExport`* values. These are sample values to supply as inputs during transaction construction with `cardano-cli`. Any value of a type with a *`ToData`* instance can be exported.
 
-If data exports are included, the `jamb` CLI will produce serialised JSON versions of them along with your contract script when you use the `jamb -w` command. These optional exports are included as additional input to `defExports` using record update syntax and the `dataExports` attribute:
+If data exports are included, `j cli` will produce serialised JSON versions of them along with your contract script when you use the `j cli -w` command. These optional exports are included as additional input to `defExports` using record update syntax and the `dataExports` attribute:
 
 ```haskell
 exports :: JambExports
@@ -668,7 +625,7 @@ exports =
 ```
 >**Note:** the value provided for `dataExports` must be a list, even if you are only exporting a single value.
 
-In this example, running `jamb -w my-contract` will serialise `contract` into a `.plutus` file and save it to `cardano-cli-guru/assets/scripts/plutus/my-contract.plutus`. It will also produce a serialised JSON representation of a unit value (saved to `cardano-cli-guru/assets/data/unit.json`) and the integer 42 (saved to `cardano-cli-guru/assets/data/forty-two.json`).
+In this example, running `j cli -w my-contract` will serialise `contract` into a `.plutus` file and save it to `cardano-cli-guru/assets/scripts/plutus/my-contract.plutus`. It will also produce a serialised JSON representation of a unit value (saved to `cardano-cli-guru/assets/data/unit.json`) and the integer 42 (saved to `cardano-cli-guru/assets/data/forty-two.json`).
 
 #### **Adding emulator test**
 An emulator test value (`::` *`EmulatorTest`*) can also be optionally included in the record input, using the `emulatorTest` attribute:
@@ -687,7 +644,7 @@ exports =
       }
 ```
 
-**Adding to the Contract Map**  
+#### **Adding to the contract map**  
 Once we've completed our `exports` value, the final step is to make our contract visible to the CLI. We go to `src/Contracts/Contracts.hs` and import our contract's module as a qualified import, i.e.:
 
 ```haskell
@@ -703,47 +660,69 @@ contracts = [
   ]
 ```
 
-Once our contract has been added to the list, it can now be operated on by the `jamb` CLI.
+Once our contract has been added to the list, it can now be operated on by `j cli`.
 
-* Compute the hash of the script:
-  ```sh
-  jamb -s my-contract
-  ```
-* Run the provided emulator test:
-  ```sh
-  jamb -t my-contract
-  ```
-* Write the contract and associated data exports to files:
-  ```sh
-  jamb -w my-contract
-  ```
+### **Hashing scripts**
+You can calculate the script hash for any available contract like this:
+
+```sh
+j cli -s CONTRACT
+```
+
+where `CONTRACT` is the name of the contract to hash.
+
+### **Testing contracts with emulator trace**
+You can run the emulator test defined for a contract with the following command:
+
+```sh
+j cli -t CONTRACT
+```
+
+where `CONTRACT` is the name of the contract to test.
+
+### **Compiling contracts to `.plutus` files**
+You can run the following command from the workspace terminal to write a contract to a `.plutus` file:
+
+```sh
+j cli -w CONTRACT [FILENAME]
+```
+
+where `CONTRACT` is the name of the contract to compile, and `[FILENAME]` is an optional file name (the contract name is used as the filename by default if no argument is given). Contracts are saved in the `assets` directory of the `cardano-cli-guru` submodule, where they can be used to easily submit transactions via `cardano-cli`, assisted by the various utility scripts provided by `cardano-cli-guru`. When the command finishes, you'll get a `CONTRACT.plutus` file at `cardano-cli-guru/assets/scripts/plutus` that contains a JSON envelope of the UPLC code:
+
+```json
+{
+    "type": "PlutusScriptV2",
+    "description": "",
+    "cborHex": "5907c05907bd0100003232323232323232323..."
+}
+```
+
+This file can now be used in on-chain transactions. 
 
 ***
 ## **Using GHCi**
-***
-To start a GHCi REPL session, run `jrepl` and then load your contract:
+
+To start a GHCi REPL session, run `j repl` and then load your contract:
 
 ```sh
-jrepl
+j repl
 
 Prelude Contracts λ > :m Contracts.MyContract
 Prelude Contracts.MyContract λ >
 ```
 
 ***
-## **Serving `plutus-apps` docs**
-***
-To serve docs for the specific revision of `plutus-apps` this project is using, open a new bash terminal from the project root directory and run the following command:
+## **Serving docs**
+
+To launch a Hoogle server with docs for the Haskell packages this project is using, open a new bash terminal from the project root directory and run the following command:
 
 ```sh
-serve-docs
+j hoogle
 ```
 
 The script will look up the specific `plutus-apps` revision hash from the `cabal.project` file, clone the `plutus-apps` repository (if it doesn't already exist) and checkout this revision, then launch a new `nix develop` shell and serve the docs at `http://0.0.0.0:8002/`.
 
 To view the correct Haddock documentation for the revision you are using, open http://0.0.0.0:8002/haddock in your browser.
-
->**Note:** This will require significant additional build time and storage space the first time the docs are served. Alternatively you can view Haddock docs for the most recent version of `plutus-apps` at [https://input-output-hk.github.io/plutus-apps/main/](https://input-output-hk.github.io/plutus-apps/main/).
 
 ***
 # **Updating Jambhala**
@@ -751,52 +730,55 @@ To view the correct Haddock documentation for the revision you are using, open h
 Since Jambhala is under active development and is closely tracking the progress of `plutus-apps`, its codebase changes frequently.
 
 ## **Learning Mode**
-If you created your repository by forking Jambhala (**Learning Mode**), you can update Jambhala using the `jupdate` command:
+If you created your repository by forking Jambhala (**Learning Mode**), you can update Jambhala using the `j update` command:
 
 ```sh
-jupdate
+j update
 ```
 
 This will fetch and merge changes from the upstream Jambhala repository, bringing your fork in sync while preserving any local changes you've made.
 
-If you've made changes to any core Jambhala files, you may encounter a merge conflict that you'll need to resolve. You may find a VS Code extension like **[Git Merger](https://marketplace.visualstudio.com/items?itemName=shaharkazaz.git-merger)** to be helpful with this.
+If you've made changes to any core Jambhala files (specifically `jambhala.cabal` and/or `src/Contracts.hs`), you may encounter a merge conflict that you'll need to resolve.
+
+If you've made changes but not committed them, you can try `j update -f` to discard any uncommitted changes to `jambhala.cabal` and `src/Contracts.hs`. After this, you'll need to re-add your contract modules to `jambhala.cabal` and your contract imports/exports to `src/Contracts.hs`.
+
+If you've committed changes to these files, you'll need to resolve the conflict yourself. The simplest way to do this is to copy/paste the latest contents from **[https://github.com/iburzynski/jambhala](https://github.com/iburzynski/jambhala)** for the conflicting files, commit your changes, and run `j update` again. After this, you'll need to re-add your contract modules to `jambhala.cabal` and your contract imports/exports to `src/Contracts.hs`.
 
 ## **Development Mode**
 Unlike forks, Github repositories generated from templates have unique histories, so they aren't able to fetch and merge upstream changes as smoothly. However it's still possible to merge updates from an upstream template into your project with a little manual effort.
 
-The `jsetup` wizard added the upstream template as a remote source. You can now run the `jupdate` command to fetch any changes to the template and attempt to merge them:
+The Jambhala environment automatically adds the upstream template as a remote source. You can run the `j update` command to fetch any changes to the template and attempt to merge them:
 
 ```sh
-jupdate
+j update
 ```
-> *Note that this command is distinct from the `jamb -u` command discussed below, which updates only the `plutus-apps` dependency in `cabal.project`, not Jambhala itself.*
+> *Note that this command is distinct from the `j cli -u` command discussed below, which updates only the `plutus-apps` dependency in `cabal.project`, not Jambhala itself.*
 
-You will need to manually resolve the resulting merge conflicts. You may find a VS Code extension like **[Git Merger](https://marketplace.visualstudio.com/items?itemName=shaharkazaz.git-merger)** to be helpful with this.
+You will need to manually resolve any resulting merge conflicts.
 
 ***
 # **Updating Plutus Dependencies**
 The non-Hackage dependencies in the `cabal.project` file are following the **[plutus-apps](https://github.com/input-output-hk/plutus-apps)** library, with `sha256` hashes calculated for each `source-repository-package` entry.
 
-`jamb` provides a utility to easily update `plutus-apps` to the most recent revision and adjust all related dependencies. Run the `jamb -u` command to pull the latest revision and generate a new `cabal.project` file.
+`j cli` provides a utility to easily update `plutus-apps` to the most recent revision and adjust all related dependencies. Run the `j cli -u` command to pull the latest revision and generate a new `cabal.project` file.
 
 ```sh
-jamb -u
+j cli -u
 ```
 
 🚨 **WARNING!** This operation rewrites your `cabal.project` file according to the most recent `plutus-apps` commit, and may cause your environment and/or contracts to break. You should use at your own risk, but you can also easily restore a previous `cabal.project` file by following the instructions for **Restoring a previous version** below.
 ***
 ## **Set `plutus-apps` to a specific commit/tag**
-***
-You can also use the `jamb -u` command with an additional argument to set `plutus-apps` to a specific commit hash or tag:
+You can also use the `j cli -u` command with an additional argument to set `plutus-apps` to a specific commit hash or tag:
 
 ```sh
-jamb -u 38979da68816ab84faf6bfec6d0e7b6d47af651a
+j cli -u 38979da68816ab84faf6bfec6d0e7b6d47af651a
 ```
 
-You can run the `pa-history` command to view the full commit history for `plutus-apps`:
+You can run the `j pa-history` command to view the full commit history for `plutus-apps`:
 
 ```sh
-pa-history
+j pa-history
 ```
 
 Use the up/down keys to navigate or type `q` to quit.
@@ -805,12 +787,10 @@ Use the up/down keys to navigate or type `q` to quit.
 
 ***
 ## **Restoring a previous version**
-***
-Before the `jamb -u` command rewrites your `cabal.project` file, a backup of your existing `cabal.project` will be created in the `backups/` directory in case you need to roll back the update. Just delete the current `cabal.project` file, copy the backup file and rename it to `cabal.project`. Then run `direnv allow` or reload the project in VS Code and your previous project state will be restored.
+Before the `j cli -u` command rewrites your `cabal.project` file, a backup of your existing `cabal.project` will be created in the `backups/` directory in case you need to roll back the update. Just delete the current `cabal.project` file, copy the backup file and rename it to `cabal.project`. Then run `direnv allow` or reload the project in VS Code and your previous project state will be restored.
 
 ***
 ## **Manually updating dependencies**
-***
 Since Nix flakes require pure inputs to guarantee reproducibility, and the content associated with a particular Git repository/tag can change, we need to hash any repositories we include in `cabal.project`. This means if we need to manually change any dependencies or add additional ones, we'll need to calculate new hashes and replace the existing ones.
 
 While not recommended, if you need to change the revision of Plutus dependencies manually, you can calculate sha256 hashes for them using the `nix-prefetch-git` utility, which has been provided with this project's Nix development environment.
@@ -882,28 +862,19 @@ fi
 
 >**NOTE:** make sure this snippet is above the `direnv` hook in these files. You must then restart the shell for the changes to take effect.
 
-**`'hs-source-dirs: app' specifies a directory which does not exist.`**
-```
-  > Warning: 'hs-source-dirs: app' specifies a directory which does not exist.
-  > building
-  > Preprocessing library for jambhala-0.1.0.0..
-  > Error: Setup: can't find source for Contracts/... in src,
-```
-You need to **stage** your new module file in `git` so it becomes visible to the Nix environment. Use the `Source Control` option in the left sidebar of VS Code or stage changes from the command line with `git add`. Then try the operation that caused the error again.
-
 **VS Codium/Code doesn't provide Haskell IDE support: hangs with `Processing: 1/x`**: 
 
 It's possible the project dependencies haven't been properly built via `cabal`, which is a requirement for Haskell Language Server support in VS Codium/Code. Run `cabal build` to build the dependencies.
 
 ### **General Troubleshooting Techniques**
 - **Restart Haskell LSP Server:** restarting `haskell-language-server` often fixes common issues with Haskell in VS Code. Open the command palette (`Ctrl + Shift + p`) and begin typing `Restart Haskell LSP Server` until you see this option, and select it. In the future it will be pinned to the top of the command palette options and easier to find.
-- **`jrebuild`:** cleaning the `dist-newstyle` directory of all build artifacts and rebuilding the project may resolve certain issues
+- **`j rebuild`:** cleaning the `.direnv`, `.cabal`, and `dist-newstyle` directories of all build artifacts and rebuilding the project may resolve certain issues
 
   ```sh
-  jrebuild
+  j rebuild
   ```
 
-  Note that it will be time-consuming to `cabal build` the project from scratch, so be sure to exhaust all other troubleshooting options before attempting.
+  Note that it will be time-consuming to rebuild the project from scratch, so be sure to exhaust all other troubleshooting options before attempting.
   
 - **Delete `~/.local/state/cabal/store`:** if you have pre-existing Haskell tooling installed system-wide (i.e. via GHCup, or the Haskell extension in VS Codium/Code), it's possible that build artifacts from Cabal can conflict with the Jambhala environment, resulting in Cabal errors or preventing IDE features from Haskell Language Server to work correctly in the editor. Removing `~/.local/state/cabal/store` can resolve such errors (the contents of this directory are always safe to remove and will not break any functionality). After removing the directory, run the `jrebuild` command to rebuild the project with Cabal before trying again.
 

@@ -18,9 +18,9 @@ type TicketPrice = Integer
 
 -- | Custom datum type.
 data TicketDatum = TicketDatum
-  { policySymbol :: CurrencySymbol,
-    redeemerCodeHash :: BuiltinByteString,
-    ticketPrice :: TicketPrice
+  { policySymbol :: CurrencySymbol
+  , redeemerCodeHash :: BuiltinByteString
+  , ticketPrice :: TicketPrice
   }
   -- Must be convertible to/from JSON due to reuse in off-chain emulator code
   deriving (Generic, FromJSON, ToJSON)
@@ -31,7 +31,7 @@ unstableMakeIsData ''TicketDatum
 
 -- | Helper function to check if any UTxO pays the ticket price to the host.
 checkPayment :: HostPKH -> TicketPrice -> [TxOut] -> Bool
-checkPayment hostPKH price = pany (isValidOutput hostPKH price) -- :: [TxOut] -> Bool
+checkPayment hostPKH price = pany (isValidOutput hostPKH price)
 {-# INLINEABLE checkPayment #-}
 
 -- | Helper function to check if an individual UTxO pays the ticket price to the host.
@@ -49,11 +49,6 @@ checkMint cs tn minting = pany (\(cs', tn', q) -> cs' #== cs && tn' #== tn && q 
 -- | Helper function to generate a unique token name from a UTxO input.
 mkTicketName :: TxOutRef -> TokenName
 mkTicketName (TxOutRef (TxId txHash) txIdx) =
-  -- 1. Convert txIdx (:: Integer) to BuiltinData with mkI
-  -- 2. Convert BuiltinData to BuiltinByteString with serialiseData
-  -- 3. Concatenate txHash and index bytestring with appendByteString
-  -- 4. Hash the concatenated bytestring (to prevent exceeding token name size limit)
-  -- 5. Apply TokenName constructor to hashed bytestring
   TokenName . sha2_256 $ consByteString txIdx txHash
 {-# INLINEABLE mkTicketName #-}
 
@@ -99,9 +94,9 @@ sampleHost = "3a5039efcafd4c82c9169b35afb27a17673f6ed785ea087139a65a5d"
 mkTicketDatum :: HostPKH -> RedeemerCodeString -> TicketPrice -> TicketDatum
 mkTicketDatum hostPKH redeemerCodeStr price =
   TicketDatum
-    { policySymbol = getFwdMintingPolicyId (compileValidator hostPKH),
-      redeemerCodeHash = sha2_256 $ stringToBuiltinByteString redeemerCodeStr,
-      ticketPrice = price
+    { policySymbol = getFwdMintingPolicyId (compileValidator hostPKH)
+    , redeemerCodeHash = sha2_256 $ stringToBuiltinByteString redeemerCodeStr
+    , ticketPrice = price
     }
 
 -- | Define spending validator exports value for use with `jamb` CLI.
@@ -110,12 +105,12 @@ validatorExports =
   export
     (defExports $ compileValidator sampleHost)
       { dataExports =
-          [ mkSampleTicketDatum "E875RPSE9M" 50_000_000 `toJSONfile` "goldTicket",
-            mkSampleTicketDatum "YIMNUUU528" 25_000_000 `toJSONfile` "silverTicket",
-            stringToBuiltinByteString "E875RPSE9M" `toJSONfile` "goldRedeemer",
-            stringToBuiltinByteString "YIMNUUU528" `toJSONfile` "silverRedeemer"
-          ],
-        emulatorTest = test
+          [ mkSampleTicketDatum "E875RPSE9M" 50_000_000 `toJSONfile` "goldTicket"
+          , mkSampleTicketDatum "YIMNUUU528" 25_000_000 `toJSONfile` "silverTicket"
+          , stringToBuiltinByteString "E875RPSE9M" `toJSONfile` "goldRedeemer"
+          , stringToBuiltinByteString "YIMNUUU528" `toJSONfile` "silverRedeemer"
+          ]
+      , emulatorTest = test
       }
   where
     mkSampleTicketDatum = mkTicketDatum sampleHost
@@ -131,8 +126,8 @@ instance ValidatorEndpoints TicketValidator where
   newtype GiveParam TicketValidator = Register TicketDatum
     deriving (Generic, FromJSON, ToJSON)
   data GrabParam TicketValidator = Claim
-    { hostPKH :: HostPKH,
-      redeemerCode :: BuiltinByteString
+    { hostPKH :: HostPKH
+    , redeemerCode :: BuiltinByteString
     }
     deriving (Generic, FromJSON, ToJSON)
 
@@ -142,8 +137,8 @@ instance ValidatorEndpoints TicketValidator where
     let appliedValidator = compileValidator hostPKH
     submitAndConfirm
       Tx
-        { lookups = scriptLookupsFor appliedValidator,
-          constraints = mustPayScriptWithDatum appliedValidator datum (lovelaceValueOf 2_000_000)
+        { lookups = scriptLookupsFor appliedValidator
+        , constraints = mustPayScriptWithDatum appliedValidator datum (lovelaceValueOf 2_000_000)
         }
     logStr $
       printf
@@ -159,12 +154,12 @@ instance ValidatorEndpoints TicketValidator where
         let TicketDatum {..} = fromJust $ convertDecoratedTxOutDatum dTxOut
         submitAndConfirm
           Tx
-            { lookups = scriptLookupsFor appliedValidator `andUtxos` validUtxos,
-              constraints =
+            { lookups = scriptLookupsFor appliedValidator `andUtxos` validUtxos
+            , constraints =
                 mconcat
-                  [ oref `mustBeSpentWith` redeemerCode,
-                    mustPayPKH hostPKH (lovelaceValueOf ticketPrice),
-                    mustMint (compilePolicy hostPKH) (mkTicketName oref) 1
+                  [ oref `mustBeSpentWith` redeemerCode
+                  , mustPayPKH hostPKH (lovelaceValueOf ticketPrice)
+                  , mustMint (compilePolicy hostPKH) (mkTicketName oref) 1
                   ]
             }
         logStr $ printf "Claimed ticket with redeemer code %s" (show redeemerCode)
@@ -179,10 +174,10 @@ test :: EmulatorTest
 test =
   initEmulator @TicketValidator
     3
-    [ Register (mkTicketDatum1 "E875RPSE9M" 50_000_000) `fromWallet` 1,
-      Register (mkTicketDatum1 "YIMNUUU528" 25_000_000) `fromWallet` 1,
-      Claim {hostPKH = pkh1, redeemerCode = "E875RPSE9M"} `toWallet` 2,
-      Claim {hostPKH = pkh1, redeemerCode = "YIMNUUU528"} `toWallet` 3
+    [ Register (mkTicketDatum1 "E875RPSE9M" 50_000_000) `fromWallet` 1
+    , Register (mkTicketDatum1 "YIMNUUU528" 25_000_000) `fromWallet` 1
+    , Claim {hostPKH = pkh1, redeemerCode = "E875RPSE9M"} `toWallet` 2
+    , Claim {hostPKH = pkh1, redeemerCode = "YIMNUUU528"} `toWallet` 3
     ]
   where
     pkh1 = pkhForWallet 1
@@ -191,7 +186,8 @@ test =
 
 -- Misc. Utilities
 
--- | Helper function to get the token name for the ticket NFT that will be minted when consuming a given UTxO "voucher".
---   This can be used to create a token whitelist for admission at the event.
+{- | Helper function to get the token name for the ticket NFT that will be minted when consuming a given UTxO "voucher".
+   This can be used to create a token whitelist for admission at the event.
+-}
 getTicketName :: Text -> Integer -> String
 getTicketName txHash txIdx = tokenNameToString . mkTicketName $ unsafeMkTxOutRef txHash txIdx

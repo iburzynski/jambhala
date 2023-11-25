@@ -1,5 +1,5 @@
 {
-  description = "Jambhala: A Plutus Development Suite";
+  description = "Jambhala Cardano Development Suite";
 
   inputs = {
     haskellNix.url = "github:input-output-hk/haskell.nix";
@@ -37,7 +37,10 @@
                 shell.buildInputs = with pkgs; [
                   bashInteractive
                   gnugrep
+                  haskellPackages.cabal-fmt
+                  haskellPackages.fourmolu
                   httpie
+                  just
                   neovim
                   nixpkgs-fmt
                   nix-prefetch-git
@@ -74,11 +77,11 @@
   nixConfig = {
     extra-substituters = [
       "https://cache.iog.io"
-      "https://cache.zw3rk.com"
+      #      "https://cache.zw3rk.com" # No longer needed
     ];
     extra-trusted-public-keys = [
       "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
-      "loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk="
+      #      "loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk=" # No longer needed
     ];
   };
 }

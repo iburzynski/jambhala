@@ -1,6 +1,6 @@
-cabal-version:      3.0
-name:               jambhala
-version:            0.3.0.0
+cabal-version: 3.0
+name:          jambhala
+version:       0.4.0.0
 
 -- A short (one-line) description of the package.
 -- synopsis:
@@ -8,32 +8,32 @@ version:            0.3.0.0
 -- A longer description of the package.
 -- description:
 
-license:            MIT
-license-file:       LICENSE
-author:             Ian Burzynski
-maintainer:         23251244+iburzynski@users.noreply.github.com
+license:       MIT
+license-file:  LICENSE
+author:        Ian Burzynski
+maintainer:    23251244+iburzynski@users.noreply.github.com
 
 flag defer-plugin-errors
   description:
-      Defer errors from the plugin, useful for things like Haddock that can't handle it.
-  default: False
-  manual: True
+    Defer errors from the plugin, useful for things like Haddock that can't handle it.
+
+  default:     False
+  manual:      True
 
 common common
   default-language: Haskell2010
-  build-depends:
-      base ^>=4.14.3.0
-  mixins:
-      base hiding (Prelude)
+  build-depends:    base ^>=4.14.3.0
+  mixins:           base hiding (Prelude)
   ghc-options:
     -Wall -fobject-code -fno-ignore-interface-pragmas
     -fno-omit-interface-pragmas -fno-strictness -fno-spec-constr
     -fno-specialise -Wno-orphans -Wno-unused-local-binds
+
   if flag(defer-plugin-errors)
     ghc-options: -fplugin-opt PlutusTx.Plugin:defer-errors
 
 library
-  import: common
+  import:             common
   exposed-modules:
     Contracts
     Jambhala.CLI
@@ -41,43 +41,50 @@ library
     Jambhala.Utils
     Prelude
 
--- Add new contracts here, i.e.:
--- Contracts.MyContract
+  -- Add new contracts here, i.e.:
+  -- Contracts.MyContract
 
   other-modules:
+    Contracts.Samples.Auction
+    Contracts.Samples.CustomTyped
+    Contracts.Samples.ForwardMinting
+    Contracts.Samples.FreeMinting
+    Contracts.Samples.NFT
+    Contracts.Samples.ParamVesting
+    Contracts.Samples.SignedMinting
+    Contracts.Samples.Simple
+    Contracts.Samples.SimpleGuessing
+    Contracts.Samples.SimpleTyped
+    Contracts.Samples.StateCounter
+    Contracts.Samples.Vesting
     Jambhala.CLI.Emulator
     Jambhala.CLI.Emulator.Types
+    Jambhala.CLI.Export
     Jambhala.CLI.Parsers
     Jambhala.CLI.Types
     Jambhala.CLI.Update
     Jambhala.CLI.Update.Parsers
-    Jambhala.CLI.Export
--- Sample contracts:
-    Contracts.Samples.Simple
-    Contracts.Samples.SimpleTyped
-    Contracts.Samples.CustomTyped
-    Contracts.Samples.SimpleGuessing
-    Contracts.Samples.Vesting
-    Contracts.Samples.ParamVesting
-    Contracts.Samples.FreeMinting
-    Contracts.Samples.SignedMinting
-    Contracts.Samples.NFT
-    Contracts.Samples.ForwardMinting
-    Contracts.Samples.StateCounter
-  hs-source-dirs:
-      src
+
+  -- Sample contracts:
+  hs-source-dirs:     src
   build-depends:
-      aeson
+    , aeson
     , base16-bytestring
     , bytestring
     , cardano-api
     , cardano-binary
     , cardano-ledger-core
     , cardano-node-emulator
+    , containers
     , data-default
     , extra
+    , foldl
     , freer-extras
+    , freer-simple
     , lens
+    , megaparsec
+    , mtl
+    , optparse-applicative
     , plutus-contract
     , plutus-core
     , plutus-ledger
@@ -86,68 +93,34 @@ library
     , plutus-tx
     , plutus-tx-constraints
     , plutus-tx-plugin
+    , row-types
     , serialise
     , text
--- Jambhala dependencies:
-    , containers
-    , foldl
-    , freer-simple
-    , megaparsec
-    , mtl
-    , optparse-applicative
-    , row-types
     , time
     , turtle
+
   default-extensions:
-    -- Allows promotion of types to "kinds", enabling more expressive type-level programming (required for all Plutus contracts):
-      DataKinds
+    DataKinds
+    DeriveAnyClass
+    DeriveGeneric
+    FlexibleInstances
+    ImportQualifiedPost
+    InstanceSigs
+    LambdaCase
+    MultiParamTypeClasses
+    NamedFieldPuns
+    NumericUnderscores
+    OverloadedStrings
+    RecordWildCards
+    ScopedTypeVariables
+    TemplateHaskell
+    TypeApplications
+    TypeFamilies
+    TypeOperators
 
-    -- Allows automatic derivation of certain typeclasses (like FromJSON/ToJSON):
-    , DeriveAnyClass
-    , DeriveGeneric
-
-    -- Allows defining typeclass instances for type synonyms:
-    , FlexibleInstances
-
-    -- Allows post-fix style qualified import declarations:
-    , ImportQualifiedPost
-
-    -- Allows writing type signatures for methods in typeclass instances:
-    , InstanceSigs
-    
-    -- A syntactic convenience for writing single-argument lambdas containing case expressions (used by Jambhala's utilities):
-    , LambdaCase
-
-    -- Allows more than one type parameter in class and instance declarations (required to lift parameters in parameterized validators):
-    , MultiParamTypeClasses
-
-    -- Allows more readable representations of large integers (i.e. 1_000_000), useful for lovelace quantities:
-    , NumericUnderscores
-
-    -- Allows construction of Text and other string-like values as string literals:
-    , OverloadedStrings
-
-    -- A syntactic convenience for working with record values (used by Jambhala's utilities):
-    , RecordWildCards
-
-    -- Allows referencing type variables in multiple scopes (required to lift parameters in parameterized validators):
-    , ScopedTypeVariables
-
-    -- Required for all Plutus contracts to translate between Plutus and Haskell:
-    , TemplateHaskell
-
-    -- Provides a convenient way to disambiguate type variables inline:
-    , TypeApplications
-
-    -- Allows type-level functions (used in Jambhala's ValidatorEndpoints & MintingEndpoint classes):
-    , TypeFamilies
-
-executable jamb
-  import: common
-  main-is: Main.hs
-  hs-source-dirs:
-    app
-  ghc-options:
-    -Werror -threaded -rtsopts -with-rtsopts=-T
-  build-depends:
-    jambhala
+executable cli
+  import:         common
+  main-is:        Main.hs
+  hs-source-dirs: j-cli
+  ghc-options:    -Werror -threaded -rtsopts -with-rtsopts=-T
+  build-depends:  jambhala

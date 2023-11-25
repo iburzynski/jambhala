@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-if ! git remote | grep -q "^upstream$"; then
-  git remote add upstream https://github.com/iburzynski/jambhala
-fi
-
-git fetch upstream --recurse-submodules
-git merge upstream/main --allow-unrelated-histories
-git submodule update --recursive

@@ -56,8 +56,8 @@ instance MintingEndpoint SignedMinting where
         mint' tQuantity tName = do
           submitAndConfirm
             Tx
-              { lookups = scriptLookupsFor appliedScript,
-                constraints =
+              { lookups = scriptLookupsFor appliedScript
+              , constraints =
                   mustMint appliedScript tName tQuantity
                     <> mustSign pkh
               }
@@ -72,7 +72,7 @@ test :: EmulatorTest
 test =
   initEmulator @SignedMinting
     2
-    [ Mint 1_000_000 "jambcoin" `forWallet` 1,
-      Mint 1_000_000 "jambcoin" `forWallet` 2, -- different currency symbol!
-      Burn 100_000 "jambcoin" `forWallet` 1
+    [ Mint 1_000_000 "jambcoin" `forWallet` 1
+    , Mint 1_000_000 "jambcoin" `forWallet` 2 -- different currency symbol!
+    , Burn 100_000 "jambcoin" `forWallet` 1
     ]

@@ -6,6 +6,11 @@ indent() {
     sed 's/^/    /'
 }
 
+if [ "${JAMB_ENV_LOADED}" != "true" ]; then
+  echo "Error: Jambhala environment not loaded. Run `direnv allow` and try again."
+  exit 1
+fi
+
 cat << "EOF"
   ,____          (\=-,
   \    `'-.______/ /
@@ -23,63 +28,12 @@ cat << "EOF"
 ▀▀▀▀▀▀                                                                        ▀
 EOF
 
-echo "Welcome to Jambhala Setup Wizard..."
+echo -e "Welcome to Jambhala Setup Wizard...\n"
 
-if ! git remote | grep -q "^upstream$"; then
-  git remote add upstream https://github.com/iburzynski/jambhala
-fi
+just personalize
 
-PKGNAME_DEFAULT="$(basename "$(pwd)")"
-if [ "$PKGNAME_DEFAULT" != "jambhala" ]; then
-  read -r -p "Project Name [$PKGNAME_DEFAULT]: " PKGNAME
-  PKGNAME=${PKGNAME:-$PKGNAME_DEFAULT}
-
-  AUTHNAME_DEFAULT=$(git config --default "Firstname Lastname" --get user.name)
-  read -r -p "Project Author [$AUTHNAME_DEFAULT]: " AUTHNAME
-  AUTHNAME=${AUTHNAME:-$AUTHNAME_DEFAULT}
-
-  EMAIL_DEFAULT=$(git config --default "user@email.com" --get user.email)
-  read -r -p "Maintainer Email [$EMAIL_DEFAULT]: " EMAIL
-  EMAIL=${EMAIL:-$EMAIL_DEFAULT}
-
-  echo "Preparing ${PKGNAME}.cabal..."
-  (
-    set -x
-    git ls-files | xargs -I _ sed _ -i \
-        -e "s#jambhala#$PKGNAME#g" \
-        -e "s#Ian Burzynski#$AUTHNAME#g" \
-        -e "s#23251244+iburzynski@users.noreply.github.com#$EMAIL#g"
-    mv "jambhala.cabal" "$PKGNAME.cabal"
-  ) 2>&1 | indent
-
-  echo "Creating README..."
-  (
-    set -x
-    mv "README.md" "docs/README.md"
-    mv "README_TEMPLATE.md" "README.md"
-  ) 2>&1 | indent
-
-  echo "Committing changes..."
-  (
-    set -x
-    git add -A
-    git commit -m "Set up project"
-  ) 2>&1 | indent
-
-  else
-    PKGNAME=$PKGNAME_DEFAULT
-fi
-
-echo "Building project..."
-(
-  set -x
-  nix build . --accept-flake-config
-  cabal update
-  cabal build "$PKGNAME"
-  cd jambhalucid
-  pnpm install
-  cd $PROJECT_ROOT
-) 2>&1 | indent
+cabal update
+cabal build .
 
 read -p "Install cardano-node/cardano-cli? [Y/n] " input
 input=${input:-Y}
@@ -89,16 +43,10 @@ else
   install_node=false
 fi
 if $install_node; then
-  install-node
+  just install-cardano
 else
-  echo "Run \`install-node\` at any time to install cardano-node/cardano-cli."
-  echo "If you already installed the node/cli through other means, you can use your existing installation with Jambhala by configuring the environment variables in the \`.env\` file (see Jambhala README for help)."
+  echo -e "\nRun \`j install-cardano\` at any time to install cardano-node/cardano-cli."
+  echo -e "If you already installed the node/cli through other means, you can use your existing installation by configuring the environment variables in the \`.env\` file (see README for help).\n" | fold -s -w 80
 fi
 
-read -p "Clean up nix-store? [Y/n] " clean_store
-clean_store=${clean_store:-Y}
-if [[ $clean_store =~ ^[Yy]$ ]]; then
-  nix-collect-garbage -d
-fi
-
-echo "Jambhala setup complete. Run \`jcode\` to start coding!"
+echo "Jambhala setup complete. Run \`j code\` to start coding!"

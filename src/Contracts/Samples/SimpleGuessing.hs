@@ -9,8 +9,9 @@ import Jambhala.Utils
 -- | Custom Datum type for the guessing validator.
 newtype Answer = Answer Integer
 
--- | Generate `FromData` and `ToData` instances for the custom type with Template Haskell.
---   These typeclasses provide methods to convert to/from the `BuiltinData` type.
+{- | Generate `FromData` and `ToData` instances for the custom type with Template Haskell.
+  These typeclasses provide methods to convert to/from the `BuiltinData` type.
+-}
 unstableMakeIsData ''Answer
 
 -- | Custom Redeemer type for the guessing validator.
@@ -54,8 +55,8 @@ exports =
 -- | Define `ValidatorEndpoints` instance for contract synonym.
 instance ValidatorEndpoints Guessing where
   data GiveParam Guessing = Give
-    { lovelace :: !Integer,
-      withAnswer :: !Integer
+    { lovelace :: !Integer
+    , withAnswer :: !Integer
     }
     deriving (Generic, ToJSON, FromJSON)
   data GrabParam Guessing = Grab {withGuess :: Integer}
@@ -65,8 +66,8 @@ instance ValidatorEndpoints Guessing where
   give (Give lovelace answer) = do
     submitAndConfirm
       Tx
-        { lookups = scriptLookupsFor compiledScript,
-          constraints = mustPayScriptWithDatum compiledScript (Answer answer) (lovelaceValueOf lovelace)
+        { lookups = scriptLookupsFor compiledScript
+        , constraints = mustPayScriptWithDatum compiledScript (Answer answer) (lovelaceValueOf lovelace)
         }
     logStr $ printf "Gave %d lovelace" lovelace
 
@@ -79,8 +80,8 @@ instance ValidatorEndpoints Guessing where
       else do
         submitAndConfirm
           Tx
-            { lookups = scriptLookupsFor compiledScript `andUtxos` validUtxos,
-              constraints = validUtxos `mustAllBeSpentWith` Guess g
+            { lookups = scriptLookupsFor compiledScript `andUtxos` validUtxos
+            , constraints = validUtxos `mustAllBeSpentWith` Guess g
             }
         logStr "Collected gifts"
 
@@ -89,10 +90,10 @@ test :: EmulatorTest
 test =
   initEmulator @Guessing
     6
-    [ Give {lovelace = 10_000_000, withAnswer = 42} `fromWallet` 1,
-      Give {lovelace = 10_000_000, withAnswer = 42} `fromWallet` 2,
-      Give {lovelace = 10_000_000, withAnswer = 21} `fromWallet` 3,
-      Grab {withGuess = 33} `toWallet` 4,
-      Grab {withGuess = 21} `toWallet` 5,
-      Grab {withGuess = 42} `toWallet` 6
+    [ Give {lovelace = 10_000_000, withAnswer = 42} `fromWallet` 1
+    , Give {lovelace = 10_000_000, withAnswer = 42} `fromWallet` 2
+    , Give {lovelace = 10_000_000, withAnswer = 21} `fromWallet` 3
+    , Grab {withGuess = 33} `toWallet` 4
+    , Grab {withGuess = 21} `toWallet` 5
+    , Grab {withGuess = 42} `toWallet` 6
     ]

@@ -8,7 +8,7 @@ module Contracts (contracts, samples) where
 
 -- Import your contracts here, i.e.:
 -- import  Contracts.MyContract qualified as MyContract
-
+import Contracts.Samples.Auction qualified as Auction
 import Contracts.Samples.CustomTyped qualified as CustomTyped
 import Contracts.Samples.ForwardMinting qualified as ForwardMinting
 import Contracts.Samples.FreeMinting qualified as FreeMinting
@@ -32,18 +32,19 @@ contracts =
 
 samples :: JambContracts
 samples =
-  [ Simple.giftExports,
-    Simple.burnExports,
-    SimpleTyped.typedExports,
-    SimpleTyped.untypedExports,
-    CustomTyped.exports,
-    SimpleGuessing.exports,
-    Vesting.exports,
-    ParamVesting.exports,
-    FreeMinting.exports,
-    SignedMinting.exports,
-    NFT.exports,
-    StateCounter.exports,
-    ForwardMinting.validatorExports,
-    ForwardMinting.policyExports
+  [ Simple.giftExports
+  , Simple.burnExports
+  , SimpleTyped.typedExports
+  , SimpleTyped.untypedExports
+  , CustomTyped.exports
+  , SimpleGuessing.exports
+  , Vesting.exports
+  , ParamVesting.exports
+  , FreeMinting.exports
+  , SignedMinting.exports
+  , NFT.exports
+  , StateCounter.exports
+  , ForwardMinting.validatorExports
+  , ForwardMinting.policyExports
+  , Auction.exports
   ]

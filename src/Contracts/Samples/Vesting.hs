@@ -9,8 +9,8 @@ import Jambhala.Utils
 
 -- | Define a custom data type for the datum.
 data VestingDatum = VestingDatum
-  { toBeneficiary :: PubKeyHash,
-    afterMaturity :: POSIXTime
+  { toBeneficiary :: PubKeyHash
+  , afterMaturity :: POSIXTime
   }
   deriving (Generic, ToJSON, FromJSON)
 
@@ -50,16 +50,16 @@ exports =
           [ VestingDatum
               { -- 1. Use the `key-hash` script from cardano-cli-guru to get the pubkey hash for a beneficiary address.
                 -- 2. Replace the placeholder hex string below with the beneficiary address pubkey hash.
-                toBeneficiary = "3a5039efcafd4c82c9169b35afb27a17673f6ed785ea087139a65a5d",
-                -- 3. With cardano-node running, use the `calc-time` script from cardano-cli-guru to get a POSIX time value
+                toBeneficiary = "3a5039efcafd4c82c9169b35afb27a17673f6ed785ea087139a65a5d"
+              , -- 3. With cardano-node running, use the `calc-time` script from cardano-cli-guru to get a POSIX time value
                 --    (add the `--plus MINUTES` option, replacing MINUTES with a number of minutes to add).
                 -- 4. Replace the placeholder value below with your POSIX time value.
                 -- 5. Note the NEW SLOT value for later use in transaction construction.
                 afterMaturity = 1689950332
               }
               `toJSONfile` "vdatum"
-          ],
-        emulatorTest = test
+          ]
+      , emulatorTest = test
       }
 
 -- 5. Define Emulator Component
@@ -67,8 +67,8 @@ exports =
 -- | Define `ValidatorEndpoints` instance for contract synonym.
 instance ValidatorEndpoints Vesting where
   data GiveParam Vesting = Give
-    { lovelace :: Integer,
-      withDatum :: VestingDatum
+    { lovelace :: Integer
+    , withDatum :: VestingDatum
     }
     deriving (Generic, ToJSON, FromJSON)
   data GrabParam Vesting = Grab
@@ -78,8 +78,8 @@ instance ValidatorEndpoints Vesting where
   give (Give lovelace datum) = do
     submitAndConfirm
       Tx
-        { lookups = scriptLookupsFor compiledScript,
-          constraints = mustPayScriptWithDatum compiledScript datum (lovelaceValueOf lovelace)
+        { lookups = scriptLookupsFor compiledScript
+        , constraints = mustPayScriptWithDatum compiledScript datum (lovelaceValueOf lovelace)
         }
     logStr $
       printf
@@ -99,12 +99,12 @@ instance ValidatorEndpoints Vesting where
       else do
         submitAndConfirm
           Tx
-            { lookups = scriptLookupsFor compiledScript `andUtxos` validUtxos,
-              constraints =
+            { lookups = scriptLookupsFor compiledScript `andUtxos` validUtxos
+            , constraints =
                 mconcat
-                  [ mustValidateInTimeRange (fromPlutusInterval now),
-                    mustSign pkh,
-                    validUtxos `mustAllBeSpentWith` ()
+                  [ mustValidateInTimeRange (fromPlutusInterval now)
+                  , mustSign pkh
+                  , validUtxos `mustAllBeSpentWith` ()
                   ]
             }
         logStr "Collected eligible gifts"
@@ -118,27 +118,27 @@ test =
   initEmulator @Vesting
     4
     [ Give
-        { lovelace = 30_000_000,
-          withDatum =
+        { lovelace = 30_000_000
+        , withDatum =
             VestingDatum
-              { toBeneficiary = pkhForWallet 2,
-                afterMaturity = maturity
+              { toBeneficiary = pkhForWallet 2
+              , afterMaturity = maturity
               }
         }
-        `fromWallet` 1,
-      Give
-        { lovelace = 30_000_000,
-          withDatum =
+        `fromWallet` 1
+    , Give
+        { lovelace = 30_000_000
+        , withDatum =
             VestingDatum
-              { toBeneficiary = pkhForWallet 4,
-                afterMaturity = maturity
+              { toBeneficiary = pkhForWallet 4
+              , afterMaturity = maturity
               }
         }
-        `fromWallet` 1,
-      Grab `toWallet` 2, -- deadline not reached
-      waitUntil 20,
-      Grab `toWallet` 3, -- wrong beneficiary
-      Grab `toWallet` 4 -- collect gift
+        `fromWallet` 1
+    , Grab `toWallet` 2 -- deadline not reached
+    , waitUntil 20
+    , Grab `toWallet` 3 -- wrong beneficiary
+    , Grab `toWallet` 4 -- collect gift
     ]
   where
     maturity :: POSIXTime

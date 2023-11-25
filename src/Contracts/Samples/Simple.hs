@@ -1,5 +1,5 @@
 -- Simple Plutus Contracts: always succeeds ("gift")/always fails ("burn")
---1. Extensions
+-- 1. Extensions
 {- The following two extensions are required for all contracts. They're `default-extensions`
    in this project's `.cabal` file, so it isn't necessary to include them explicitly like this in
    your contracts.
@@ -11,7 +11,7 @@
 
 module Contracts.Samples.Simple where
 
---2. Jambhala Imports
+-- 2. Jambhala Imports
 {- `PlutusTx.Prelude` has been set up as an alternate Prelude for this project, so it does not need
    to be imported, and the `NoImplicitPrelude` extension isn't required. -}
 {- The `Jambhala.Plutus` module re-exports many common Plutus types and functions, so you don't need
@@ -20,6 +20,7 @@ module Contracts.Samples.Simple where
 
    Hover over any Plutus type or function to see which module it is imported from. -}
 import Jambhala.Plutus
+
 {- The `Jambhala.Utils` module contains boilerplate utility functions for performing common
    operations on contracts.
 -}

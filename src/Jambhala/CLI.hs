@@ -21,7 +21,7 @@ import System.Directory.Extra (doesDirectoryExist, doesFileExist)
 import System.Environment (lookupEnv)
 import System.IO (BufferMode (..), getChar, hSetBuffering, putStr, stdin, stdout, writeFile)
 
-runJamb :: MonadIO m => JambContracts -> m ()
+runJamb :: (MonadIO m) => JambContracts -> m ()
 runJamb = runReaderT (commandParser >>= liftIO . execParser >>= runCommand)
 
 runCommand :: (MonadReader JambContracts m, MonadIO m) => Command -> m ()
@@ -52,12 +52,12 @@ scriptAddressBech32 network script =
   where
     scriptHash s = hashScript $ PlutusScript PlutusScriptV2 $ getSerialised s
 
-writeScriptWithData :: MonadIO m => FileName -> Network -> ContractExports -> m ()
+writeScriptWithData :: (MonadIO m) => FileName -> Network -> ContractExports -> m ()
 writeScriptWithData fn n (ContractExports s ds _) = do
   _ <- liftIO $ writeScriptToFile fn n s
   liftIO $ traverse_ writeDataToFile ds
 
-writeScriptToFile :: MonadIO m => FileName -> Network -> ScriptExport -> m ()
+writeScriptToFile :: (MonadIO m) => FileName -> Network -> ScriptExport -> m ()
 writeScriptToFile fn network script = do
   fp <- liftIO $ mkFilePath "PLUTUS_SCRIPTS_PATH" "cardano-cli-guru/assets/scripts/plutus" fn ".plutus"
   fileOverwritePrompt fp $
@@ -73,7 +73,7 @@ type DefDir = String
 
 type FileExt = String
 
-mkFilePath :: MonadIO m => EnvVar -> DefDir -> FileName -> FileExt -> m FilePath
+mkFilePath :: (MonadIO m) => EnvVar -> DefDir -> FileName -> FileExt -> m FilePath
 mkFilePath envVar defDir fn ext = do
   mDir <- liftIO $ lookupEnv envVar
   case mDir >>= stripTrailingSlash of
@@ -95,20 +95,20 @@ mkFilePath envVar defDir fn ext = do
     mkFilePath' :: String -> String
     mkFilePath' dir =
       concat
-        [ dir,
-          "/",
-          fn,
-          ext
+        [ dir
+        , "/"
+        , fn
+        , ext
         ]
 
-    mkDefFilePath :: MonadIO m => m FilePath
+    mkDefFilePath :: (MonadIO m) => m FilePath
     mkDefFilePath = do
       defDirExists <- liftIO $ doesDirectoryExist defDir
       if defDirExists
         then pure $ mkFilePath' defDir
         else error $ concat ["Error: default directory '", defDir, "' does not exist."]
 
-fileOverwritePrompt :: MonadIO m => FileName -> m () -> m ()
+fileOverwritePrompt :: (MonadIO m) => FileName -> m () -> m ()
 fileOverwritePrompt fn writeAction = do
   liftIO $ hSetBuffering stdin NoBuffering
   liftIO $ hSetBuffering stdout NoBuffering
@@ -124,7 +124,7 @@ fileOverwritePrompt fn writeAction = do
         _ -> liftIO (putStrLn "Invalid response. Please enter Y or N.") >> fileOverwritePrompt fn writeAction
     else writeAction
 
-writeDataToFile :: MonadIO m => DataExport -> m ()
+writeDataToFile :: (MonadIO m) => DataExport -> m ()
 writeDataToFile (DataExport fn d) = do
   fp <- mkFilePath "DATA_PATH" "cardano-cli-guru/assets/data" fn ".json"
   let v = dataToJSON d
@@ -133,10 +133,10 @@ writeDataToFile (DataExport fn d) = do
       Left err -> liftIO . print $ displayError err
       Right () -> liftIO . printf "Wrote data to '%s':\n\n%s\n\n" fp . BS8.unpack $ prettyPrintJSON v
   where
-    dataToJSON :: ToData a => a -> Aeson.Value
+    dataToJSON :: (ToData a) => a -> Aeson.Value
     dataToJSON = scriptDataToJsonDetailedSchema . fromPlutusData . toData
 
-writeScriptAddressToFile :: MonadIO m => FileName -> Network -> ScriptExport -> m ()
+writeScriptAddressToFile :: (MonadIO m) => FileName -> Network -> ScriptExport -> m ()
 writeScriptAddressToFile fn n script = do
   fp <- liftIO $ mkFilePath "ADDR_PATH" "cardano-cli-guru/assets/addr/" fn ".addr"
   let addr = scriptAddressBech32 n script
@@ -144,9 +144,9 @@ writeScriptAddressToFile fn n script = do
     liftIO $ writeFile fp addr
     liftIO . putStrLn $
       concat
-        [ "Wrote address '",
-          addr,
-          "' to '",
-          fp,
-          "'"
+        [ "Wrote address '"
+        , addr
+        , "' to '"
+        , fp
+        , "'"
         ]

@@ -29,9 +29,10 @@ customTypedLambda :: () -> CustomRedeemer -> ScriptContext -> Bool
 customTypedLambda _ (Guess g) _ = traceIfFalse "Sorry, wrong guess!" (g #== 42)
 {-# INLINEABLE customTypedLambda #-}
 
--- | Convert lambda into "untyped" form before pre-compilation (:: BuiltinData -> BuiltinData -> BuiltinData -> ())
---   Conversion to untyped must occur in a different scope than the call to `compile` during pre-compilation.
---   Otherwise Template Haskell will try to compile the code before `unstableMakeIsData` completes!
+{- | Convert lambda into "untyped" form before pre-compilation (:: BuiltinData -> BuiltinData -> BuiltinData -> ())
+  Conversion to untyped must occur in a different scope than the call to `compile` during pre-compilation.
+  Otherwise Template Haskell will try to compile the code before `unstableMakeIsData` completes!
+-}
 untypedLambda :: UntypedValidator
 untypedLambda = mkUntypedValidator customTypedLambda
 {-# INLINEABLE untypedLambda #-}
@@ -54,11 +55,11 @@ exports =
     (defExports compiledScript)
       { dataExports =
           [ -- redeemer that succeeds
-            Guess 42 `toJSONfile` "42",
-            -- redeemer that fails
+            Guess 42 `toJSONfile` "42"
+          , -- redeemer that fails
             Guess 21 `toJSONfile` "21"
-          ],
-        emulatorTest = test
+          ]
+      , emulatorTest = test
       }
 
 -- 5. Define Emulator Component
@@ -75,8 +76,8 @@ instance ValidatorEndpoints CustomTyped where
   give (Give lovelace) = do
     submitAndConfirm
       Tx
-        { lookups = scriptLookupsFor compiledScript,
-          constraints = mustPayScriptWithDatum compiledScript () (lovelaceValueOf lovelace)
+        { lookups = scriptLookupsFor compiledScript
+        , constraints = mustPayScriptWithDatum compiledScript () (lovelaceValueOf lovelace)
         }
     logStr $ printf "Made transaction of %d lovelace." lovelace
   grab :: GrabParam CustomTyped -> ContractM CustomTyped ()
@@ -84,8 +85,8 @@ instance ValidatorEndpoints CustomTyped where
     utxos <- getUtxosAt compiledScript
     submitAndConfirm
       Tx
-        { lookups = scriptLookupsFor compiledScript `andUtxos` utxos,
-          constraints = utxos `mustAllBeSpentWith` Guess guess
+        { lookups = scriptLookupsFor compiledScript `andUtxos` utxos
+        , constraints = utxos `mustAllBeSpentWith` Guess guess
         }
     logStr "Collected gifts!"
 
@@ -97,7 +98,7 @@ test =
     -- Specify the number of wallets required for the test:
     3
     -- List the emulator actions involved in the test:
-    [ Give {lovelace = 42_000_000} `fromWallet` 1,
-      Grab {withGuess = 21} `toWallet` 2, -- wrong guess
-      Grab {withGuess = 42} `toWallet` 3 -- right guess
+    [ Give {lovelace = 42_000_000} `fromWallet` 1
+    , Grab {withGuess = 21} `toWallet` 2 -- wrong guess
+    , Grab {withGuess = 42} `toWallet` 3 -- right guess
     ]

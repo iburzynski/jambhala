@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-rm .env
-rm cardano-cli-guru/.env
-refresh

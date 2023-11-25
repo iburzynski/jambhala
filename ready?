@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
+./scripts/fix-submodules.sh
 
 run_python_script() {
-  if ! python3 setup/readiness_test.py; then
+  if ! python3 jsetup-utils/readiness_test.py jambhala; then
     exit 1
   fi
 }
 
-# Check if python3 command is available and Python version is 3.10 or greater
+# Check if python3 command available and version >= 3.10
 if command -v python3 &> /dev/null &&
    python_version=$(python3 -c "import sys; print(sys.version_info.major * 10 + sys.version_info.minor)") &&
    [[ $python_version -ge 40 ]]; then
   run_python_script
   else
-    # If not, use nix-shell with Python 3.11
+    # If not, use nix-shell with Python
     nix-shell -p python311 --run "$(declare -f run_python_script); run_python_script"
 fi

@@ -1,29 +1,29 @@
-module Jambhala.CLI.Update.Parsers
-  ( CabalProjectData (..),
-    Dependency (..),
-    cabalProjectParser,
-    prefetchGitParser,
-  )
+module Jambhala.CLI.Update.Parsers (
+  CabalProjectData (..),
+  Dependency (..),
+  cabalProjectParser,
+  prefetchGitParser,
+)
 where
 
-import qualified Data.Text as T
-import Text.Megaparsec
-  ( MonadParsec (..),
-    Parsec,
-    anySingle,
-    choice,
-    manyTill,
-  )
+import Data.Text qualified as T
+import Text.Megaparsec (
+  MonadParsec (..),
+  Parsec,
+  anySingle,
+  choice,
+  manyTill,
+ )
 import Text.Megaparsec.Char (char, eol, hspace, printChar, space, string)
 import Text.Megaparsec.Char.Lexer (charLiteral, skipLineComment)
 
 type Parser = Parsec Void Text
 
 data Dependency = Dependency
-  { depType :: !Text,
-    depLoc :: !Text,
-    depTag :: !Text,
-    depSubdirs :: !(Maybe Text)
+  { depType :: !Text
+  , depLoc :: !Text
+  , depTag :: !Text
+  , depSubdirs :: !(Maybe Text)
   }
   deriving (Show)
 
@@ -41,10 +41,10 @@ cabalProjectParser tag = do
   sect2 <- sectP . lookAhead $ void (string "source-repository-package") <|> eof
   let plutusAppsSrp =
         Dependency
-          { depType = "git",
-            depLoc = "https://github.com/input-output-hk/plutus-apps.git",
-            depTag = tag,
-            depSubdirs = Just sds
+          { depType = "git"
+          , depLoc = "https://github.com/input-output-hk/plutus-apps.git"
+          , depTag = tag
+          , depSubdirs = Just sds
           }
   deps <- (plutusAppsSrp :) <$> manyTill srpParser eof
   pure . CabalProjectData deps $ mconcat ["packages: ./\n\n", sect1, sect2]

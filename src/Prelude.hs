@@ -1,114 +1,114 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Prelude
-  ( module PlutusTx.Prelude,
-    module Data.Foldable,
-    module Data.Functor,
-    module Data.Void,
-    module Control.Applicative,
-    module GHC.Err,
-    Applicative (..),
-    Enum (..),
-    Eq (..),
-    FilePath,
-    FromJSON,
-    Generic,
-    Int,
-    Integral (toInteger),
-    IO,
-    Monoid (..),
-    Num (..),
-    Ord (..),
-    PApplicative,
-    PEnum,
-    PEq,
-    PFoldable,
-    PFunctor,
-    POrd,
-    PMonoid,
-    PSemigroup,
-    PTraversable,
-    Semigroup (..),
-    Show (..),
-    String,
-    Text,
-    ToJSON,
-    Traversable (..),
-    Typeable,
-    (#<>),
-    (#<$),
-    (#<$>),
-    (#<*>),
-    (#<*),
-    (#*>),
-    (#==),
-    (#/=),
-    (#<),
-    (#<=),
-    (#>),
-    (#>=),
-    (#+),
-    (#-),
-    (#*),
-    (/),
-    drop,
-    fromIntegral,
-    fromJust,
-    guard,
-    init,
-    last,
-    mconcatMap,
-    pabs,
-    pall,
-    pand,
-    pany,
-    pasum,
-    pcompare,
-    pconcat,
-    pconcatMap,
-    pelem,
-    perror,
-    pfind,
-    pfmapDefault,
-    pfoldMapDefault,
-    pfold,
-    pfoldl,
-    pfoldMap,
-    pfoldr,
-    pfor,
-    pfor_,
-    pfromEnum,
-    pfromInteger,
-    plength,
-    pliftA2,
-    pmapM,
-    pmappend,
-    pmax,
-    pmconcat,
-    pmempty,
-    pmin,
-    pnegate,
-    pnotElem,
-    pnull,
-    por,
-    ppred,
-    pproduct,
-    ppure,
-    psequence,
-    psequenceA,
-    psequenceA_,
-    psucc,
-    psum,
-    ptoEnum,
-    ptoList,
-    ptraverse,
-    ptraverse_,
-    punless,
-    putStrLn,
-    print,
-    printf,
-  )
+module Prelude (
+  module PlutusTx.Prelude,
+  module Data.Foldable,
+  module Data.Functor,
+  module Data.Void,
+  module Control.Applicative,
+  module GHC.Err,
+  Applicative (..),
+  Enum (..),
+  Eq (..),
+  FilePath,
+  FromJSON,
+  Generic,
+  Int,
+  Integral (toInteger),
+  IO,
+  Monoid (..),
+  Num (..),
+  Ord (..),
+  PApplicative,
+  PEnum,
+  PEq,
+  PFoldable,
+  PFunctor,
+  POrd,
+  PMonoid,
+  PSemigroup,
+  PTraversable,
+  Semigroup (..),
+  Show (..),
+  String,
+  Text,
+  ToJSON,
+  Traversable (..),
+  Typeable,
+  (#<>),
+  (#<$),
+  (#<$>),
+  (#<*>),
+  (#<*),
+  (#*>),
+  (#==),
+  (#/=),
+  (#<),
+  (#<=),
+  (#>),
+  (#>=),
+  (#+),
+  (#-),
+  (#*),
+  (/),
+  drop,
+  fromIntegral,
+  fromJust,
+  guard,
+  init,
+  last,
+  mconcatMap,
+  pabs,
+  pall,
+  pand,
+  pany,
+  pasum,
+  pcompare,
+  pconcat,
+  pconcatMap,
+  pelem,
+  perror,
+  pfind,
+  pfmapDefault,
+  pfoldMapDefault,
+  pfold,
+  pfoldl,
+  pfoldMap,
+  pfoldr,
+  pfor,
+  pfor_,
+  pfromEnum,
+  pfromInteger,
+  plength,
+  pliftA2,
+  pmapM,
+  pmappend,
+  pmax,
+  pmconcat,
+  pmempty,
+  pmin,
+  pnegate,
+  pnotElem,
+  pnull,
+  por,
+  ppred,
+  pproduct,
+  ppure,
+  psequence,
+  psequenceA,
+  psequenceA_,
+  psucc,
+  psum,
+  ptoEnum,
+  ptoList,
+  ptraverse,
+  ptraverse_,
+  punless,
+  putStrLn,
+  print,
+  printf,
+)
 where
 
 import Control.Applicative
@@ -135,64 +135,64 @@ import GHC.Generics (Generic)
 import GHC.Num (Num (..))
 import GHC.Real (Integral (..), fromIntegral, (/))
 import GHC.Show (Show (..))
-import PlutusTx.Prelude hiding
-  ( Applicative (..),
-    Enum (..),
-    Eq (..),
-    Foldable (..),
-    Functor (..),
-    Monoid (..),
-    Ord (..),
-    Semigroup (..),
-    Traversable (..),
-    abs,
-    all,
-    and,
-    any,
-    asum,
-    concat,
-    concatMap,
-    elem,
-    error,
-    find,
-    fold,
-    foldMap,
-    foldl,
-    foldlM,
-    foldr,
-    foldrM,
-    for,
-    for_,
-    fromInteger,
-    length,
-    liftA2,
-    mapM,
-    mapM_,
-    mappend,
-    mconcat,
-    negate,
-    notElem,
-    null,
-    or,
-    product,
-    sequence,
-    sequenceA,
-    sequenceA_,
-    sequence_,
-    sum,
-    toList,
-    traverse_,
-    unless,
-    (*),
-    (*>),
-    (+),
-    (-),
-    (/=),
-    (<$),
-    (<$>),
-    (<*),
-    (<*>),
-  )
+import PlutusTx.Prelude hiding (
+  Applicative (..),
+  Enum (..),
+  Eq (..),
+  Foldable (..),
+  Functor (..),
+  Monoid (..),
+  Ord (..),
+  Semigroup (..),
+  Traversable (..),
+  abs,
+  all,
+  and,
+  any,
+  asum,
+  concat,
+  concatMap,
+  elem,
+  error,
+  find,
+  fold,
+  foldMap,
+  foldl,
+  foldlM,
+  foldr,
+  foldrM,
+  for,
+  for_,
+  fromInteger,
+  length,
+  liftA2,
+  mapM,
+  mapM_,
+  mappend,
+  mconcat,
+  negate,
+  notElem,
+  null,
+  or,
+  product,
+  sequence,
+  sequenceA,
+  sequenceA_,
+  sequence_,
+  sum,
+  toList,
+  traverse_,
+  unless,
+  (*),
+  (*>),
+  (+),
+  (-),
+  (/=),
+  (<$),
+  (<$>),
+  (<*),
+  (<*>),
+ )
 import PlutusTx.Prelude qualified as P
 import PlutusTx.Ratio qualified as P.Ratio
 import System.IO (FilePath, IO, print, putStrLn)
@@ -204,12 +204,12 @@ perror = P.error
 
 -- | Plutus Tx version of '(Data.Functor.<$>)'.
 {-# INLINEABLE (#<$>) #-}
-(#<$>) :: PFunctor f => (a -> b) -> f a -> f b
+(#<$>) :: (PFunctor f) => (a -> b) -> f a -> f b
 (#<$>) = (P.<$>)
 
 -- | Plutus Tx version of '(Data.Functor.<$)'.
 {-# INLINEABLE (#<$) #-}
-(#<$) :: PFunctor f => a -> f b -> f a
+(#<$) :: (PFunctor f) => a -> f b -> f a
 (#<$) = (P.<$)
 
 infixl 4 #<$>
@@ -218,11 +218,11 @@ infixl 4 #<$>
 type PEq = P.Eq
 
 {-# INLINEABLE (#==) #-}
-(#==) :: PEq a => a -> a -> Bool
+(#==) :: (PEq a) => a -> a -> Bool
 (#==) = (P.==)
 
 {-# INLINEABLE (#/=) #-}
-(#/=) :: PEq a => a -> a -> Bool
+(#/=) :: (PEq a) => a -> a -> Bool
 (#/=) = (P./=)
 
 infix 4 #==, #/=
@@ -231,66 +231,66 @@ infix 4 #==, #/=
 type POrd = P.Ord
 
 {-# INLINEABLE pcompare #-}
-pcompare :: POrd a => a -> a -> Ordering
+pcompare :: (POrd a) => a -> a -> Ordering
 pcompare = P.compare
 
 infix 4 #<, #<=, #>, #>=
 
 {-# INLINEABLE (#<) #-}
-(#<) :: POrd a => a -> a -> Bool
+(#<) :: (POrd a) => a -> a -> Bool
 (#<) = (P.<)
 
 {-# INLINEABLE (#<=) #-}
-(#<=) :: POrd a => a -> a -> Bool
+(#<=) :: (POrd a) => a -> a -> Bool
 (#<=) = (P.<=)
 
 {-# INLINEABLE (#>) #-}
-(#>) :: POrd a => a -> a -> Bool
+(#>) :: (POrd a) => a -> a -> Bool
 (#>) = (P.>)
 
 {-# INLINEABLE (#>=) #-}
-(#>=) :: POrd a => a -> a -> Bool
+(#>=) :: (POrd a) => a -> a -> Bool
 (#>=) = (P.>=)
 
 {-# INLINEABLE pmax #-}
-pmax :: POrd a => a -> a -> a
+pmax :: (POrd a) => a -> a -> a
 pmax = P.max
 
 {-# INLINEABLE pmin #-}
-pmin :: POrd a => a -> a -> a
+pmin :: (POrd a) => a -> a -> a
 pmin = P.min
 
 -- | Plutus Tx version of Enum
 type PEnum = P.Enum
 
 {-# INLINEABLE psucc #-}
-psucc :: PEnum a => a -> a
+psucc :: (PEnum a) => a -> a
 psucc = P.succ
 
 {-# INLINEABLE ppred #-}
-ppred :: PEnum a => a -> a
+ppred :: (PEnum a) => a -> a
 ppred = P.pred
 
 {-# INLINEABLE ptoEnum #-}
-ptoEnum :: PEnum a => Integer -> a
+ptoEnum :: (PEnum a) => Integer -> a
 ptoEnum = P.toEnum
 
 {-# INLINEABLE pfromEnum #-}
-pfromEnum :: PEnum a => a -> Integer
+pfromEnum :: (PEnum a) => a -> Integer
 pfromEnum = P.fromEnum
 
 {-# INLINEABLE (#+) #-}
-(#+) :: AdditiveMonoid a => a -> a -> a
+(#+) :: (AdditiveMonoid a) => a -> a -> a
 (#+) = (P.+)
 
 {-# INLINEABLE (#-) #-}
-(#-) :: AdditiveGroup a => a -> a -> a
+(#-) :: (AdditiveGroup a) => a -> a -> a
 (#-) = (P.-)
 
 infixl 6 #+, #-
 
 {-# INLINEABLE (#*) #-}
-(#*) :: MultiplicativeSemigroup a => a -> a -> a
+(#*) :: (MultiplicativeSemigroup a) => a -> a -> a
 (#*) = (P.*)
 
 infixl 7 #*
@@ -306,7 +306,7 @@ pfromInteger = P.Ratio.fromInteger
 
 -- | Plutus Tx version of 'GHC.Num.negate'
 {-# INLINEABLE pnegate #-}
-pnegate :: AdditiveGroup a => a -> a
+pnegate :: (AdditiveGroup a) => a -> a
 pnegate = P.negate
 
 -- | Plutus Tx version of Foldable
@@ -314,7 +314,7 @@ type PFoldable = P.Foldable
 
 -- | Plutus Tx version of 'Data.Foldable.foldr'.
 {-# INLINEABLE pfoldr #-}
-pfoldr :: PFoldable t => (a -> b -> b) -> b -> t a -> b
+pfoldr :: (PFoldable t) => (a -> b -> b) -> b -> t a -> b
 pfoldr = P.foldr
 
 -- | Plutus Tx version of 'Data.Foldable.fold'.
@@ -328,22 +328,22 @@ pfoldMap = P.foldMap
 
 -- | Plutus Tx version of 'Data.Foldable.foldl'.
 {-# INLINEABLE pfoldl #-}
-pfoldl :: PFoldable t => (b -> a -> b) -> b -> t a -> b
+pfoldl :: (PFoldable t) => (b -> a -> b) -> b -> t a -> b
 pfoldl = P.foldl
 
 -- | Plutus Tx version of 'Data.Foldable.toList'.
-ptoList :: PFoldable t => t a -> [a]
+ptoList :: (PFoldable t) => t a -> [a]
 {-# INLINE ptoList #-}
 ptoList = P.toList
 
 -- | Plutus Tx version of 'Data.Foldable.null'.
 {-# INLINEABLE pnull #-}
-pnull :: PFoldable t => t a -> Bool
+pnull :: (PFoldable t) => t a -> Bool
 pnull = P.null
 
 -- | Plutus Tx version of 'Data.Foldable.length'.
 {-# INLINEABLE plength #-}
-plength :: PFoldable t => t a -> Integer
+plength :: (PFoldable t) => t a -> Integer
 plength = P.length
 
 -- | Plutus Tx version of 'Data.Foldable.sum'.
@@ -376,37 +376,37 @@ pasum = P.asum
 
 -- | Plutus Tx version of 'Data.Foldable.concat'.
 {-# INLINE pconcat #-}
-pconcat :: PFoldable t => t [a] -> [a]
+pconcat :: (PFoldable t) => t [a] -> [a]
 pconcat = P.concat
 
 -- | Plutus Tx version of 'Data.Foldable.concatMap'.
 {-# INLINE pconcatMap #-}
-pconcatMap :: PFoldable t => (a -> [b]) -> t a -> [b]
+pconcatMap :: (PFoldable t) => (a -> [b]) -> t a -> [b]
 pconcatMap = P.concatMap
 
 -- | Plutus Tx version of 'Data.Foldable.and'.
 {-# INLINEABLE pand #-}
-pand :: PFoldable t => t Bool -> Bool
+pand :: (PFoldable t) => t Bool -> Bool
 pand = P.and
 
 -- | Plutus Tx version of 'Data.Foldable.or'.
 {-# INLINEABLE por #-}
-por :: PFoldable t => t Bool -> Bool
+por :: (PFoldable t) => t Bool -> Bool
 por = P.or
 
 -- | Plutus Tx version of 'Data.Foldable.any'.
 {-# INLINEABLE pany #-}
-pany :: PFoldable t => (a -> Bool) -> t a -> Bool
+pany :: (PFoldable t) => (a -> Bool) -> t a -> Bool
 pany = P.any
 
 -- | Plutus Tx version of 'Data.Foldable.all'.
 {-# INLINEABLE pall #-}
-pall :: PFoldable t => (a -> Bool) -> t a -> Bool
+pall :: (PFoldable t) => (a -> Bool) -> t a -> Bool
 pall = P.all
 
 -- | Plutus Tx version of 'Data.Foldable.find'.
 {-# INLINEABLE pfind #-}
-pfind :: PFoldable t => (a -> Bool) -> t a -> Maybe a
+pfind :: (PFoldable t) => (a -> Bool) -> t a -> Maybe a
 pfind = P.find
 
 -- | Plutus Tx version of Semigroup
@@ -416,7 +416,7 @@ infixr 6 #<>
 
 -- | Plutus Tx version of '(Data.Semigroup.<>)'.
 {-# INLINEABLE (#<>) #-}
-(#<>) :: PSemigroup a => a -> a -> a
+(#<>) :: (PSemigroup a) => a -> a -> a
 (#<>) = (P.<>)
 
 -- | Plutus Tx version of Data.Monoid.Monoid
@@ -424,17 +424,17 @@ type PMonoid = P.Monoid
 
 -- | Plutus Tx version of 'Data.Monoid.mempty'.
 {-# INLINEABLE pmempty #-}
-pmempty :: PMonoid a => a
+pmempty :: (PMonoid a) => a
 pmempty = P.mempty
 
 -- | Plutus Tx version of 'Data.Monoid.mappend'.
 {-# INLINEABLE pmappend #-}
-pmappend :: P.Monoid a => a -> a -> a
+pmappend :: (P.Monoid a) => a -> a -> a
 pmappend = (P.<>)
 
 -- | Plutus Tx version of 'Data.Monoid.mconcat'.
 {-# INLINEABLE pmconcat #-}
-pmconcat :: P.Monoid a => [a] -> a
+pmconcat :: (P.Monoid a) => [a] -> a
 pmconcat = P.mconcat
 
 -- | Plutus Tx version of Functor
@@ -444,25 +444,25 @@ type PFunctor = P.Functor
 type PApplicative = P.Applicative
 
 {-# INLINEABLE ppure #-}
-ppure :: PApplicative f => a -> f a
+ppure :: (PApplicative f) => a -> f a
 ppure = P.pure
 
 {-# INLINEABLE pliftA2 #-}
-pliftA2 :: PApplicative f => (a -> b -> c) -> f a -> f b -> f c
+pliftA2 :: (PApplicative f) => (a -> b -> c) -> f a -> f b -> f c
 pliftA2 = P.liftA2
 
 infixl 4 #<*>, #<*, #*>
 
 {-# INLINEABLE (#<*>) #-}
-(#<*>) :: PApplicative f => f (a -> b) -> f a -> f b
+(#<*>) :: (PApplicative f) => f (a -> b) -> f a -> f b
 (#<*>) = (P.<*>)
 
 {-# INLINEABLE (#<*) #-}
-(#<*) :: PApplicative f => f a -> f b -> f a
+(#<*) :: (PApplicative f) => f a -> f b -> f a
 (#<*) = (P.<*)
 
 {-# INLINEABLE (#*>) #-}
-(#*>) :: PApplicative f => f a -> f b -> f b
+(#*>) :: (PApplicative f) => f a -> f b -> f b
 (#*>) = (P.*>)
 
 -- | Plutus Tx version of 'Control.Monad.unless'.
@@ -501,7 +501,7 @@ pfor = P.for
 -- | Plutus Tx version of 'Data.Traversable.fmapDefault'.
 pfmapDefault ::
   forall t a b.
-  PTraversable t =>
+  (PTraversable t) =>
   (a -> b) ->
   t a ->
   t b
@@ -522,10 +522,10 @@ pfoldMapDefault = P.foldMapDefault
 
 -- | Plutus Tx version of 'Data.List.elem'.
 {-# INLINEABLE pelem #-}
-pelem :: PEq a => a -> [a] -> Bool
+pelem :: (PEq a) => a -> [a] -> Bool
 pelem = P.elem
 
 -- | Plutus Tx version of 'Data.List.notElem'.
 {-# INLINEABLE pnotElem #-}
-pnotElem :: PEq a => a -> [a] -> Bool
+pnotElem :: (PEq a) => a -> [a] -> Bool
 pnotElem = P.notElem

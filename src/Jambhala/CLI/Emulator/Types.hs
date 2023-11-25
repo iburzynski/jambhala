@@ -1,5 +1,3 @@
-{-# LANGUAGE TypeOperators #-}
-
 module Jambhala.CLI.Emulator.Types where
 
 import Control.Monad.Freer (Eff)

@@ -1,20 +1,20 @@
 {
-  // "json.schemaDownload.enable": true,
-  "haskell.manageHLS": "PATH",
-  "haskell.serverExecutablePath": "${workspaceFolder}/.vscode/haskell-language-server.link",
-  "haskell.upgradeGHCup": false,
-  "terminal.integrated.defaultProfile.linux": "bash",
-  "workbench.colorTheme": "Dracula",
-  "workbench.iconTheme": "vs-seti",
-  "vscode-neovim.neovimExecutablePaths.linux": "nvim",
-  "vscode-neovim.neovimExecutablePaths.darwin": "nvim",
   "editor.minimap.enabled": false,
   "editor.formatOnSave": true,
   "editor.renderWhitespace": "all",
+  "haskell.formattingProvider": "fourmolu",
+  "haskell.manageHLS": "PATH",
+  "haskell.serverExecutablePath": "${workspaceFolder}/.vscode/haskell-language-server.link",
+  "haskell.upgradeGHCup": false,
   "python.analysis.typeCheckingMode": "basic",
   "python.formatting.autopep8Args": [
     "--max-line-length",
     "80",
     "--experimental"
-  ]
+  ],
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "vscode-neovim.neovimExecutablePaths.linux": "nvim",
+  "vscode-neovim.neovimExecutablePaths.darwin": "nvim",
+  "workbench.colorTheme": "Dracula",
+  "workbench.iconTheme": "vs-seti",
 }

@@ -1,12 +1,15 @@
-[submodule "jambhalucid"]
-	path = jambhalucid
-	url = https://github.com/iburzynski/jambhalucid
-[submodule "cardano-ez-installer"]
-	path = cardano-ez-installer
-	url = https://github.com/iburzynski/cardano-ez-installer
 [submodule "cardano-cli-guru"]
 	path = cardano-cli-guru
 	url = https://github.com/iburzynski/cardano-cli-guru
 [submodule "cardano-devnet"]
 	path = cardano-devnet
 	url = https://github.com/cryptophonic/cardano-devnet.git
+[submodule "cardano-ez-installer"]
+	path = cardano-ez-installer
+	url = https://github.com/iburzynski/cardano-ez-installer
+[submodule "jambhalucid"]
+	path = jambhalucid
+	url = https://github.com/iburzynski/jambhalucid
+[submodule "jsetup-utils"]
+	path = jsetup-utils
+	url = https://github.com/iburzynski/jsetup-utils

@@ -11,15 +11,17 @@ import Jambhala.Utils
 -- | Define a custom type to parameterize the minting policy:
 data PolicyParam = PolicyParam {getUtxo :: TxOutRef, getTokenName :: TokenName}
 
--- | Generate `Lift` instance for the custom parameter type with Template Haskell.
---   Allows argument value to be pre-compiled to UPLC, so the compiled parameterized script can be applied to it.
+{- | Generate `Lift` instance for the custom parameter type with Template Haskell.
+  Allows argument value to be pre-compiled to UPLC, so the compiled parameterized script can be applied to it.
+-}
 makeLift ''PolicyParam
 
 -- | Custom redeemer type to indicate minting mode.
 data Mode = Minting | Burning
 
--- | For custom types with multiple constructors, `makeIsDataIndexed` must be used to generate ToData/FromData instances.
---   Unlike `unstableMakeIsData`, this generates `BuiltinData` values with constructors indexed in a stable order.
+{- | For custom types with multiple constructors, `makeIsDataIndexed` must be used to generate ToData/FromData instances.
+  Unlike `unstableMakeIsData`, this generates `BuiltinData` values with constructors indexed in a stable order.
+-}
 makeIsDataIndexed ''Mode [('Minting, 0), ('Burning, 1)]
 
 -- 2. Define Lambda
@@ -44,13 +46,14 @@ nftLambda (PolicyParam oref tn) mode ctx@(ScriptContext TxInfo {..} _) =
   -- check a list of conditions that must be met to mint with the policy
   pand $
     -- transactions must always mint the correct amount of the asset
-    traceIfFalse "Wrong amount" (checkMintAmount (ownCurrencySymbol ctx) tn mode txInfoMint) :
-    -- "cons" this condition (head) onto one of two possible tails:
-    case mode of
-      -- if minting, the UTxO parameterizing the policy must be consumed as an input
-      Minting -> [traceIfFalse "UTxO not consumed" $ hasUtxo oref txInfoInputs]
-      -- if burning, no additional conditions are required: construct a singleton list with empty tail
-      Burning -> []
+    traceIfFalse "Wrong amount" (checkMintAmount (ownCurrencySymbol ctx) tn mode txInfoMint)
+      :
+      -- "cons" this condition (head) onto one of two possible tails:
+      case mode of
+        -- if minting, the UTxO parameterizing the policy must be consumed as an input
+        Minting -> [traceIfFalse "UTxO not consumed" $ hasUtxo oref txInfoInputs]
+        -- if burning, no additional conditions are required: construct a singleton list with empty tail
+        Burning -> []
 {-# INLINEABLE nftLambda #-}
 
 -- | Untyped version of the parameterized minting policy lambda.
@@ -76,8 +79,8 @@ exports =
   export
     (defExports policy)
       { -- Export JSON representations of our redeemer Mode values for transaction construction.
-        dataExports = [Minting `toJSONfile` "mintmode", Burning `toJSONfile` "burnmode"],
-        emulatorTest = test
+        dataExports = [Minting `toJSONfile` "mintmode", Burning `toJSONfile` "burnmode"]
+      , emulatorTest = test
       }
   where
     -- To produce the finished minting policy, select an arbitrary UTxO at your address to consume during the mint.
@@ -101,8 +104,8 @@ instance MintingEndpoint NFTMinting where
     minterUtxos <- ownUtxos
     submitAndConfirm
       Tx
-        { lookups = scriptLookupsFor policy `andUtxos` minterUtxos,
-          constraints =
+        { lookups = scriptLookupsFor policy `andUtxos` minterUtxos
+        , constraints =
             mustSpendPubKeyOutput oref
               <> mustMintWithRedeemer policy Minting tName 1
         }
@@ -111,8 +114,8 @@ instance MintingEndpoint NFTMinting where
     let policy = compileScript (PolicyParam mintTxOutRef tName)
     submitAndConfirm
       Tx
-        { lookups = scriptLookupsFor policy,
-          constraints = mustMintWithRedeemer policy Burning tName (-1)
+        { lookups = scriptLookupsFor policy
+        , constraints = mustMintWithRedeemer policy Burning tName (-1)
         }
     logStr $ "Burned 1 " ++ show tName
 
@@ -120,11 +123,10 @@ instance MintingEndpoint NFTMinting where
 test :: EmulatorTest
 test =
   initEmulator @NFTMinting
-    2
-    [ Mint "jambtoken" `forWallet` 1,
-      Mint "jambtoken" `forWallet` 1,
-      Mint "jambtoken" `forWallet` 2,
-      -- To test a burn transaction, first run the test with just the actions above.
+    1
+    [ Mint "jambtoken" `forWallet` 1
+    , Mint "jambtoken" `forWallet` 1
+    , -- To test a burn transaction, first run the test with just the actions above.
       -- Use the emulator output to identify the TxHash/TxIx of the UTxO used as input to mint the NFT we want to burn.
       -- Then apply unsafeMkTxOutRef to the TxHash and TxIx to reconstruct a corresponding TxOutRef value, and provide it to the Burn constructor.
       Burn (unsafeMkTxOutRef "899b40a640d4d3df5bb4a85b0d03be7df0509bcd7f6c1e99075423852a35a2a4" 10) "jambtoken" `forWallet` 1

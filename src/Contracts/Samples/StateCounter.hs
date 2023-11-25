@@ -1,6 +1,7 @@
 module Contracts.Samples.StateCounter where
 
 import Contracts.Samples.NFT qualified as NFT
+import Control.Monad (replicateM_)
 import Data.Map qualified as Map
 import Jambhala.Plutus
 import Jambhala.Utils
@@ -61,8 +62,8 @@ exports =
   export
     (defExports compiled)
       { dataExports =
-          [(0 :: Count) `toJSONfile` "zero"],
-        emulatorTest = NFT.test <> test
+          [(0 :: Count) `toJSONfile` "zero"]
+      , emulatorTest = NFT.test <> test
       }
   where
     compiled =
@@ -74,17 +75,17 @@ exports =
 
 -- | Define `ValidatorEndpoints` instance for contract synonym.
 instance ValidatorEndpoints StateCounter where
-  newtype GiveParam StateCounter = Give AssetClass
+  newtype GiveParam StateCounter = SetCount AssetClass
     deriving (Generic, FromJSON, ToJSON)
-  newtype GrabParam StateCounter = Grab AssetClass
+  newtype GrabParam StateCounter = IncCount AssetClass
     deriving (Generic, FromJSON, ToJSON)
 
   give :: GiveParam StateCounter -> ContractM StateCounter ()
-  give (Give proofToken@(AssetClass (cs, tn))) = do
+  give (SetCount proofToken@(AssetClass (cs, tn))) = do
     submitAndConfirm
       Tx
-        { lookups = scriptLookupsFor compiled,
-          constraints =
+        { lookups = scriptLookupsFor compiled
+        , constraints =
             mustPayScriptWithInlineDatum @Count
               compiled
               0
@@ -96,9 +97,9 @@ instance ValidatorEndpoints StateCounter where
       compiled = compileValidator proofToken
 
   grab :: GrabParam StateCounter -> ContractM StateCounter ()
-  grab (Grab proofToken@(AssetClass (cs, tn))) = do
+  grab (IncCount proofToken@(AssetClass (cs, tn))) = do
     utxos <- getUtxosAt compiled
-    let validUtxo = filterByValue ((cs, tn, 1) `elem`) utxos
+    let validUtxo = filterByFlatValue ((cs, tn, 1) `elem`) utxos
     case Map.toList validUtxo of
       [] -> logStr "No UTxO with proof token"
       (_ : _ : _) -> logStr "Multiple UTxOs with proof token"
@@ -110,8 +111,8 @@ instance ValidatorEndpoints StateCounter where
             let newState = oldState + 1
             submitAndConfirm
               Tx
-                { lookups = scriptLookupsFor compiled `andUtxos` validUtxo,
-                  constraints =
+                { lookups = scriptLookupsFor compiled `andUtxos` validUtxo
+                , constraints =
                     oref `mustBeSpentWith` ()
                       <> mustPayScriptWithInlineDatum
                         compiled
@@ -127,9 +128,8 @@ test :: EmulatorTest
 test =
   initEmulator @StateCounter
     1
-    [ Give proofToken `fromWallet` 1,
-      Grab proofToken `toWallet` 1,
-      Grab proofToken `toWallet` 1
+    [ SetCount proofToken `fromWallet` 1
+    , replicateM_ 100 (IncCount proofToken `toWallet` 1)
     ]
   where
     proofToken =

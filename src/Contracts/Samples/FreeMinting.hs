@@ -53,8 +53,8 @@ instance MintingEndpoint FreeMinting where
       mint' tQuantity tName = do
         submitAndConfirm
           Tx
-            { lookups = scriptLookupsFor compiledScript,
-              constraints = mustMint compiledScript tName tQuantity
+            { lookups = scriptLookupsFor compiledScript
+            , constraints = mustMint compiledScript tName tQuantity
             }
         let mintAction = if tQuantity > 0 then "Minted" :: String else "Burned"
         logStr $ printf "%s %d %s" mintAction (abs tQuantity) (show tName)
@@ -64,7 +64,7 @@ test :: EmulatorTest
 test =
   initEmulator @FreeMinting
     2
-    [ Mint 1_000_000 "jambcoin" `forWallet` 1,
-      Mint 1_000_000 "jambcoin" `forWallet` 2,
-      Burn 100_000 "jambcoin" `forWallet` 1
+    [ Mint 1_000_000 "jambcoin" `forWallet` 1
+    , Mint 1_000_000 "jambcoin" `forWallet` 2
+    , Burn 100_000 "jambcoin" `forWallet` 1
     ]
