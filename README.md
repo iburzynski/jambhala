@@ -13,7 +13,7 @@
   * **[Clone repository & test readiness](#4-clone-repository--test-readiness)**
   * **[Build environment](#5-build-environment)**
   * **[Getting started: j commands and setup wizard](#6-getting-started-j-commands-and-setup-wizard)**
-  * **[Start coding](#6-start-coding)**
+  * **[Start coding](#7-start-coding)**
 * **[Writing contracts](#writing-contracts)**
   * **[Creating a contract](#creating-a-contract)**
   * **[Writing emulator tests](#writing-emulator-tests)**
