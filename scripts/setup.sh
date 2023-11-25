@@ -35,6 +35,7 @@ just personalize
 cabal update
 cabal build .
 
+echo ""
 read -p "Install cardano-node/cardano-cli? [Y/n] " input
 input=${input:-Y}
 if [[ $input =~ ^[Yy]$ ]]; then
