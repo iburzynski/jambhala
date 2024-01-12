@@ -3,5 +3,6 @@
     "mkhl.direnv",
     "jnoortheen.nix-ide",
     "haskell.haskell",
+    "TxPipe.aiken"
   ]
 }

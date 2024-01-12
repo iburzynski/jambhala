@@ -13,3 +13,6 @@
 [submodule "jsetup-utils"]
 	path = jsetup-utils
 	url = https://github.com/iburzynski/jsetup-utils
+[submodule "jambhalaiken"]
+	path = jambhalaiken
+	url = https://github.com/iburzynski/jambhalaiken
