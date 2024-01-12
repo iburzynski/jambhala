@@ -4,8 +4,11 @@ module Jambhala.CLI.Parsers (commandParser, contractsPretty) where
 
 import Cardano.Ledger.BaseTypes (Network (..))
 import Control.Monad.Reader (MonadReader (..))
+import Data.Char (digitToInt)
 import Data.List (unlines)
 import Data.Map.Strict qualified as M
+import Data.Text qualified as T
+import Data.Text.Encoding qualified as T
 import Jambhala.CLI.Types
 import Options.Applicative
 
@@ -15,7 +18,7 @@ commandParser = do
   pa <- parseAddress
   ph <- parseHash
   pt <- parseTest
-  let p = parseList <|> pa <|> ph <|> pt <|> pw <|> parseUpdate
+  let p = parseList <|> pa <|> parseBech32 <|> ph <|> pt <|> pw <|> parseUpdate
   pure . info (helper <*> p) $ mconcat [fullDesc, progDesc "Jambhala Cardano Development Suite"]
 
 parseList :: Parser Command
@@ -30,6 +33,24 @@ parseAddress =
       , metavar "CONTRACT"
       , help "Display CONTRACT address with optional mainnet flag (default is testnet)"
       ]
+
+parseBech32 :: Parser Command
+parseBech32 =
+  liftA2 Bech32 parseAddrHeader parsePayload
+  where
+    parseAddrHeader :: Parser Int
+    parseAddrHeader =
+      digitToInt . head
+        <$> strOption
+          ( mconcat
+              [ long "bech32"
+              , short 'b'
+              , metavar "HEADER"
+              , help "Encode KEYHASH to Bech32 address with HEADER (0 - 7)"
+              ]
+          )
+    parsePayload :: Parser Text
+    parsePayload = T.strip . T.decodeUtf8 <$> strArgument (metavar "HASH" <> help "HASH to encode in Bech32")
 
 parseNetwork :: Parser Network
 parseNetwork =

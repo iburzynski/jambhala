@@ -1,6 +1,6 @@
 cabal-version: 3.0
 name:          jambhala
-version:       0.4.0.0
+version:       0.5.0.0
 
 -- A short (one-line) description of the package.
 -- synopsis:
@@ -57,6 +57,7 @@ library
     Contracts.Samples.SimpleTyped
     Contracts.Samples.StateCounter
     Contracts.Samples.Vesting
+    Jambhala.CLI.Bech32
     Jambhala.CLI.Emulator
     Jambhala.CLI.Emulator.Types
     Jambhala.CLI.Export
@@ -70,6 +71,7 @@ library
   build-depends:
     , aeson
     , base16-bytestring
+    , bech32
     , bytestring
     , cardano-api
     , cardano-binary
@@ -83,6 +85,7 @@ library
     , freer-simple
     , lens
     , megaparsec
+    , memory
     , mtl
     , optparse-applicative
     , plutus-contract
@@ -97,6 +100,7 @@ library
     , serialise
     , text
     , time
+    , transformers
     , turtle
 
   default-extensions:

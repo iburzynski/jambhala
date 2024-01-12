@@ -62,8 +62,7 @@ module Jambhala.Utils (
   unsafeMkTxOutRef,
   wait,
   waitUntil,
-)
-where
+) where
 
 import Jambhala.CLI.Emulator (
   addConstraints,

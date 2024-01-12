@@ -226,6 +226,7 @@ type FileName = String
 data Command
   = List
   | Addr !ContractName !Network
+  | Bech32 !Int !Text
   | Hash !ContractName
   | Test !ContractName
   | Write !ContractName !(Maybe FileName) !Network

@@ -10,6 +10,7 @@ import Data.ByteString.Char8 qualified as BS8
 import Data.Char (toUpper)
 import Data.Map.Strict qualified as M
 import Data.Text qualified as Text
+import Jambhala.CLI.Bech32 (bech32)
 import Jambhala.CLI.Emulator
 import Jambhala.CLI.Export (getSerialised)
 import Jambhala.CLI.Parsers
@@ -28,6 +29,7 @@ runCommand :: (MonadReader JambContracts m, MonadIO m) => Command -> m ()
 runCommand = \case
   List -> asks contractsPretty >>= liftIO . putStrLn . ("Available Contracts:\n\n" ++)
   Addr c n -> go c (liftIO . putStrLn . scriptAddressBech32 n . script)
+  Bech32 h kh -> bech32 h kh >>= liftIO . putStrLn
   Hash c -> go c (hash . script)
   Test c ->
     go c (liftIO . runJambEmulator . test)
