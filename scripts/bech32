@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <cardano_address_header> <hash>"
+    echo "Arguments:"
+    echo "  <cardano_address_header>: A number between 0 and 7. Refer to CIP-19 for reference: https://cips.cardano.org/cip/CIP-19"
+    echo "  <hash>: The pubkey hash or script hash"
+    exit 1
+fi
+
+cabal build > /dev/null 2>&1
+echo -n $(just cli -b $1 $2)
