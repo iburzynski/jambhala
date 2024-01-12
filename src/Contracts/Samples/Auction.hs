@@ -11,27 +11,27 @@ import Plutus.V1.Ledger.Value (geq)
 type BidAmt = Integer
 
 data AuctionParam = AuctionParam
-  { -- | The asset being auctioned. It can be a single token, multiple tokens of the same
-    -- kind, or tokens of different kinds, and the token(s) can be fungible or non-fungible.
-    -- These can all be encoded as a `Value`.
-    apAsset :: Value
-  , -- | Seller's wallet address. The highest bid (if exists) will be sent to the seller.
-    -- If there is no bid, the asset auctioned will be sent to the seller.
-    apSeller :: PubKeyHash
-  , -- | The minimum bid in Lovelace.
-    apMinBid :: BidAmt
-  , -- | The deadline for placing a bid. This is the earliest time the auction can be closed.
-    apEndTime :: POSIXTime
+  { apAsset :: Value
+  -- ^ The asset being auctioned. It can be a single token, multiple tokens of the same
+  -- kind, or tokens of different kinds, and the token(s) can be fungible or non-fungible.
+  -- These can all be encoded as a `Value`.
+  , apSeller :: PubKeyHash
+  -- ^ Seller's wallet address. The highest bid (if exists) will be sent to the seller.
+  -- If there is no bid, the asset auctioned will be sent to the seller.
+  , apMinBid :: BidAmt
+  -- ^ The minimum bid in Lovelace.
+  , apEndTime :: POSIXTime
+  -- ^ The deadline for placing a bid. This is the earliest time the auction can be closed.
   }
   deriving (Generic, FromJSON, ToJSON)
 
 makeLift ''AuctionParam
 
 data Bid = Bid
-  { -- | Bidder's wallet address.
-    bBidder :: PubKeyHash
-  , -- | Bid amount.
-    bAmount :: BidAmt
+  { bBidder :: PubKeyHash
+  -- ^ Bidder's wallet address.
+  , bAmount :: BidAmt
+  -- ^ Bid amount.
   }
 
 unstableMakeIsData ''Bid
@@ -127,14 +127,14 @@ validContOutput :: [TxOut] -> Value -> Bid -> Bool
 validContOutput [o] asset (Bid bidder amt) = case (txOutDatum o, txOutValue o) of
   (OutputDatum (Datum newDatum), val)
     | val #== (asset #<> lovelaceValueOf amt) ->
-      maybe
-        (traceError "Failed to decode output datum")
-        ( traceIfFalse "Invalid bid in output datum"
-            . maybe
-              False
-              (\(Bid bidder' amt') -> bidder' #== bidder && amt' #== amt)
-        )
-        $ fromBuiltinData newDatum
+        maybe
+          (traceError "Failed to decode output datum")
+          ( traceIfFalse "Invalid bid in output datum"
+              . maybe
+                False
+                (\(Bid bidder' amt') -> bidder' #== bidder && amt' #== amt)
+          )
+          $ fromBuiltinData newDatum
     | otherwise -> traceError "Invalid continuing output value"
   _noInlineDatum -> traceError "No inline datum on continuing output"
 validContOutput [] _ _ = traceError "No continuing output"
