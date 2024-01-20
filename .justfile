@@ -28,11 +28,19 @@
 @vars:
   python3 jsetup-utils/check_env.py jambhala
 
+direnv-bin := `which direnv`
 hls-bin := `which haskell-language-server`
 
 # generate .env file from template
 @mk-env:
   mk-env.sh
+
+# create direnv symlink
+# @link-direnv:
+#  if [ -n "{{ direnv-bin }}" ]; then \
+#    ln -s -f "{{ direnv-bin }}" .vscode/direnv.link; \
+#  else echo "direnv not found!"; \
+#  fi
 
 # create HLS symlink
 @link-hls:
@@ -115,7 +123,7 @@ node-port := "1337"
   rm -rf .direnv
   rm -rf .cabal
   cabal clean
-  direnv allow
+  cabal build
 
 # reset .env files to defaults
 @reset-env:
@@ -126,3 +134,10 @@ node-port := "1337"
 # run setup wizard
 @setup:
   setup.sh
+
+# run Aiken tests, build, and write validators
+@aiken:
+  cd jambhalaiken; \
+  aiken check; \
+  aiken build; \
+  python write.py;

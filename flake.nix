@@ -82,6 +82,7 @@
       });
 
   nixConfig = {
+    extra-experimental-features = [ "configurable-impure-env" "auto-allocate-uids" ];
     extra-substituters = [
       "https://cache.iog.io"
       #      "https://cache.zw3rk.com" # No longer needed
