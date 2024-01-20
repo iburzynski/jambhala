@@ -99,7 +99,7 @@ mkTicketDatum hostPKH redeemerCodeStr price =
     , ticketPrice = price
     }
 
--- | Define spending validator exports value for use with `jamb` CLI.
+-- | Define spending validator exports value for use with `j cli`.
 validatorExports :: JambExports
 validatorExports =
   export

@@ -46,14 +46,13 @@ nftLambda (PolicyParam oref tn) mode ctx@(ScriptContext TxInfo {..} _) =
   -- check a list of conditions that must be met to mint with the policy
   pand $
     -- transactions must always mint the correct amount of the asset
-    traceIfFalse "Wrong amount" (checkMintAmount (ownCurrencySymbol ctx) tn mode txInfoMint)
-      :
-      -- "cons" this condition (head) onto one of two possible tails:
-      case mode of
-        -- if minting, the UTxO parameterizing the policy must be consumed as an input
-        Minting -> [traceIfFalse "UTxO not consumed" $ hasUtxo oref txInfoInputs]
-        -- if burning, no additional conditions are required: construct a singleton list with empty tail
-        Burning -> []
+    traceIfFalse "Wrong amount" (checkMintAmount (ownCurrencySymbol ctx) tn mode txInfoMint) :
+    -- "cons" this condition (head) onto one of two possible tails:
+    case mode of
+      -- if minting, the UTxO parameterizing the policy must be consumed as an input
+      Minting -> [traceIfFalse "UTxO not consumed" $ hasUtxo oref txInfoInputs]
+      -- if burning, no additional conditions are required: construct a singleton list with empty tail
+      Burning -> []
 {-# INLINEABLE nftLambda #-}
 
 -- | Untyped version of the parameterized minting policy lambda.
@@ -73,7 +72,7 @@ compileScript p =
 
 -- 4. Export Contract to Jambhala
 
--- | Define `exports` value for use with `jamb` CLI.
+-- | Define `exports` value for use with `j cli`.
 exports :: JambExports
 exports =
   export

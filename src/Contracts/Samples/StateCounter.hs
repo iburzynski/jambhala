@@ -56,7 +56,7 @@ compileValidator proofToken =
 
 -- 4. Export Contract to Jambhala
 
--- | Define `exports` value for use with `jamb` CLI.
+-- | Define `exports` value for use with `j cli`.
 exports :: JambExports
 exports =
   export

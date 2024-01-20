@@ -21,7 +21,7 @@ unstableMakeIsData ''VestingDatum
 -- | Define typed vesting validator lambda.
 vestingLambda :: VestingDatum -> () -> ScriptContext -> Bool
 vestingLambda (VestingDatum beneficiary maturity) _ (ScriptContext txInfo _) =
-  traceIfFalse "Wrong beneficiary" (txSignedBy txInfo beneficiary)
+  traceIfFalse "Not signed by beneficiary" (txSignedBy txInfo beneficiary)
     && traceIfFalse "Maturity not reached" (from maturity `contains` txInfoValidRange txInfo)
 {-# INLINEABLE vestingLambda #-}
 
@@ -41,8 +41,8 @@ compiledScript = mkValidatorContract $$(compile [||untypedLambda||])
 
 -- 4. Export Contract to Jambhala
 
--- | Define `exports` value for use with `jamb` CLI.
-exports :: JambExports -- Prepare exports for jamb CLI:
+-- | Define `exports` value for use with `j cli`.
+exports :: JambExports
 exports =
   export
     (defExports compiledScript)

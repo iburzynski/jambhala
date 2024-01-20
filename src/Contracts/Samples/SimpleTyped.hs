@@ -28,7 +28,7 @@ compiledTypelessScript = mkValidatorContract $$(compile [||typelessLambda||])
 
 -- 4. Export Contract to Jambhala
 
--- | Define exports value for the typeless version to use with `jamb` CLI.
+-- | Define exports value for the typeless version to use with `j cli`.
 untypedExports :: JambExports
 untypedExports = export (defExports compiledTypelessScript)
 

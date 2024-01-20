@@ -47,7 +47,7 @@ giftCompiled = mkValidatorContract $$(compile [||giftLambda||])
 burnCompiled :: Burn
 burnCompiled = mkValidatorContract $$(compile [||burnLambda||])
 
--- 6. Prepare exports for use with jamb CLI:
+-- 6. Prepare exports for use with `j cli`:
 giftExports :: JambExports
 giftExports =
   export
