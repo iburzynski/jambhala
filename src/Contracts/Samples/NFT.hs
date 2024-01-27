@@ -26,33 +26,41 @@ makeIsDataIndexed ''Mode [('Minting, 0), ('Burning, 1)]
 
 -- 2. Define Lambda
 
--- | Helper function to check if the correct quantity of the given asset is minted in the transaction.
-checkMintAmount :: CurrencySymbol -> TokenName -> Mode -> Value -> Bool
-checkMintAmount cs tn mode minted =
-  let q = case mode of
-        Minting -> 1
-        Burning -> -1
-   in pany (\(cs', tn', q') -> cs' #== cs && tn' #== tn && q' #== q) $ flattenValue minted
-{-# INLINEABLE checkMintAmount #-}
-
 -- | Helper function to check that the UTxO parameterizing the script is being spent in the transaction.
 hasUtxo :: TxOutRef -> [TxInInfo] -> Bool
-hasUtxo oref = pany (\(TxInInfo oref' _) -> oref' #== oref)
+hasUtxo oref inputs =
+  traceIfFalse "UTxO not consumed" $ pany (\(TxInInfo oref' _) -> oref' #== oref) inputs
 {-# INLINEABLE hasUtxo #-}
+
+{- | Helper function to check if *only* the NFT is minted in the transaction.
+     The safest way to prevent "other token name" vulnerability
+     (see https://library.mlabs.city/common-plutus-security-vulnerabilities#2.othertokenname)
+-}
+checkMintRestrictive :: AssetClass -> Value -> Integer -> Bool
+checkMintRestrictive ac minted qty =
+  traceIfFalse "Invalid mint" $ minted #== assetClassValue ac qty
+{-# INLINEABLE checkMintRestrictive #-}
+
+{- | Helper function that permits other assets to be minted in the same transaction,
+     but no other assets with the NFT's currency symbol can be minted
+     (useful if application requires minting multiple assets in the same transaction.)
+-}
+checkMintPermissive :: AssetClass -> Value -> Integer -> Bool
+checkMintPermissive (AssetClass (cs, tn)) minted qty =
+  case filter (\(cs', _, _) -> cs' #== cs) $ flattenValue minted of
+    [(_, tn', qty')] ->
+      traceIfFalse "Wrong token name" (tn' #== tn)
+        && traceIfFalse "Invalid mint quantity" (qty' #== qty)
+    _invalidMint -> trace "Multiple assets" False
+{-# INLINEABLE checkMintPermissive #-}
 
 -- | Typed parameterized minting policy lambda.
 nftLambda :: PolicyParam -> Mode -> ScriptContext -> Bool
 nftLambda (PolicyParam oref tn) mode ctx@(ScriptContext TxInfo {..} _) =
-  -- check a list of conditions that must be met to mint with the policy
-  pand $
-    -- transactions must always mint the correct amount of the asset
-    traceIfFalse "Wrong amount" (checkMintAmount (ownCurrencySymbol ctx) tn mode txInfoMint) :
-    -- "cons" this condition (head) onto one of two possible tails:
-    case mode of
-      -- if minting, the UTxO parameterizing the policy must be consumed as an input
-      Minting -> [traceIfFalse "UTxO not consumed" $ hasUtxo oref txInfoInputs]
-      -- if burning, no additional conditions are required: construct a singleton list with empty tail
-      Burning -> []
+  let checkMint' = checkMintRestrictive (AssetClass (ownCurrencySymbol ctx, tn)) txInfoMint
+   in case mode of
+        Minting -> hasUtxo oref txInfoInputs && checkMint' 1
+        Burning -> checkMint' (-1)
 {-# INLINEABLE nftLambda #-}
 
 -- | Untyped version of the parameterized minting policy lambda.
@@ -107,6 +115,8 @@ instance MintingEndpoint NFTMinting where
         , constraints =
             mustSpendPubKeyOutput oref
               <> mustMintWithRedeemer policy Minting tName 1
+              -- Uncomment below to test for "other token name" vulnerability:
+              -- <> mustMintWithRedeemer policy Minting "oops!" 1
         }
     logStr $ "Minted 1 " ++ show tName
   mint (Burn mintTxOutRef tName) = do
@@ -128,5 +138,5 @@ test =
     , -- To test a burn transaction, first run the test with just the actions above.
       -- Use the emulator output to identify the TxHash/TxIx of the UTxO used as input to mint the NFT we want to burn.
       -- Then apply unsafeMkTxOutRef to the TxHash and TxIx to reconstruct a corresponding TxOutRef value, and provide it to the Burn constructor.
-      Burn (unsafeMkTxOutRef "899b40a640d4d3df5bb4a85b0d03be7df0509bcd7f6c1e99075423852a35a2a4" 10) "jambtoken" `forWallet` 1
+      Burn (unsafeMkTxOutRef "019b759d7d22f8f93125c27229debf4771194f9d9776acd31e3b0ac4bda04c9a" 0) "jambtoken" `forWallet` 1
     ]
