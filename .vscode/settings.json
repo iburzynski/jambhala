@@ -2,6 +2,7 @@
   "editor.minimap.enabled": false,
   "editor.formatOnSave": true,
   "editor.renderWhitespace": "all",
+  "files.autoSave": "onFocusChange",
   "haskell.formattingProvider": "fourmolu",
   "haskell.manageHLS": "PATH",
   "haskell.serverExecutablePath": "${workspaceFolder}/.vscode/haskell-language-server.link",
@@ -17,4 +18,8 @@
   "vscode-neovim.neovimExecutablePaths.darwin": "nvim",
   "workbench.colorTheme": "Dracula",
   "workbench.iconTheme": "vs-seti",
+  "deno.enable": true,
+  "deno.unstable": true,
+  "deno.lint": false,
+  "editor.defaultFormatter": "denoland.vscode-deno"
 }
